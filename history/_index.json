@@ -1,0 +1,70 @@
+[
+  {
+    "date": "2026-07-06",
+    "fetched_at": "2026-07-06 22:12:56",
+    "funds": {
+      "019633": {
+        "score": 7,
+        "conclusion": "忍着不动"
+      },
+      "014194": {
+        "score": 9,
+        "conclusion": "安心持有"
+      },
+      "CPO": {
+        "score": 7,
+        "conclusion": "安心持有"
+      },
+      "024239": {
+        "score": 5,
+        "conclusion": "忍着不动"
+      },
+      "021528": {
+        "score": 5,
+        "conclusion": "忍着不动"
+      },
+      "015789": {
+        "score": 7,
+        "conclusion": "安心持有"
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动"
+      }
+    }
+  },
+  {
+    "date": "2026-07-07",
+    "fetched_at": "2026-07-07 14:00:56",
+    "funds": {
+      "019633": {
+        "score": 7,
+        "conclusion": "忍着不动"
+      },
+      "014194": {
+        "score": 7,
+        "conclusion": "安心持有"
+      },
+      "CPO": {
+        "score": 8,
+        "conclusion": "安心持有"
+      },
+      "024239": {
+        "score": 5,
+        "conclusion": "忍着不动"
+      },
+      "021528": {
+        "score": 5,
+        "conclusion": "忍着不动"
+      },
+      "015789": {
+        "score": 7,
+        "conclusion": "安心持有"
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动"
+      }
+    }
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "topics": [
+    {
+      "id": "1",
+      "title": "逃跑指数阈值校准",
+      "desc": "根据历史快照对比实际走势，调整各基金 exit_thresholds 参数",
+      "status": "pending",
+      "created": "2026-07-06"
+    },
+    {
+      "id": "2",
+      "title": "A股数据源稳定性",
+      "desc": "部分 A 股标的偶发 fetch 失败，考虑接入 akshare 或备用数据源",
+      "status": "pending",
+      "created": "2026-07-06"
+    },
+    {
+      "id": "3",
+      "title": "增加均线交叉信号",
+      "desc": "当前只看 MA50 位置，增加 MA20/MA50 金叉死叉判断",
+      "status": "pending",
+      "created": "2026-07-06"
+    }
+  ]
+}

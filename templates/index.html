@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investment Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💹</text></svg>">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- ═══ 顶部栏 ═══ -->
+  <header class="top-bar">
+    <h1>📊 基金监控</h1>
+    <div class="top-bar-center">
+      <span id="fund-name" class="fund-title">--</span>
+      <span id="fund-code" class="fund-code">--</span>
+    </div>
+    <div id="top-indices" class="index-row"></div>
+    <div class="top-bar-right">
+      <span id="loading-indicator" class="loading-indicator" style="display:none">⏳ 刷新中...</span>
+      <span id="update-time" class="update-time">--</span>
+      <button id="refresh-btn" class="refresh-btn" title="手动刷新全部数据">🔄</button>
+    </div>
+  </header>
+
+  <!-- ═══ 标签页导航 ═══ -->
+  <nav class="tab-nav">
+    {% for fid, f in funds.items() %}
+    <button class="tab-btn" data-fund="{{ fid }}" data-short="{{ f.short }}">
+      <span class="tab-dot"></span>
+      {{ f.short }}
+      <small>{{ fid }}</small>
+    </button>
+    {% endfor %}
+    <button class="tab-btn tab-special" data-fund="_optimize" data-short="优化">
+      <span class="tab-dot tab-dot-opt"></span>
+      ⚙ 优化
+      <small>复盘 & 调优</small>
+    </button>
+  </nav>
+
+  <!-- ═══ P0-任务1：共享瓶颈敞口警告 ═══ -->
+  <section id="bottleneck-warnings" class="bottleneck-warnings" style="display:none"></section>
+
+  <!-- ═══ 逃跑信号横幅 ═══ -->
+  <section id="exit-banner" class="exit-banner exit-unknown">
+    <div class="exit-main">
+      <span class="exit-emoji">⏳</span>
+      <div class="exit-info">
+        <span class="exit-action">选择基金</span>
+        <span class="exit-desc">点击上方标签加载基金数据</span>
+      </div>
+      <div class="exit-score-box">
+        <span class="exit-score-num">--</span>
+        <span class="exit-score-label">逃跑指数</span>
+      </div>
+    </div>
+    <div id="exit-tags" class="exit-tags"></div>
+  </section>
+
+  <!-- ═══ 主体三栏 ═══ -->
+  <main class="main-grid">
+
+    <!-- 左 — 核心标的 + 周期位置 -->
+    <section class="panel left-panel">
+      <div class="sub-panel">
+        <h2>📌 核心标的</h2>
+        <div id="stocks-panel" class="stock-list">
+          <div class="loading-hint">请选择基金</div>
+        </div>
+      </div>
+      <div class="sub-panel" id="cycle-wrap">
+        <h2>🔄 周期位置</h2>
+        <div id="cycle-panel" class="cycle-box"></div>
+      </div>
+      <div class="sub-panel" id="specials-wrap" style="display:none">
+        <h2>🔍 特殊关注</h2>
+        <div id="specials-panel" class="stock-list"></div>
+      </div>
+    </section>
+
+    <!-- 中 — 领先指标（主角，放大展示） -->
+    <section class="panel center-panel">
+      <h2>📡 领先指标 <span class="hint-text">— 基本面走向，比股价超前 3-12 个月</span></h2>
+      <div id="leading-panel" class="leading-list">
+        <div class="loading-hint">请选择基金</div>
+      </div>
+    </section>
+
+    <!-- 右 — 关键事件 + 逃跑信号 + 说明 -->
+    <section class="panel right-panel">
+      <div class="sub-panel">
+        <h2>📅 关键事件</h2>
+        <div id="events-panel" class="event-list">
+          <div class="loading-hint">--</div>
+        </div>
+      </div>
+      <div class="sub-panel" id="predict-wrap">
+        <h2>🔮 预测 <span class="hint-text">— 待验证</span></h2>
+        <div id="predict-panel" class="predict-box"></div>
+      </div>
+      <div class="sub-panel">
+        <h2>📊 评分拆解</h2>
+        <div id="exit-detail" class="exit-detail-list">
+          <div class="loading-hint">--</div>
+        </div>
+      </div>
+      <div class="sub-panel">
+        <h2>📋 评分说明</h2>
+        <div class="legend-list">
+          <div class="legend-row"><span class="dot green"></span> ≥6分 = 🟢 安心持有（可加仓）</div>
+          <div class="legend-row"><span class="dot yellow"></span> 3-5分 = 🟡 忍着不动（多看少动）</div>
+          <div class="legend-row"><span class="dot red"></span> 0-2分 = 🔴 考虑跑路（反弹减仓）</div>
+          <div class="legend-row" style="margin-top:4px">领先指标(0-5) + 周期(0-2) + 技术面(0-3)</div>
+          <div class="legend-row">日涨跌幅已大幅降权（基金无需盯盘）</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ 优化面板（独立于主网格） ═══ -->
+  <section id="optimize-panel" class="optimize-panel" style="display:none">
+    <div class="opt-row">
+      <!-- 优化专题 -->
+      <div class="panel opt-col">
+        <h2>🔧 待优化专题</h2>
+        <div id="opt-topics" class="opt-topics-list"></div>
+      </div>
+      <!-- 历史快照 -->
+      <div class="panel opt-col">
+        <h2>📸 历史快照</h2>
+        <div id="opt-history" class="opt-history-list"></div>
+      </div>
+      <!-- 月度复盘 -->
+      <div class="panel opt-col">
+        <h2>📋 月度复盘</h2>
+        <div style="margin-bottom:10px">
+          <button id="opt-review-btn" class="opt-btn">生成本月复盘</button>
+        </div>
+        <div id="opt-reviews" class="opt-reviews-list"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ── 工具函数 ──────────────────────────────
+const $ = (s,p) => (p||document).querySelector(s);
+
+function fmt(v, d=2) { return v!=null ? Number(v).toFixed(d) : '--'; }
+function fmtPct(v) { return v!=null ? (v>0?'+':'')+Number(v).toFixed(2)+'%' : '--'; }
+
+function colorChg(v) { return v>0?'up':v<0?'down':'flat'; }
+
+function rsiLabel(rsi, t) {
+  if (rsi==null) return '';
+  if (rsi>=t.rsi_overbought) return '超买';
+  if (rsi<=t.rsi_oversold) return '超卖';
+  return '';
+}
+
+function rsiClass(rsi, t) {
+  if (rsi==null) return '';
+  if (rsi>=t.rsi_overbought) return 'rsi-overbought';
+  if (rsi<=t.rsi_oversold) return 'rsi-oversold';
+  return 'rsi-neutral';
+}
+
+// ── 状态 ──────────────────────────────────
+let currentFund = null;
+let fundData = null;
+const summaryCache = {};  // { fid: {score, max_score, action_emoji, action} }
+
+// ── 预加载所有基金概要（并行）───────────────
+async function preloadSummaries() {
+  const btns = $$('.tab-btn');
+  const promises = btns.map(async btn => {
+    const fid = btn.dataset.fund;
+    if (fid === '_optimize') return;  // 跳过优化标签
+    try {
+      const resp = await fetch('/api/fund/' + fid);
+      const d = await resp.json();
+      const a = d.assessment || {};
+      summaryCache[fid] = {
+        score: a.score,
+        max_score: a.max_score || 10,
+        emoji: a.emoji || '⚪',
+        action: a.conclusion || '?',
+      };
+    } catch(e) {
+      summaryCache[fid] = { score: '?', max_score: '?', emoji: '⚪', action: 'err' };
+    }
+    updateTabDot(btn, summaryCache[fid]);
+  });
+  await Promise.all(promises);
+}
+
+function updateTabDot(btn, s) {
+  const dot = btn.querySelector('.tab-dot');
+  if (!dot) return;
+  if (s.score === '?') { dot.className = 'tab-dot dot-unknown'; return; }
+  // 用结论判断颜色（而非裸分），确保联动降级/背离/破坏触发后的🟡也正确显示
+  const action = s.action || s.conclusion || '';
+  if (action.includes('安心') || action.includes('持有') && !action.includes('忍着'))
+    dot.className = 'tab-dot dot-green';
+  else if (action.includes('忍着') || action.includes('警惕'))
+    dot.className = 'tab-dot dot-yellow';
+  else if (action.includes('跑路') || action.includes('减仓'))
+    dot.className = 'tab-dot dot-red';
+  else if (s.score >= 6)
+    dot.className = 'tab-dot dot-green';
+  else if (s.score >= 3)
+    dot.className = 'tab-dot dot-yellow';
+  else
+    dot.className = 'tab-dot dot-red';
+  dot.title = `${s.emoji} ${s.action} (${s.score}/${s.max_score||10})`;
+}
+
+// ── 标签页切换 ────────────────────────────
+$$('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const fid = btn.dataset.fund;
+    if (fid === '_optimize') {
+      // 切换到优化面板
+      $('.main-grid').style.display = 'none';
+      $('#exit-banner').style.display = 'none';
+      $('#optimize-panel').style.display = '';
+      loadOptimize();
+    } else {
+      $('.main-grid').style.display = '';
+      $('#exit-banner').style.display = '';
+      $('#optimize-panel').style.display = 'none';
+      loadFund(fid);
+    }
+  });
+});
+
+async function loadFund(fid) {
+  currentFund = fid;
+  $('#fund-name').textContent = '加载中...';
+  $('#fund-code').textContent = fid;
+  setExitBanner('loading');
+
+  try {
+    const resp = await fetch('/api/fund/' + fid);
+    fundData = await resp.json();
+    // 更新缓存
+    const a = fundData.assessment || {};
+    summaryCache[fid] = {
+      score: a.score, max_score: a.max_score || 10,
+      emoji: a.emoji || '⚪', action: a.conclusion || '?',
+    };
+    const activeBtn = $('.tab-btn.active');
+    if (activeBtn) updateTabDot(activeBtn, summaryCache[fid]);
+    renderAll(fundData);
+  } catch(e) {
+    console.error(e);
+    $('#fund-name').textContent = '加载失败';
+  }
+}
+
+// ── 全量渲染 ──────────────────────────────
+function renderAll(d) {
+  $('#fund-name').textContent = d.name;
+  $('#fund-code').textContent = d.fund_id;
+
+  renderTopIndices(d.indices);
+  renderStocks(d.stocks, d.exit_thresholds || {rsi_overbought:70,rsi_oversold:30});
+  renderLeading(d.leading_indicators || {});
+  renderKeyDates(d.key_dates || []);
+  renderCycle(d.cycle_assessment || {}, d.disruption_status || {});
+  renderSpecials(d.specials);
+  renderPrediction(d.prediction);
+  renderExitBanner(d.assessment);
+  renderExitDetail(d.assessment);
+
+  // 更新时间
+  const cachedAt = d.cached_at || d.updated_at;
+  $('#update-time').textContent = '数据更新于 ' + (cachedAt || '--');
+  $('#update-time').title = '缓存时间: ' + (cachedAt || '--');
+
+  // 加载状态
+  if (d.fetching) {
+    $('#loading-indicator').style.display = '';
+  } else {
+    $('#loading-indicator').style.display = 'none';
+  }
+}
+
+// ── 顶部指数条 ────────────────────────────
+function renderTopIndices(indices) {
+  const container = $('#top-indices');
+  container.innerHTML = Object.entries(indices).map(([k,v]) => {
+    if (v.error) return `<div class="idx-chip"><b>${k}</b> 错误</div>`;
+    const cls = colorChg(v.day_change_pct);
+    return `<div class="idx-chip">
+      <b>${k}</b>
+      <span class="price">${fmt(v.price)}</span>
+      <span class="chg ${cls}">${fmtPct(v.day_change_pct)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── 核心标的列表 ──────────────────────────
+function renderStocks(stocks, t) {
+  const container = $('#stocks-panel');
+  container.innerHTML = Object.entries(stocks).map(([k,v]) => {
+    if (v.error) return `<div class="stock-row"><span class="name">${k}</span><span class="price">错误</span></div>`;
+    const cls = colorChg(v.day_change_pct);
+    const rsic = rsiClass(v.rsi, t);
+    const rlbl = rsiLabel(v.rsi, t);
+    const ma = v.above_ma50 ? '<span class="ma-up">↑MA50</span>' : (v.above_ma50===false ? '<span class="ma-down">↓MA50</span>' : '');
+    return `<div class="stock-row">
+      <span class="name">${k}<small>${v.name||''}</small></span>
+      <span class="price">${fmt(v.price)}</span>
+      <span class="chg ${cls}">${fmtPct(v.day_change_pct)}</span>
+      ${v.rsi!=null ? `<span class="rsi ${rsic}">RSI ${fmt(v.rsi,1)} ${rlbl}</span>` : ''}
+      ${ma}
+    </div>`;
+  }).join('');
+}
+
+// ── 指数面板 ──────────────────────────────
+function renderIndicesPanel(indices) {
+  const container = $('#indices-panel');
+  container.innerHTML = Object.entries(indices).map(([k,v]) => {
+    if (v.error) return `<div class="stock-row"><span class="name">${k}</span><span class="price">错误</span></div>`;
+    const cls = colorChg(v.day_change_pct);
+    const ma = v.above_ma50 ? '<span class="ma-up">↑MA50</span>' : (v.above_ma50===false ? '<span class="ma-down">↓MA50</span>' : '');
+    return `<div class="stock-row">
+      <span class="name">${k}<small>${v.name||''}</small></span>
+      <span class="price">${fmt(v.price)}</span>
+      <span class="chg ${cls}">${fmtPct(v.day_change_pct)}</span>
+      ${ma}
+    </div>`;
+  }).join('');
+}
+
+// ── 领先指标 ──────────────────────────────
+function renderLeading(data) {
+  const container = $('#leading-panel');
+  const entries = Object.entries(data);
+  if (!entries.length) {
+    container.innerHTML = '<div class="opt-empty">暂无领先指标数据</div>';
+    return;
+  }
+  container.innerHTML = entries.map(([name, v]) => {
+    const icon = v.trend === 'up' ? '📈' : v.trend === 'down' ? '📉' : '📊';
+    const cls = v.trend === 'up' ? 'lead-up' : v.trend === 'down' ? 'lead-down' : 'lead-flat';
+    return `<div class="lead-row">
+      <span class="lead-icon">${icon}</span>
+      <div class="lead-info">
+        <span class="lead-name">${name}</span>
+        <span class="lead-value ${cls}">${v.value}</span>
+        <span class="lead-note">${v.note || ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 关键事件倒计时 ──────────────────────────
+function renderKeyDates(data) {
+  const container = $('#events-panel');
+  if (!data.length) {
+    container.innerHTML = '<div class="opt-empty">暂无关键事件</div>';
+    return;
+  }
+  const upcoming = data.filter(e => !e.passed).sort((a,b) => a.days_left - b.days_left);
+  const passed = data.filter(e => e.passed);
+  let html = '';
+  if (upcoming.length) {
+    html += upcoming.map(e => {
+      const badgeCls = e.importance === 'critical' ? 'badge-critical' : e.importance === 'high' ? 'badge-high' : 'badge-normal';
+      const urgency = e.days_left <= 3 ? 'badge-urgent' : '';
+      return `<div class="event-row">
+        <span class="badge ${badgeCls} ${urgency}">${e.days_left}天</span>
+        <span class="event-name">${e.event}</span>
+        <span class="event-date">${e.date_str}</span>
+      </div>`;
+    }).join('');
+  }
+  container.innerHTML = html || '<div class="opt-empty">近期无关键事件</div>';
+}
+
+// ── 周期位置 ──────────────────────────────
+function renderCycle(data, disruption) {
+  const container = $('#cycle-panel');
+  const wrap = $('#cycle-wrap');
+  if (!data || !data.stage) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+  const riskIcon = data.risk === 'red' ? '🔴' : data.risk === 'yellow' ? '🟡' : '🟢';
+
+  // 反方假设
+  const counter = data.counter_hypothesis || '';
+  const counterHtml = counter ? `<div class="cycle-counter">🤔 如果我错了: ${counter}</div>` : '';
+
+  // 瓶颈破坏条件
+  const dis = disruption || {};
+  const disEntries = Object.entries(dis);
+  const disHtml = disEntries.length ? `<div class="cycle-disruption">⚠ 瓶颈破坏监测:<br>${disEntries.map(([tag, d]) => `<span class="dis-${d.status}">• ${d.label}: ${d.condition} [${d.status==='watching'?'观察中':'突破!'}]</span>`).join('<br>')}</div>` : '';
+
+  container.innerHTML = `<div class="cycle-main">
+    <span class="cycle-stage">${riskIcon} ${data.label}</span>
+    <span class="cycle-note">${data.note || ''}</span>
+    ${counterHtml}
+    ${disHtml}
+  </div>`;
+}
+
+// ── 特殊标的 ──────────────────────────────
+function renderSpecials(specials) {
+  const wrap = $('#specials-wrap');
+  const container = $('#specials-panel');
+  if (!specials || Object.keys(specials).length===0) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+  container.innerHTML = Object.entries(specials).map(([k,v]) => {
+    if (v.error) return `<div class="stock-row"><span class="name">${k}</span><span class="price">错误</span></div>`;
+    const cls = colorChg(v.day_change_pct);
+    return `<div class="stock-row">
+      <span class="name">${k}<small>${v.name||''}</small></span>
+      <span class="price">${fmt(v.price)}</span>
+      <span class="chg ${cls}">${fmtPct(v.day_change_pct)}</span>
+      <span class="note-hint">${v.note||''}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── 预测卡片 ──────────────────────────────
+function renderPrediction(p) {
+  if (!p || !p.direction) {
+    $('#predict-wrap').style.display = 'none';
+    return;
+  }
+  $('#predict-wrap').style.display = '';
+  const confCls = p.confidence === '高' ? 'pred-conf-high' : p.confidence === '中' ? 'pred-conf-med' : 'pred-conf-low';
+  const dirCls = p.direction === 'up' ? 'pred-up' : p.direction === 'down' ? 'pred-down' : 'pred-flat';
+  $('#predict-panel').innerHTML = `
+    <div class="predict-main ${dirCls}">
+      <span class="predict-emoji">${p.emoji}</span>
+      <span class="predict-label">${p.label}</span>
+      <span class="predict-conf ${confCls}">置信度: ${p.confidence}</span>
+    </div>
+    <div class="predict-meta">
+      <span>${p.timeframe}</span>
+      <span>验证日: ${p.verify_date}</span>
+    </div>
+    <div class="predict-reasons">
+      ${(p.reasons||[]).map(r => `<div class="predict-reason">• ${r}</div>`).join('')}
+    </div>
+    <div class="predict-watch">
+      ${(p.watchpoints||[]).map(w => `<div class="predict-wp">👁 ${w}</div>`).join('')}
+    </div>
+  `;
+}
+
+// ── 逃跑横幅 ──────────────────────────────
+function setExitBanner(mode) {
+  const banner = $('#exit-banner');
+  if (mode==='loading') {
+    banner.className = 'exit-banner exit-unknown';
+    banner.querySelector('.exit-emoji').textContent = '⏳';
+    banner.querySelector('.exit-action').textContent = '加载中...';
+    banner.querySelector('.exit-desc').textContent = '';
+    banner.querySelector('.exit-score-num').textContent = '--';
+    $('#exit-tags').innerHTML = '';
+  }
+}
+
+function renderExitBanner(a) {
+  if (!a) return;
+  const banner = $('#exit-banner');
+  const s = a.score;
+  let lvl = s>=6?'exit-safe':s>=3?'exit-watch':'exit-run';
+  banner.className = 'exit-banner '+lvl;
+  banner.querySelector('.exit-emoji').textContent = a.emoji;
+  banner.querySelector('.exit-action').textContent = a.conclusion;
+  banner.querySelector('.exit-desc').textContent = a.desc;
+  banner.querySelector('.exit-score-num').textContent = s+'/'+(a.max_score||10);
+
+  // 标签：根据分数段
+  const tagLabel = s>=6?'✅ 安心持有':s>=3?'⏸ 忍着不动':'⚠ 考虑跑路';
+  const tagCls = s>=6?'tag-green':s>=3?'tag-yellow':'tag-red';
+  $('#exit-tags').innerHTML = `<span class="exit-tag ${tagCls}">${tagLabel}</span>`;
+}
+
+// ── 综合研判拆解 ──────────────────────────
+function renderExitDetail(a) {
+  if (!a || !a.details) return;
+  const container = $('#exit-detail');
+  const score = a.score || 5;
+  container.innerHTML = (a.details||[]).map(d => {
+    // 推断每条 detail 的趋势（从文本内容判断）
+    const isUp = d.includes('→ +5') || d.includes('→ +4') || d.includes('→ +3') || d.includes('→ +2');
+    const isFlat = d.includes('→ +1') || d.includes('→ +0');
+    const isDown = d.includes('→ -1');
+    const icon = isUp ? '🟢' : isDown ? '🔴' : '🟡';
+    const cls = isUp ? 'green' : isDown ? 'red' : 'yellow';
+    return `<div class="exit-flag-row flag-${cls}">
+      <span class="exit-flag-icon">${icon}</span>
+      <div class="exit-flag-info">
+        <span class="exit-flag-detail">${d}</span>
+      </div>
+    </div>`;
+  }).join('');
+  // 总分说明
+  container.innerHTML += `<div style="margin-top:6px;font-size:10px;color:var(--text-dim)">
+    综合评分 ${score}/10 = 领先指标(0-5) + 周期(0-2) + 技术面(0-3)
+  </div>`;
+}
+
+// ── DOM 工具 ──────────────────────────────
+function $$(sel, p) { return [...(p||document).querySelectorAll(sel)]; }
+
+// ── 优化面板 ──────────────────────────────
+async function loadOptimize() {
+  // 加载优化专题
+  try {
+    const resp = await fetch('/api/optimize/topics');
+    const data = await resp.json();
+    renderTopics(data.topics || []);
+  } catch(e) { console.error(e); }
+
+  // 加载历史快照
+  try {
+    const resp = await fetch('/api/history');
+    const data = await resp.json();
+    renderHistory(data || []);
+  } catch(e) { console.error(e); }
+
+  // 加载复盘报告
+  try {
+    const resp = await fetch('/api/review');
+    const data = await resp.json();
+    renderReviews(data || []);
+  } catch(e) { console.error(e); }
+}
+
+function renderTopics(topics) {
+  const container = $('#opt-topics');
+  if (!topics.length) {
+    container.innerHTML = '<div class="opt-empty">暂无待优化项 ✅</div>';
+    return;
+  }
+  container.innerHTML = topics.map(t => `
+    <div class="opt-topic ${t.status}">
+      <span class="opt-status">${t.status==='done'?'✅':t.status==='in_progress'?'🔧':'📌'}</span>
+      <div class="opt-topic-info">
+        <span class="opt-topic-title">${t.title}</span>
+        <span class="opt-topic-desc">${t.desc}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderHistory(history) {
+  const container = $('#opt-history');
+  if (!history.length) {
+    container.innerHTML = '<div class="opt-empty">暂无历史快照（每日14:00自动保存）</div>';
+    return;
+  }
+  container.innerHTML = '<div class="opt-history-scroll">' + history.slice(-14).reverse().map(h => {
+    const funds_html = Object.entries(h.funds || {}).map(([fid, f]) => {
+      // 用结论判断颜色（与标签圆点逻辑一致）
+      const c = f.conclusion || '';
+      const icon = c.includes('安心') ? '🟢' : c.includes('忍着') ? '🟡' : c.includes('跑路') ? '🔴' : (f.score >= 6 ? '🟢' : f.score >= 3 ? '🟡' : '🔴');
+      const name = (FUND_SHORTS || {})[fid] || fid;
+      return `<span class="opt-hist-chip">${icon} ${name} ${f.score}/10 ${c}</span>`;
+    }).join('');
+    return `<div class="opt-hist-day">
+      <span class="opt-hist-date">${h.date}</span>
+      <div class="opt-hist-funds">${funds_html}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderReviews(reviews) {
+  const container = $('#opt-reviews');
+  if (!reviews.length) {
+    container.innerHTML = '<div class="opt-empty">暂无复盘报告</div>';
+    return;
+  }
+  container.innerHTML = reviews.map(r => `
+    <div class="opt-review-row">📋 <span>${r.file.replace('.md','')}</span></div>
+  `).join('');
+}
+
+// 基金简称映射（用于历史快照显示）
+const FUND_SHORTS = {};
+document.querySelectorAll('.tab-btn[data-fund]').forEach(b => {
+  if (b.dataset.fund !== '_optimize') FUND_SHORTS[b.dataset.fund] = b.dataset.short;
+});
+
+// 生成复盘按钮
+$('#opt-review-btn').addEventListener('click', async () => {
+  const btn = $('#opt-review-btn');
+  btn.disabled = true;
+  btn.textContent = '生成中...';
+  try {
+    const resp = await fetch('/api/review/generate', {method: 'POST'});
+    const data = await resp.json();
+    if (data.status === 'generated') {
+      alert('月度复盘已生成: ' + data.file);
+      loadOptimize(); // 刷新列表
+    }
+  } catch(e) {
+    alert('生成失败: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '生成本月复盘';
+  }
+});
+
+// ── 手动刷新 ──────────────────────────────
+$('#refresh-btn').addEventListener('click', async () => {
+  const btn = $('#refresh-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  $('#loading-indicator').style.display = '';
+
+  try {
+    await fetch('/api/refresh', {method: 'POST'});
+    // 等 2 秒让后台抓取完成一部分
+    await new Promise(r => setTimeout(r, 2000));
+    // 重新加载当前基金（带 refresh=1）
+    if (currentFund) {
+      const resp = await fetch('/api/fund/' + currentFund + '?refresh=1');
+      fundData = await resp.json();
+      renderAll(fundData);
+    }
+    // 更新所有标签圆点
+    await preloadSummaries();
+  } catch(e) {
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄';
+    $('#loading-indicator').style.display = 'none';
+  }
+});
+
+// ── 共享瓶颈敞口 ──────────────────────────
+async function loadBottleneckExposure() {
+  try {
+    const resp = await fetch('/api/bottleneck-exposure');
+    const data = await resp.json();
+    renderBottleneckWarnings(data.warnings || []);
+  } catch(e) { console.error(e); }
+}
+
+function renderBottleneckWarnings(warnings) {
+  const container = $('#bottleneck-warnings');
+  if (!warnings.length) { container.style.display = 'none'; return; }
+  container.style.display = '';
+  container.innerHTML = warnings.map(w => `
+    <div class="bn-warn">
+      ⚠ <b>共享瓶颈敞口警告</b>：${w.label} — ${w.count} 个板块共享此瓶颈且全部🟢。
+      建议将依赖此瓶颈的板块视为<b>单一仓位</b>，总仓位不超过阈值。
+    </div>
+  `).join('');
+}
+
+// ── 启动：先点亮标签，再加载第一只基金 ──────
+(async () => {
+  await Promise.all([preloadSummaries(), loadBottleneckExposure()]);
+  const firstBtn = $('.tab-btn');
+  if (firstBtn) firstBtn.click();
+})();
+</script>
+</body>
+</html>
