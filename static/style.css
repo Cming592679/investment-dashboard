@@ -467,3 +467,76 @@ body {
   .index-row { gap: 4px; }
   .idx-chip { font-size: 11px; padding: 2px 6px; }
 }
+
+/* ── 数据健康指示器 ────────────────────────── */
+.health-dot {
+  font-size: 14px;
+  margin-right: 8px;
+  cursor: default;
+  transition: transform 0.2s;
+}
+.health-dot:hover { transform: scale(1.2); }
+
+/* ── 指标过期徽标 ──────────────────────────── */
+.stale-badge {
+  display: inline-block;
+  background: rgba(210, 153, 34, 0.2);
+  color: var(--yellow);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: 4px;
+  font-weight: bold;
+  animation: stale-pulse 2s infinite;
+}
+@keyframes stale-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.lead-stale {
+  border-left: 2px solid var(--yellow);
+  padding-left: 8px;
+  background: rgba(210, 153, 34, 0.05);
+}
+
+/* ── 事件分区标签 ──────────────────────────── */
+.event-section-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin: 8px 0 4px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--border);
+}
+.event-passed {
+  opacity: 0.75;
+  background: rgba(139, 148, 158, 0.05);
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+.badge-passed {
+  background: rgba(139, 148, 158, 0.5);
+  color: var(--text-dim);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.event-passed-hint {
+  font-size: 10px;
+  color: var(--yellow);
+  margin-left: 4px;
+  white-space: nowrap;
+}
+.event-passed-done {
+  opacity: 0.9;
+  background: rgba(63, 185, 80, 0.05);
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+.event-result {
+  font-size: 11px;
+  color: var(--green);
+  margin-top: 1px;
+  display: block;
+  width: 100%;
+}

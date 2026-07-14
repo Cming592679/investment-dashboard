@@ -1,76 +1,76 @@
 {
-  "date": "2026-07-07",
-  "fetched_at": "2026-07-07 14:00:56",
+  "date": "2026-07-08",
+  "fetched_at": "2026-07-08 14:00:50",
   "funds": {
     "019633": {
       "name": "国泰半导体材料设备ETF联接C",
-      "score": 7,
+      "score": 5,
       "conclusion": "忍着不动",
       "emoji": "🟡",
       "details": [
         "领先指标 4/5 向好 → +5",
         "周期中后期（增速峰值区）→ +1",
-        "MA50 趋势完好（成分5/5 指数3/3）→ +2",
+        "MA50 大面积破位（成分5/5 指数1/3）→ +0",
         "联动降级: DRAM 合约价→flat（来自019633）-1"
       ],
       "stocks": {
         "AMAT": {
           "name": "应用材料",
-          "price": 592.79,
-          "chg_pct": -1.7,
-          "rsi": 52.5,
+          "price": 554.5,
+          "chg_pct": -6.46,
+          "rsi": 47.1,
           "above_ma50": true
         },
         "LRCX": {
           "name": "泛林研究",
-          "price": 350.2,
-          "chg_pct": -0.34,
-          "rsi": 47.4,
+          "price": 326.13,
+          "chg_pct": -6.87,
+          "rsi": 40.0,
           "above_ma50": true
         },
         "ASML": {
           "name": "阿斯麦",
-          "price": 1825.07,
-          "chg_pct": 3.15,
-          "rsi": 48.1,
+          "price": 1747.28,
+          "chg_pct": -4.26,
+          "rsi": 43.1,
           "above_ma50": true
         },
         "KLAC": {
           "name": "科磊",
-          "price": 233.31,
-          "chg_pct": -0.95,
-          "rsi": 45.4,
+          "price": 216.47,
+          "chg_pct": -7.22,
+          "rsi": 41.9,
           "above_ma50": true
         },
         "TOELY": {
           "name": "东京电子",
-          "price": 224.49,
-          "chg_pct": 2.32,
-          "rsi": 52.3,
+          "price": 209.84,
+          "chg_pct": -6.53,
+          "rsi": 43.8,
           "above_ma50": true
         }
       },
       "indices": {
         "SOXX": {
           "name": "iShares半导体ETF",
-          "price": 581.51,
-          "chg_pct": 2.68,
+          "price": 551.69,
+          "chg_pct": -5.13,
           "above_ma50": true
         },
         "SMH": {
           "name": "VanEck半导体ETF",
-          "price": 604.3,
-          "chg_pct": 2.03,
-          "above_ma50": true
+          "price": 581.45,
+          "chg_pct": -3.78,
+          "above_ma50": false
         },
         "^SOX": {
           "name": "费城半导体指数",
-          "price": 12900.14,
-          "chg_pct": 2.17,
-          "above_ma50": true
+          "price": 12300.52,
+          "chg_pct": -4.65,
+          "above_ma50": false
         }
       },
-      "fund_return_pct": -0.42
+      "fund_return_pct": 0.43
     },
     "014194": {
       "name": "汇添富中证芯片指数增强C",
@@ -86,54 +86,55 @@
       "stocks": {
         "688981.SS": {
           "name": "中芯国际",
-          "price": 147.2,
-          "chg_pct": 2.23,
-          "rsi": 60.9,
+          "price": 153.6,
+          "chg_pct": 5.63,
+          "rsi": 61.8,
           "above_ma50": true
         },
         "002371.SZ": {
           "name": "北方华创",
-          "price": 807.98,
-          "chg_pct": 0.55,
-          "rsi": 67.1,
+          "price": 809.0,
+          "chg_pct": 0.32,
+          "rsi": 64.4,
           "above_ma50": true
         },
         "603501.SS": {
           "name": "韦尔股份",
-          "price": 100.21,
-          "chg_pct": 3.31,
-          "rsi": 66.8,
+          "price": 101.17,
+          "chg_pct": 1.72,
+          "rsi": 65.9,
           "above_ma50": true
         },
         "688012.SS": {
           "name": "中微公司",
-          "price": 424.0,
-          "chg_pct": 0.95,
-          "rsi": 73.2,
+          "price": 429.47,
+          "chg_pct": 2.25,
+          "rsi": 69.6,
           "above_ma50": true
         },
         "603986.SS": {
           "name": "兆易创新",
-          "price": 627.49,
-          "chg_pct": -4.1,
-          "rsi": 57.5,
+          "price": 612.95,
+          "chg_pct": -1.14,
+          "rsi": 52.3,
           "above_ma50": true
         }
       },
       "indices": {
         "000688.SS": {
           "name": "科创50",
-          "price": 2020.45,
+          "price": 2036.77,
           "chg_pct": 0.0,
           "above_ma50": null
         },
         "159995.SZ": {
           "name": "芯片ETF",
           "price": 1.51,
-          "chg_pct": -49.65,
+          "chg_pct": 0.4,
           "above_ma50": false
         }
-      }
+      },
+      "fund_return_pct": -0.53
     },
     "CPO": {
       "name": "光模块(CPO)板块监测",
@@ -148,55 +149,55 @@
       "stocks": {
         "300308.SZ": {
           "name": "中际旭创",
-          "price": 1134.22,
-          "chg_pct": 3.21,
-          "rsi": 40.2,
+          "price": 1139.32,
+          "chg_pct": 1.55,
+          "rsi": 37.7,
           "above_ma50": true
         },
         "300502.SZ": {
           "name": "新易盛",
-          "price": 510.0,
-          "chg_pct": 0.61,
+          "price": 518.82,
+          "chg_pct": 1.71,
           "rsi": 44.6,
           "above_ma50": true
         },
         "300394.SZ": {
           "name": "天孚通信",
-          "price": 243.21,
-          "chg_pct": 2.62,
-          "rsi": 29.1,
+          "price": 249.2,
+          "chg_pct": 2.09,
+          "rsi": 29.6,
           "above_ma50": false
         },
         "002281.SZ": {
           "name": "光迅科技",
-          "price": 220.98,
-          "chg_pct": 5.72,
-          "rsi": 47.3,
+          "price": 220.62,
+          "chg_pct": -0.47,
+          "rsi": 43.2,
           "above_ma50": true
         },
         "688313.SS": {
           "name": "仕佳光子",
-          "price": 146.67,
-          "chg_pct": -1.35,
-          "rsi": 38.3,
+          "price": 144.52,
+          "chg_pct": -0.3,
+          "rsi": 38.8,
           "above_ma50": false
         }
       },
       "indices": {
         "159997.SZ": {
           "name": "电子ETF",
-          "price": 2.56,
-          "chg_pct": 0.87,
+          "price": 2.55,
+          "chg_pct": 0.43,
           "above_ma50": true
         },
         "399006.SZ": {
           "name": "创业板指",
-          "price": 3934.83,
+          "price": 3883.66,
           "chg_pct": 0.0,
           "above_ma50": null
         }
       },
-      "fund_return_pct": 2.09
+      "fund_return_pct": 0.57
     },
     "024239": {
       "name": "华夏全球科技先锋QDII C",
@@ -206,67 +207,67 @@
       "details": [
         "领先指标 5/5 向好 → +5",
         "周期中后期（AI算力扩张中后期（Bottleneck主题））→ +1",
-        "MA50 大面积破位（成分2/5 指数3/3）→ +0",
+        "MA50 大面积破位（成分2/5 指数0/3）→ +0",
         "联动降级: DRAM 合约价→flat（来自019633）-1"
       ],
       "stocks": {
         "NVDA": {
           "name": "英伟达",
-          "price": 195.55,
-          "chg_pct": 0.37,
-          "rsi": 40.9,
+          "price": 196.93,
+          "chg_pct": 0.71,
+          "rsi": 33.5,
           "above_ma50": false
         },
         "AMD": {
           "name": "超威",
-          "price": 552.05,
-          "chg_pct": 6.61,
-          "rsi": 56.1,
+          "price": 516.11,
+          "chg_pct": -6.51,
+          "rsi": 45.3,
           "above_ma50": true
         },
         "AVGO": {
           "name": "博通",
-          "price": 373.9,
-          "chg_pct": 3.73,
-          "rsi": 47.6,
+          "price": 370.78,
+          "chg_pct": -0.83,
+          "rsi": 42.4,
           "above_ma50": false
         },
         "ANET": {
           "name": "Arista",
-          "price": 173.28,
-          "chg_pct": 8.31,
-          "rsi": 56.3,
+          "price": 166.46,
+          "chg_pct": -3.94,
+          "rsi": 48.4,
           "above_ma50": true
         },
         "SMCI": {
           "name": "超微电脑",
-          "price": 27.19,
-          "chg_pct": -0.11,
-          "rsi": 42.5,
+          "price": 26.25,
+          "chg_pct": -3.46,
+          "rsi": 39.7,
           "above_ma50": false
         }
       },
       "indices": {
         "^NDX": {
           "name": "纳斯达克100",
-          "price": 29697.87,
-          "chg_pct": 1.26,
-          "above_ma50": true
+          "price": 29173.02,
+          "chg_pct": -1.77,
+          "above_ma50": false
         },
         "SMH": {
           "name": "VanEck半导体ETF",
-          "price": 604.3,
-          "chg_pct": 2.03,
-          "above_ma50": true
+          "price": 581.45,
+          "chg_pct": -3.78,
+          "above_ma50": false
         },
         "QQQ": {
           "name": "纳指100ETF",
-          "price": 722.82,
-          "chg_pct": 1.43,
-          "above_ma50": true
+          "price": 709.43,
+          "chg_pct": -1.85,
+          "above_ma50": false
         }
       },
-      "fund_return_pct": -1.85
+      "fund_return_pct": 0.28
     },
     "021528": {
       "name": "财通成长优选C",
@@ -281,118 +282,119 @@
       "stocks": {
         "002916.SZ": {
           "name": "深南电路",
-          "price": 417.96,
-          "chg_pct": -5.05,
-          "rsi": 52.7,
+          "price": 407.9,
+          "chg_pct": -1.02,
+          "rsi": 42.2,
           "above_ma50": true
         },
         "002384.SZ": {
           "name": "东山精密",
-          "price": 239.12,
-          "chg_pct": 6.53,
-          "rsi": 47.2,
+          "price": 235.08,
+          "chg_pct": -0.76,
+          "rsi": 43.5,
           "above_ma50": true
         },
         "002463.SZ": {
           "name": "沪电股份",
-          "price": 131.96,
-          "chg_pct": 2.43,
-          "rsi": 45.5,
+          "price": 129.38,
+          "chg_pct": -0.26,
+          "rsi": 40.2,
           "above_ma50": true
         },
         "300476.SZ": {
           "name": "胜宏科技",
-          "price": 287.66,
-          "chg_pct": -1.75,
-          "rsi": 31.7,
+          "price": 282.21,
+          "chg_pct": -0.95,
+          "rsi": 28.4,
           "above_ma50": false
         },
         "603228.SS": {
           "name": "景旺电子",
-          "price": 65.39,
-          "chg_pct": -3.53,
-          "rsi": 36.5,
+          "price": 63.22,
+          "chg_pct": -1.74,
+          "rsi": 31.3,
           "above_ma50": false
         }
       },
       "indices": {
         "159997.SZ": {
           "name": "电子ETF",
-          "price": 2.56,
-          "chg_pct": 0.87,
+          "price": 2.55,
+          "chg_pct": 0.43,
           "above_ma50": true
         },
         "399006.SZ": {
           "name": "创业板指",
-          "price": 3934.99,
+          "price": 3883.27,
           "chg_pct": 0.0,
           "above_ma50": null
         }
       },
-      "fund_return_pct": 0.08
+      "fund_return_pct": -0.75
     },
     "015789": {
       "name": "永赢高端装备智选A",
-      "score": 7,
+      "score": 6,
       "conclusion": "安心持有",
       "emoji": "🟢",
       "details": [
         "领先指标 4/4 向好 → +5",
         "周期早期 → +2",
-        "MA50 大面积破位（成分1/5 指数0/2）→ +0"
+        "MA50 大面积破位（成分1/5 指数0/2）→ +0",
+        "Rocket Lab 极端暴跌 -10.4% → -1"
       ],
       "stocks": {
         "600118.SS": {
           "name": "中国卫星",
-          "price": 79.86,
-          "chg_pct": -3.96,
-          "rsi": 56.1,
+          "price": 77.98,
+          "chg_pct": -1.89,
+          "rsi": 52.8,
           "above_ma50": false
         },
         "600879.SS": {
           "name": "航天电子",
-          "price": 20.79,
-          "chg_pct": -3.35,
-          "rsi": 53.5,
+          "price": 20.58,
+          "chg_pct": -0.24,
+          "rsi": 52.0,
           "above_ma50": false
         },
         "688568.SS": {
           "name": "中科星图",
-          "price": 36.98,
-          "chg_pct": -3.95,
-          "rsi": 31.7,
+          "price": 36.74,
+          "chg_pct": 0.38,
+          "rsi": 28.5,
           "above_ma50": false
         },
         "600391.SS": {
           "name": "航发科技",
-          "price": 32.65,
-          "chg_pct": -6.12,
-          "rsi": 44.5,
+          "price": 30.61,
+          "chg_pct": -5.2,
+          "rsi": 40.1,
           "above_ma50": false
         },
         "603698.SS": {
           "name": "航天工程",
-          "price": 41.17,
-          "chg_pct": 4.57,
-          "rsi": 68.5,
+          "price": 38.9,
+          "chg_pct": -4.87,
+          "rsi": 62.7,
           "above_ma50": true
         }
       },
       "indices": {
         "512660.SS": {
           "name": "军工ETF",
-          "price": 1.25,
-          "chg_pct": -2.34,
+          "price": 1.22,
+          "chg_pct": -1.61,
           "above_ma50": false
         },
         "000300.SS": {
           "name": "沪深300",
-          "price": 4807.03,
-          "chg_pct": -0.73,
+          "price": 4780.92,
+          "chg_pct": -1.26,
           "above_ma50": false
         }
       },
-      "fund_return_pct": -3.12
+      "fund_return_pct": -2.01
     },
     "025856": {
       "name": "华夏中证电网设备ETF联接A",
@@ -408,37 +410,37 @@
       "stocks": {
         "600406.SS": {
           "name": "国电南瑞",
-          "price": 22.84,
-          "chg_pct": -1.38,
-          "rsi": 47.4,
+          "price": 22.53,
+          "chg_pct": -1.14,
+          "rsi": 46.3,
           "above_ma50": false
         },
         "000400.SZ": {
           "name": "许继电气",
-          "price": 20.69,
-          "chg_pct": -1.99,
-          "rsi": 26.0,
+          "price": 20.26,
+          "chg_pct": -1.41,
+          "rsi": 23.8,
           "above_ma50": false
         },
         "600089.SS": {
           "name": "特变电工",
-          "price": 20.71,
-          "chg_pct": -3.0,
-          "rsi": 28.7,
+          "price": 20.28,
+          "chg_pct": -1.55,
+          "rsi": 29.7,
           "above_ma50": false
         },
         "601179.SS": {
           "name": "中国西电",
-          "price": 13.63,
-          "chg_pct": -2.78,
-          "rsi": 29.9,
+          "price": 13.34,
+          "chg_pct": -1.77,
+          "rsi": 30.9,
           "above_ma50": false
         },
         "601126.SS": {
           "name": "四方股份",
-          "price": 57.18,
-          "chg_pct": -6.2,
-          "rsi": 32.4,
+          "price": 54.12,
+          "chg_pct": -4.03,
+          "rsi": 31.0,
           "above_ma50": false
         }
       },
@@ -446,17 +448,17 @@
         "159611.SZ": {
           "name": "电力ETF",
           "price": 1.01,
-          "chg_pct": -2.22,
+          "chg_pct": -0.3,
           "above_ma50": false
         },
         "000300.SS": {
           "name": "沪深300",
-          "price": 4807.03,
-          "chg_pct": -0.73,
+          "price": 4780.92,
+          "chg_pct": -1.26,
           "above_ma50": false
         }
       },
-      "fund_return_pct": -2.22
+      "fund_return_pct": -0.2
     }
   },
   "predictions": {
@@ -466,12 +468,11 @@
       "emoji": "📈",
       "confidence": "低",
       "timeframe": "未来1周",
-      "verify_date": "2026-07-14",
-      "generated_at": "2026-07-07 14:00",
+      "verify_date": "2026-07-15",
+      "generated_at": "2026-07-08 14:00",
       "reasons": [
         "4/5 领先指标向上，基本面强劲",
-        "周期处于增速峰值区，警惕见顶",
-        "综合评分高，基本面+技术面共振向上"
+        "周期处于增速峰值区，警惕见顶"
       ],
       "watchpoints": [
         "台积电 6 月营收（07/10）后重新评估",
@@ -509,15 +510,15 @@
           "update_cycle": "季末 Hyperscaler 财报后更新"
         }
       },
-      "indicator_verify_date": "2026-10-05",
+      "indicator_verify_date": "2026-10-06",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-05"
+          "verify_by": "2026-10-06"
         },
         "tier2_price": {
           "desc": "价格层验证（7天）：预测的方向 vs 实际走势 — 仅作短期噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-07-14",
+          "verify_by": "2026-07-15",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -528,8 +529,8 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1周",
-      "verify_date": "2026-07-14",
-      "generated_at": "2026-07-07 14:00",
+      "verify_date": "2026-07-15",
+      "generated_at": "2026-07-08 14:00",
       "reasons": [
         "5/5 领先指标向上，基本面强劲",
         "周期处于早期，上升空间大",
@@ -570,15 +571,15 @@
           "update_cycle": "季度/事件驱动"
         }
       },
-      "indicator_verify_date": "2026-10-05",
+      "indicator_verify_date": "2026-10-06",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-05"
+          "verify_by": "2026-10-06"
         },
         "tier2_price": {
           "desc": "价格层验证（7天）：预测的方向 vs 实际走势 — 仅作短期噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-07-14",
+          "verify_by": "2026-07-15",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -589,8 +590,8 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1周",
-      "verify_date": "2026-07-14",
-      "generated_at": "2026-07-07 14:00",
+      "verify_date": "2026-07-15",
+      "generated_at": "2026-07-08 14:00",
       "reasons": [
         "4/5 领先指标向上，基本面强劲",
         "周期处于早期，上升空间大",
@@ -632,15 +633,15 @@
           "update_cycle": "年度（盯NVDA/Google集群架构白皮书）"
         }
       },
-      "indicator_verify_date": "2026-10-05",
+      "indicator_verify_date": "2026-10-06",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-05"
+          "verify_by": "2026-10-06"
         },
         "tier2_price": {
           "desc": "价格层验证（7天）：预测的方向 vs 实际走势 — 仅作短期噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-07-14",
+          "verify_by": "2026-07-15",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -651,8 +652,8 @@
       "emoji": "📈",
       "confidence": "低",
       "timeframe": "未来1周",
-      "verify_date": "2026-07-14",
-      "generated_at": "2026-07-07 14:00",
+      "verify_date": "2026-07-15",
+      "generated_at": "2026-07-08 14:00",
       "reasons": [
         "5/5 领先指标向上，基本面强劲",
         "周期处于AI算力扩张中后期（Bottleneck主题），警惕见顶"
@@ -692,15 +693,15 @@
           "update_cycle": "季报后"
         }
       },
-      "indicator_verify_date": "2026-10-05",
+      "indicator_verify_date": "2026-10-06",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-05"
+          "verify_by": "2026-10-06"
         },
         "tier2_price": {
           "desc": "价格层验证（7天）：预测的方向 vs 实际走势 — 仅作短期噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-07-14",
+          "verify_by": "2026-07-15",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -711,8 +712,8 @@
       "emoji": "📊",
       "confidence": "低",
       "timeframe": "未来1周",
-      "verify_date": "2026-07-14",
-      "generated_at": "2026-07-07 14:00",
+      "verify_date": "2026-07-15",
+      "generated_at": "2026-07-08 14:00",
       "reasons": [
         "2/4 领先指标向上，2项走平待观察"
       ],
@@ -746,15 +747,15 @@
           "update_cycle": "月度/季报"
         }
       },
-      "indicator_verify_date": "2026-10-05",
+      "indicator_verify_date": "2026-10-06",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-05"
+          "verify_by": "2026-10-06"
         },
         "tier2_price": {
           "desc": "价格层验证（7天）：预测的方向 vs 实际走势 — 仅作短期噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-07-14",
+          "verify_by": "2026-07-15",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -765,12 +766,11 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1周",
-      "verify_date": "2026-07-14",
-      "generated_at": "2026-07-07 14:00",
+      "verify_date": "2026-07-15",
+      "generated_at": "2026-07-08 14:00",
       "reasons": [
         "4/4 领先指标向上，基本面强劲",
-        "周期处于早期，上升空间大",
-        "综合评分高，基本面+技术面共振向上"
+        "周期处于早期，上升空间大"
       ],
       "watchpoints": [
         "SpaceX H1 发射统计（07/15）后重新评估"
@@ -801,15 +801,15 @@
           "update_cycle": "季度（盯RKLB季报+首飞日期）"
         }
       },
-      "indicator_verify_date": "2026-10-05",
+      "indicator_verify_date": "2026-10-06",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-05"
+          "verify_by": "2026-10-06"
         },
         "tier2_price": {
           "desc": "价格层验证（7天）：预测的方向 vs 实际走势 — 仅作短期噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-07-14",
+          "verify_by": "2026-07-15",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -820,8 +820,8 @@
       "emoji": "📊",
       "confidence": "低",
       "timeframe": "未来1周",
-      "verify_date": "2026-07-14",
-      "generated_at": "2026-07-07 14:00",
+      "verify_date": "2026-07-15",
+      "generated_at": "2026-07-08 14:00",
       "reasons": [
         "3/4 领先指标向上，1项走平待观察"
       ],
@@ -856,15 +856,15 @@
           "update_cycle": "日度（铜HG=F）+月度（硅钢）"
         }
       },
-      "indicator_verify_date": "2026-10-05",
+      "indicator_verify_date": "2026-10-06",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-05"
+          "verify_by": "2026-10-06"
         },
         "tier2_price": {
           "desc": "价格层验证（7天）：预测的方向 vs 实际走势 — 仅作短期噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-07-14",
+          "verify_by": "2026-07-15",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }

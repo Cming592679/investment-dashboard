@@ -5,31 +5,38 @@
     "funds": {
       "019633": {
         "score": 7,
-        "conclusion": "忍着不动"
+        "conclusion": "忍着不动",
+        "return_pct": 0.64
       },
       "014194": {
         "score": 9,
-        "conclusion": "安心持有"
+        "conclusion": "安心持有",
+        "return_pct": 0.3
       },
       "CPO": {
         "score": 7,
-        "conclusion": "安心持有"
+        "conclusion": "安心持有",
+        "return_pct": -1.53
       },
       "024239": {
         "score": 5,
-        "conclusion": "忍着不动"
+        "conclusion": "忍着不动",
+        "return_pct": 1.43
       },
       "021528": {
         "score": 5,
-        "conclusion": "忍着不动"
+        "conclusion": "忍着不动",
+        "return_pct": -0.94
       },
       "015789": {
         "score": 7,
-        "conclusion": "安心持有"
+        "conclusion": "安心持有",
+        "return_pct": -1.31
       },
       "025856": {
         "score": 4,
-        "conclusion": "忍着不动"
+        "conclusion": "忍着不动",
+        "return_pct": -0.58
       }
     }
   },
@@ -39,31 +46,325 @@
     "funds": {
       "019633": {
         "score": 7,
-        "conclusion": "忍着不动"
+        "conclusion": "忍着不动",
+        "return_pct": -0.42
       },
       "014194": {
         "score": 7,
-        "conclusion": "安心持有"
+        "conclusion": "安心持有",
+        "return_pct": null
       },
       "CPO": {
         "score": 8,
-        "conclusion": "安心持有"
+        "conclusion": "安心持有",
+        "return_pct": 2.09
       },
       "024239": {
         "score": 5,
-        "conclusion": "忍着不动"
+        "conclusion": "忍着不动",
+        "return_pct": -1.85
       },
       "021528": {
         "score": 5,
-        "conclusion": "忍着不动"
+        "conclusion": "忍着不动",
+        "return_pct": 0.08
       },
       "015789": {
         "score": 7,
-        "conclusion": "安心持有"
+        "conclusion": "安心持有",
+        "return_pct": -3.12
       },
       "025856": {
         "score": 4,
-        "conclusion": "忍着不动"
+        "conclusion": "忍着不动",
+        "return_pct": -2.22
+      }
+    }
+  },
+  {
+    "date": "2026-07-08",
+    "fetched_at": "2026-07-08 14:00:50",
+    "funds": {
+      "019633": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": 0.43
+      },
+      "014194": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -0.53
+      },
+      "CPO": {
+        "score": 8,
+        "conclusion": "安心持有",
+        "return_pct": 0.57
+      },
+      "024239": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": 0.28
+      },
+      "021528": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": -0.75
+      },
+      "015789": {
+        "score": 6,
+        "conclusion": "安心持有",
+        "return_pct": -2.01
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": -0.2
+      }
+    }
+  },
+  {
+    "date": "2026-07-09",
+    "fetched_at": "2026-07-09 16:44:14",
+    "funds": {
+      "019633": {
+        "score": 7,
+        "conclusion": "忍着不动",
+        "return_pct": 9.77
+      },
+      "014194": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": 9.98
+      },
+      "CPO": {
+        "score": 8,
+        "conclusion": "安心持有",
+        "return_pct": 5.9
+      },
+      "024239": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": 0.28
+      },
+      "021528": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": 8.17
+      },
+      "015789": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": 1.97
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": -0.2
+      }
+    }
+  },
+  {
+    "date": "2026-07-10",
+    "fetched_at": "2026-07-10 15:06:31",
+    "funds": {
+      "019633": {
+        "score": 7,
+        "conclusion": "忍着不动",
+        "return_pct": -5.94
+      },
+      "014194": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -5.72
+      },
+      "CPO": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -7.91
+      },
+      "024239": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": 1.66
+      },
+      "021528": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": -4.95
+      },
+      "015789": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": 3.3
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": 1.09
+      }
+    }
+  },
+  {
+    "date": "2026-07-11",
+    "fetched_at": "2026-07-11 14:01:03",
+    "funds": {
+      "019633": {
+        "score": 7,
+        "conclusion": "忍着不动",
+        "return_pct": -6.58
+      },
+      "014194": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -6.52
+      },
+      "CPO": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -8.45
+      },
+      "024239": {
+        "score": 6,
+        "conclusion": "忍着不动",
+        "return_pct": 0.31
+      },
+      "021528": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": -5.21
+      },
+      "015789": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": 3.06
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": 1.49
+      }
+    }
+  },
+  {
+    "date": "2026-07-12",
+    "fetched_at": "2026-07-12 14:00:28",
+    "funds": {
+      "019633": {
+        "score": 7,
+        "conclusion": "忍着不动",
+        "return_pct": -6.58
+      },
+      "014194": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -6.52
+      },
+      "CPO": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -8.45
+      },
+      "024239": {
+        "score": 6,
+        "conclusion": "忍着不动",
+        "return_pct": 0.31
+      },
+      "021528": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": -5.21
+      },
+      "015789": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": 3.06
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": 1.49
+      }
+    }
+  },
+  {
+    "date": "2026-07-13",
+    "fetched_at": "2026-07-13 14:46:18",
+    "funds": {
+      "019633": {
+        "score": 7,
+        "conclusion": "忍着不动",
+        "return_pct": -5.11
+      },
+      "014194": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -5.67
+      },
+      "CPO": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -0.67
+      },
+      "024239": {
+        "score": 6,
+        "conclusion": "忍着不动",
+        "return_pct": 0.31
+      },
+      "021528": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": -5.77
+      },
+      "015789": {
+        "score": 6,
+        "conclusion": "安心持有",
+        "return_pct": -6.79
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": -1.37
+      }
+    }
+  },
+  {
+    "date": "2026-07-14",
+    "fetched_at": "2026-07-14 10:05:20",
+    "funds": {
+      "019633": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": -5.32
+      },
+      "014194": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": -6.19
+      },
+      "CPO": {
+        "score": 7,
+        "conclusion": "安心持有",
+        "return_pct": 0.93
+      },
+      "024239": {
+        "score": 5,
+        "conclusion": "忍着不动",
+        "return_pct": -1.9
+      },
+      "021528": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": -5.92
+      },
+      "015789": {
+        "score": 6,
+        "conclusion": "安心持有",
+        "return_pct": -10.54
+      },
+      "025856": {
+        "score": 4,
+        "conclusion": "忍着不动",
+        "return_pct": -1.08
       }
     }
   }

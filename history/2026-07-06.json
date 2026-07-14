@@ -69,7 +69,8 @@
           "chg_pct": 4.73,
           "above_ma50": true
         }
-      }
+      },
+      "fund_return_pct": 0.64
     },
     "014194": {
       "name": "汇添富中证芯片指数增强C",
@@ -132,7 +133,8 @@
           "chg_pct": 0.3,
           "above_ma50": true
         }
-      }
+      },
+      "fund_return_pct": 0.3
     },
     "CPO": {
       "name": "光模块(CPO)板块监测",
@@ -194,7 +196,8 @@
           "chg_pct": 0.0,
           "above_ma50": null
         }
-      }
+      },
+      "fund_return_pct": -1.53
     },
     "024239": {
       "name": "华夏全球科技先锋QDII C",
@@ -263,7 +266,8 @@
           "chg_pct": 1.58,
           "above_ma50": true
         }
-      }
+      },
+      "fund_return_pct": 1.43
     },
     "021528": {
       "name": "财通成长优选C",
@@ -325,7 +329,8 @@
           "chg_pct": 0.0,
           "above_ma50": null
         }
-      }
+      },
+      "fund_return_pct": -0.94
     },
     "015789": {
       "name": "永赢高端装备智选A",
@@ -387,7 +392,8 @@
           "chg_pct": -0.0,
           "above_ma50": false
         }
-      }
+      },
+      "fund_return_pct": -1.31
     },
     "025856": {
       "name": "华夏中证电网设备ETF联接A",
@@ -450,7 +456,8 @@
           "chg_pct": -0.0,
           "above_ma50": false
         }
-      }
+      },
+      "fund_return_pct": -0.58
     }
   },
   "predictions": {

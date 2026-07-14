@@ -10,6 +10,7 @@ FUNDS = {
     "019633": {
         "name": "国泰半导体材料设备ETF联接C",
         "short": "半导体设备",
+        "benchmark": "512760.SS",
         "market": "us",
         "stocks": {
             "AMAT":  "应用材料",
@@ -38,6 +39,7 @@ FUNDS = {
     "014194": {
         "name": "汇添富中证芯片指数增强C",
         "short": "芯片指数",
+        "benchmark": "159995.SZ",
         "market": "a",
         "stocks": {
             "688981.SS": "中芯国际",
@@ -65,6 +67,7 @@ FUNDS = {
     "CPO": {
         "name": "光模块(CPO)板块监测",
         "short": "CPO",
+        "benchmark": "300308.SZ",
         "market": "a",
         "stocks": {
             "300308.SZ": "中际旭创",
@@ -92,6 +95,7 @@ FUNDS = {
     "024239": {
         "name": "华夏全球科技先锋QDII C",
         "short": "AI硬件",
+        "benchmark": "QQQ",
         "market": "us",
         "stocks": {
             "NVDA": "英伟达",
@@ -120,6 +124,7 @@ FUNDS = {
     "021528": {
         "name": "财通成长优选C",
         "short": "PCB",
+        "benchmark": "159997.SZ",
         "market": "a",
         "stocks": {
             "002916.SZ": "深南电路",
@@ -147,6 +152,7 @@ FUNDS = {
     "015789": {
         "name": "永赢高端装备智选A",
         "short": "航天卫星",
+        "benchmark": "512660.SS",
         "market": "a",
         "stocks": {
             "600118.SS": "中国卫星",
@@ -174,6 +180,7 @@ FUNDS = {
     "025856": {
         "name": "华夏中证电网设备ETF联接A",
         "short": "电网设备",
+        "benchmark": "159611.SZ",
         "market": "a",
         "stocks": {
             "600406.SS": "国电南瑞",
@@ -218,10 +225,11 @@ LEADING_INDICATORS = {
             "update_cycle": "季末 TrendForce/DRAMeXchange 发布后更新",
         },
         "台积电月度营收 YoY": {
-            "value": "5月 +30% YoY",
+            "value": "6月 +32% YoY（Q2合计 +31% YoY）",
             "trend": "up",
-            "note": "先进制程满产，CoWoS 产能仍是瓶颈",
+            "note": "Q2营收超预期，先进制程满产，CoWoS 产能仍是瓶颈。Q2法说会7/16是关键",
             "update_cycle": "每月10日 TSMC 发布后更新",
+            "last_updated": "2026-07-10",
         },
         "ASML EUV 积压订单": {
             "value": "Q1 新增 €3.6B 订单",
@@ -438,34 +446,45 @@ LEADING_INDICATORS = {
 
 KEY_DATES = {
     "019633": [
-        {"date": date(2026, 7, 10), "event": "台积电 6 月营收", "importance": "critical"},
+        {"date": date(2026, 7, 10), "event": "台积电 6 月营收", "importance": "critical",
+         "result": "6月营收 NT$2,484亿（+32% YoY），Q2合计 NT$6,735亿（+31% YoY），双超预期。CoWoS 满载，3nm/5nm 产能利用率 100%"},
+        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical"},
         {"date": date(2026, 7, 17), "event": "ASML Q2 财报",     "importance": "critical"},
         {"date": date(2026, 7, 21), "event": "SEMI 6月 Billings", "importance": "critical"},
+        {"date": date(2026, 7, 25), "event": "SK海力士 Q2 财报(HBM)", "importance": "critical"},
         {"date": date(2026, 7, 27), "event": "GOOGL Q2 财报",    "importance": "high"},
         {"date": date(2026, 7, 29), "event": "MSFT Q2 财报",     "importance": "high"},
         {"date": date(2026, 7, 30), "event": "META Q2 财报",     "importance": "high"},
         {"date": date(2026, 8, 1),  "event": "AMZN Q2 财报",     "importance": "high"},
     ],
     "014194": [
-        {"date": date(2026, 7, 10),  "event": "台积电 6 月营收",        "importance": "high"},
+        {"date": date(2026, 7, 10),  "event": "台积电 6 月营收",        "importance": "high",
+         "result": "6月营收 +32% YoY，先进制程满产，利好国产设备订单预期"},
         {"date": date(2026, 7, 15),  "event": "中国集成电路 6 月产量",    "importance": "high"},
+        {"date": date(2026, 7, 15),  "event": "中国集成电路 6 月产量",    "importance": "high"},
+        {"date": date(2026, 7, 16),  "event": "台积电 Q2 法说会 ⚠",     "importance": "critical"},
+        {"date": date(2026, 7, 17),  "event": "ASML Q2 财报(EUV订单)",   "importance": "critical"},
         {"date": date(2026, 7, 20),  "event": "北方华创 H1 业绩预告(预计)", "importance": "critical"},
         {"date": date(2026, 8, 15),  "event": "中芯国际 Q2 财报(预计)",    "importance": "critical"},
         {"date": date(2026, 8, 25),  "event": "北方华创 Q2 财报(预计)",    "importance": "high"},
     ],
     "CPO": [
-        {"date": date(2026, 7, 10), "event": "台积电 6 月营收", "importance": "high"},
+        {"date": date(2026, 7, 10), "event": "台积电 6 月营收", "importance": "high",
+         "result": "6月营收超预期 → AI算力需求强劲 → 800G/1.6T 光模块需求确定性强"},
+        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical"},
+        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical"},
         {"date": date(2026, 7, 25), "event": "中际旭创 H1 业绩预告(预计)", "importance": "critical"},
         {"date": date(2026, 8, 5),  "event": "Lumentum Q2 财报(光芯片)", "importance": "high"},
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报", "importance": "critical"},
         {"date": date(2026, 8, 25), "event": "中际旭创 Q2 财报(预计)", "importance": "critical"},
     ],
     "024239": [
+        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical"},
         {"date": date(2026, 7, 17), "event": "ASML Q2 财报(EUV订单)", "importance": "critical"},
         {"date": date(2026, 7, 25), "event": "SK海力士 Q2 财报(HBM)", "importance": "critical"},
         {"date": date(2026, 7, 27), "event": "GOOGL Q2(CapEx指引)", "importance": "critical"},
         {"date": date(2026, 7, 29), "event": "MSFT Q2(CapEx指引)", "importance": "critical"},
-        {"date": date(2026, 7, 30), "event": "META Q2(CapEx指引)", "importance": "high"},
+        {"date": date(2026, 7, 30), "event": "META Q2(CapEx指引)+三星Q2", "importance": "high"},
         {"date": date(2026, 8, 1),  "event": "AMZN Q2(CapEx指引)", "importance": "high"},
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报", "importance": "critical"},
     ],
@@ -705,5 +724,25 @@ CYCLE_COUNTER_HYPOTHESIS = {
 # ══════════════════════════════════════════════════════════
 
 DIVERGENCE_DOWNGRADE_WEEKS = 2  # 持续N周背离 → 自动降级
-# 触发条件：技术面评分=0 但 领先指标+周期≥4 → 标记背离
-# 持续满足条件超过 DIVERGENCE_DOWNGRADE_WEEKS → 强制降级到🟡
+
+# ══════════════════════════════════════════════════════════
+# 复盘配置（Review Methodology 优化）
+# ══════════════════════════════════════════════════════════
+
+# 动态阈值：周涨跌标准差系数
+DYNAMIC_THRESHOLD_COEFFICIENT = 0.5
+DYNAMIC_THRESHOLD_LOOKBACK_DAYS = 60
+
+# 小样本警告阈值
+MIN_SAMPLE_SIZE_WARNING = 30
+
+# 对照组：各板块对应的基准指数（用于计算超额收益）
+CONTROL_BENCHMARKS = {
+    "019633": "SOXX",      # 半导体设备 → SOXX
+    "014194": "000688.SS", # 芯片指数 → 科创50
+    "CPO":     "159997.SZ", # CPO → 电子ETF
+    "024239":  "^NDX",     # AI硬件 → 纳斯达克100
+    "021528":  "159997.SZ", # PCB → 电子ETF
+    "015789":  "512660.SS", # 航天卫星 → 军工ETF
+    "025856":  "159611.SZ", # 电网设备 → 电力ETF
+}

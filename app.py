@@ -1,7 +1,8 @@
-"""Investment Dashboard — 基金监控仪表盘（多基金版 + 缓存 + 历史快照）"""
+"""Investment Dashboard — 基金监控仪表盘（多基金版 + 缓存 + 历史快照 + 数据健康检测）"""
 
 import json
 import os
+import re
 import threading
 import time as _time
 from datetime import datetime, date, timedelta
@@ -12,8 +13,269 @@ from config import (
     BOTTLENECK_CLUSTERS, BOTTLENECK_CONCENTRATION_WARN,
     SHARED_INDICATORS, BOTTLENECK_DISRUPTION,
     CYCLE_COUNTER_HYPOTHESIS, DIVERGENCE_DOWNGRADE_WEEKS,
+    DYNAMIC_THRESHOLD_COEFFICIENT, DYNAMIC_THRESHOLD_LOOKBACK_DAYS,
+    MIN_SAMPLE_SIZE_WARNING, CONTROL_BENCHMARKS,
 )
 from data_fetcher import get_index_snapshot, get_stock_snapshot
+
+# ══════════════════════════════════════════════════════════
+# 数据健康检测 — 指标过期 & 缺失事件
+# ══════════════════════════════════════════════════════════
+
+# 已知公司财报日历（用于检测 KEY_DATES 中遗漏的事件）
+# aliases 用于中英文名称匹配
+CORPORATE_CALENDAR = {
+    "TSMC": {
+        "ticker": "TSM",
+        "aliases": ["台积电", "tsmc", "TSMC"],
+        "events": [
+            {"date": date(2026, 7, 16), "event": "Q2 法说会", "importance": "critical"},
+            {"date": date(2026, 10, 15), "event": "Q3 法说会", "importance": "critical"},
+        ],
+        "affected_funds": ["019633", "014194", "024239", "CPO"],
+    },
+    "NVDA": {
+        "ticker": "NVDA",
+        "aliases": ["英伟达", "nvidia", "NVDA"],
+        "events": [
+            {"date": date(2026, 8, 20), "event": "Q2 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["024239", "CPO", "021528"],
+    },
+    "ASML": {
+        "ticker": "ASML",
+        "aliases": ["阿斯麦", "asml", "ASML"],
+        "events": [
+            {"date": date(2026, 7, 17), "event": "Q2 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["019633", "014194", "024239"],
+    },
+    "SK海力士": {
+        "ticker": "000660.KS",
+        "aliases": ["SK海力士", "SK 海力士", "海力士", "sk hynix"],
+        "events": [
+            {"date": date(2026, 7, 25), "event": "Q2 财报(HBM)", "importance": "critical"},
+        ],
+        "affected_funds": ["024239", "019633"],
+    },
+    "三星": {
+        "ticker": "005930.KS",
+        "aliases": ["三星", "samsung"],
+        "events": [
+            {"date": date(2026, 7, 30), "event": "Q2 财报", "importance": "high"},
+        ],
+        "affected_funds": ["024239"],
+    },
+    "美光": {
+        "ticker": "MU",
+        "aliases": ["美光", "micron"],
+        "events": [
+            {"date": date(2026, 9, 25), "event": "Q4 财报", "importance": "high"},
+        ],
+        "affected_funds": ["019633", "024239"],
+    },
+    "中芯国际": {
+        "ticker": "688981.SS",
+        "aliases": ["中芯国际", "中芯", "SMIC"],
+        "events": [
+            {"date": date(2026, 8, 15), "event": "Q2 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["014194"],
+    },
+    "北方华创": {
+        "ticker": "002371.SZ",
+        "aliases": ["北方华创"],
+        "events": [
+            {"date": date(2026, 8, 25), "event": "Q2 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["014194"],
+    },
+    "中际旭创": {
+        "ticker": "300308.SZ",
+        "aliases": ["中际旭创"],
+        "events": [
+            {"date": date(2026, 8, 25), "event": "Q2 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["CPO"],
+    },
+    "Rocket Lab": {
+        "ticker": "RKLB",
+        "aliases": ["rocket lab", "rocketlab"],
+        "events": [
+            {"date": date(2026, 8, 10), "event": "Q2 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["015789"],
+    },
+}
+
+
+def _parse_data_date(value):
+    """从指标 value 字符串中提取数据对应的*发布日期*（而非数据所属期间）。
+    月度数据通常次月发布，季度数据通常季末后2-4周发布。
+    返回 date 对象或 None。"""
+    today = date.today()
+
+    def _valid_month(m_val):
+        m_int = int(m_val)
+        return m_int if 1 <= m_int <= 12 else None
+
+    def _next_month(y, m):
+        """返回下个月的 15 日（模拟月度数据发布时间）"""
+        if m == 12:
+            return date(y + 1, 1, 15)
+        return date(y, m + 1, 15)
+
+    def _quarter_end_publish(y, q):
+        """季度数据：季末 + 1 个月为发布日期"""
+        end_month = q * 3
+        if end_month == 12:
+            return date(y + 1, 1, 15)
+        return date(y, end_month + 1, 15)
+
+    # "2026年5月" — 月度数据，次月发布 → 用下月 15 日
+    m = re.search(r'(\d{4})年(\d{1,2})月', value)
+    if m:
+        month = _valid_month(m.group(2))
+        if month:
+            return _next_month(int(m.group(1)), month)
+    m = re.search(r'(\d{4})Q([1-4])', value)
+    if m:
+        return _quarter_end_publish(int(m.group(1)), int(m.group(2)))
+    # "5月"（假设当年，前置必须是非数字或行首）
+    m = re.search(r'(?:^|[^0-9])(\d{1,2})月', value)
+    if m:
+        month = _valid_month(m.group(1))
+        if month:
+            return _next_month(today.year, month)
+    # "Q1" / "Q2"（假设当年）— 季度 → 季末+1月
+    m = re.search(r'(?:^|[^0-9])Q([1-4])(?:\s|$|,|→)', value)
+    if m:
+        return _quarter_end_publish(today.year, int(m.group(1)))
+    # "H1" → 7月, "H2" → 次年1月
+    m = re.search(r'H([12])', value)
+    if m:
+        return date(today.year, 7 if m.group(1) == '1' else 12, 15)
+    return None
+
+
+def _get_max_age_days(update_cycle):
+    """根据 update_cycle 描述确定最长可接受的更新间隔（天）"""
+    if not update_cycle:
+        return None
+    if '日度' in update_cycle:
+        return 2
+    if '月度' in update_cycle or '每月' in update_cycle:
+        return 35
+    if '季度' in update_cycle or '季末' in update_cycle or '季报' in update_cycle:
+        return 110
+    if '年度' in update_cycle or '年初' in update_cycle:
+        return 370
+    return None  # 事件驱动型，无法自动判断
+
+
+def check_indicator_staleness(fund_id=None):
+    """检查领先指标是否过期。返回过期指标列表。"""
+    today = date.today()
+    stale_list = []
+
+    funds_to_check = {fund_id: FUNDS[fund_id]} if fund_id else FUNDS
+    for fid in funds_to_check:
+        indicators = LEADING_INDICATORS.get(fid, {})
+        for name, info in indicators.items():
+            # 优先使用显式 last_updated
+            last_updated_str = info.get("last_updated", "")
+            if last_updated_str:
+                try:
+                    data_date = date.fromisoformat(last_updated_str)
+                except ValueError:
+                    data_date = _parse_data_date(info.get("value", ""))
+            else:
+                data_date = _parse_data_date(info.get("value", ""))
+
+            if data_date is None:
+                continue
+
+            max_age = _get_max_age_days(info.get("update_cycle", ""))
+            if max_age is None:
+                continue
+
+            age = (today - data_date).days
+            if age > max_age:
+                stale_list.append({
+                    "fund_id": fid,
+                    "fund_short": FUNDS.get(fid, {}).get("short", fid),
+                    "indicator": name,
+                    "value_snippet": info.get("value", "")[:60],
+                    "data_date": data_date.strftime("%Y-%m-%d"),
+                    "age_days": age,
+                    "max_age_days": max_age,
+                    "update_cycle": info.get("update_cycle", ""),
+                    "severity": "critical" if age > max_age * 2 else "warning",
+                })
+
+    return stale_list
+
+
+def detect_missing_events():
+    """交叉比对 CORPORATE_CALENDAR 和 KEY_DATES，发现遗漏的关键事件。"""
+    today = date.today()
+    future_cutoff = today + timedelta(days=60)  # 只看未来60天内的
+    missing = []
+
+    for company, cal in CORPORATE_CALENDAR.items():
+        for event in cal["events"]:
+            if event["date"] < today or event["date"] > future_cutoff:
+                continue  # 已过期或太远
+            # 构建匹配关键词列表：公司名 + ticker + 别名
+            match_keywords = [company.lower(), cal["ticker"].lower()]
+            match_keywords += [a.lower() for a in cal.get("aliases", [])]
+
+            for fid in cal["affected_funds"]:
+                fund_dates = KEY_DATES.get(fid, [])
+                # 检查该事件是否已被追踪（关键词匹配 + 日期差 ≤3天）
+                found = any(
+                    any(kw in kd["event"].lower() for kw in match_keywords)
+                    and abs((kd["date"] - event["date"]).days) <= 3
+                    for kd in fund_dates
+                )
+                if not found:
+                    fund_short = FUNDS.get(fid, {}).get("short", fid)
+                    missing.append({
+                        "company": company,
+                        "ticker": cal["ticker"],
+                        "fund_id": fid,
+                        "fund_short": fund_short,
+                        "event": f"{company} {event['event']}",
+                        "date_str": event["date"].strftime("%Y-%m-%d"),
+                        "importance": event["importance"],
+                    })
+
+    return missing
+
+
+def check_recently_passed_events():
+    """检查最近 14 天内已过期的关键事件。有 result 标记为已跟进，无则标记待分析。"""
+    today = date.today()
+    recently_passed = []
+
+    for fid, events in KEY_DATES.items():
+        for e in events:
+            days_ago = (today - e["date"]).days
+            if 0 <= days_ago <= 14:
+                fund_short = FUNDS.get(fid, {}).get("short", fid)
+                result = e.get("result", "")
+                recently_passed.append({
+                    "fund_id": fid,
+                    "fund_short": fund_short,
+                    "event": e["event"],
+                    "date_str": e["date"].strftime("%Y-%m-%d"),
+                    "days_ago": days_ago,
+                    "importance": e.get("importance", "normal"),
+                    "has_analysis": bool(result),
+                    "result": result,
+                })
+
+    return recently_passed
 
 app = Flask(__name__)
 
@@ -93,6 +355,21 @@ def _fetch_one_fund(fund_id, fund):
                         "note": cond.get("note", ""),
                     }
 
+    # 拉基准 ETF 实际涨跌作为 fund_return_pct
+    bm_ticker = fund.get("benchmark", "")
+    fund_return_pct = None
+    if bm_ticker:
+        # 优先从已拉取的数据中找
+        for src in [stocks, indices, specials]:
+            if bm_ticker in src and not src[bm_ticker].get("error"):
+                fund_return_pct = src[bm_ticker].get("day_change_pct")
+                break
+        # 没找到就单独拉
+        if fund_return_pct is None:
+            bm_snap = get_stock_snapshot(bm_ticker)
+            if not bm_snap.get("error"):
+                fund_return_pct = bm_snap.get("day_change_pct")
+
     return {
         "fund_id": fund_id,
         "name": fund["name"],
@@ -107,6 +384,7 @@ def _fetch_one_fund(fund_id, fund):
         "cycle_assessment": cycle,
         "prediction": prediction,
         "disruption_status": disruption_status,
+        "fund_return_pct": fund_return_pct,
     }
 
 
@@ -198,12 +476,16 @@ def _save_daily_snapshot():
                     "chg_pct": s.get("day_change_pct"),
                     "above_ma50": s.get("above_ma50"),
                 }
+            # 用 _fetch_one_fund 预计算的 benchmark 涨跌
+            fund_return = d.get("fund_return_pct")
+
             snapshot["funds"][fid] = {
                 "name": d["name"],
                 "score": a["score"],
                 "conclusion": a["conclusion"],
                 "emoji": a["emoji"],
                 "details": a.get("details", []),
+                "fund_return_pct": fund_return,
                 "stocks": stocks_brief,
                 "indices": indices_brief,
             }
@@ -217,6 +499,7 @@ def _save_daily_snapshot():
     snapshot["predictions"] = preds
 
     snap_path = os.path.join(HISTORY_DIR, f"{today_str}.json")
+    snapshot = _sanitize_json(snapshot)
     with open(snap_path, "w", encoding="utf-8") as f:
         json.dump(snapshot, f, ensure_ascii=False, indent=2)
 
@@ -261,9 +544,11 @@ def _save_daily_snapshot():
     index.append({
         "date": today_str,
         "fetched_at": now_str,
-        "funds": {fid: {"score": snapshot["funds"][fid]["score"],
-                         "conclusion": snapshot["funds"][fid]["conclusion"]}
-                  for fid in snapshot["funds"]}
+        "funds": {fid: {
+            "score": snapshot["funds"][fid]["score"],
+            "conclusion": snapshot["funds"][fid]["conclusion"],
+            "return_pct": snapshot["funds"][fid].get("fund_return_pct"),
+        } for fid in snapshot["funds"]}
     })
     with open(HISTORY_INDEX_PATH, "w", encoding="utf-8") as f:
         json.dump(index, f, ensure_ascii=False, indent=2)
@@ -271,13 +556,34 @@ def _save_daily_snapshot():
     print(f"📸 快照已保存: {today_str} ({len(snapshot['funds'])} 只基金)")
 
 
+def _sanitize_json(obj):
+    """递归清理 NaN/Infinity 为 None，确保 JSON 合法"""
+    import math
+    if isinstance(obj, dict):
+        return {k: _sanitize_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_sanitize_json(v) for v in obj]
+    elif isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+        return None
+    return obj
+
+
 def _attach_meta(data, fetched_at, is_fetching):
-    """给响应附加时间元信息"""
-    return {
+    """给响应附加时间元信息 + 指标健康状态"""
+    fund_id = data.get("fund_id", "")
+    # 仅检查当前基金的指标过期
+    staleness = check_indicator_staleness(fund_id=fund_id) if fund_id else []
+    result = {
         **data,
         "cached_at": fetched_at.strftime("%Y-%m-%d %H:%M:%S"),
         "fetching": is_fetching,
+        "health": {
+            "stale_indicators": staleness,
+            "stale_count": len(staleness),
+        },
     }
+    # 递归清理 NaN → null，防止 JSON 解析失败
+    return _sanitize_json(result)
 
 
 # ══════════════════════════════════════════════════════════
@@ -311,8 +617,124 @@ def _scheduler_loop():
                     print(f"  ⚠ 复盘失败: {e}")
 
 
+# ══════════════════════════════════════════════════════════
+# 复盘辅助函数
+# ══════════════════════════════════════════════════════════
+
+def _check_tier1_gate():
+    """Tier-1 门禁：检查指标层是否有 ≥1 季度的验证样本"""
+    # 检查最早的预测是否已过 90 天
+    preds_dir = os.path.join(PROJECT_DIR, "predictions")
+    if not os.path.exists(preds_dir):
+        return {"ready": False, "reason": "无预测记录", "warning": "尚未生成任何预测，无法进行 Tier-1 验证"}
+    files = sorted([f for f in os.listdir(preds_dir) if f.endswith(".json")])
+    if not files:
+        return {"ready": False, "reason": "无预测文件", "warning": "预测目录为空"}
+    earliest = files[0].replace(".json", "")
+    try:
+        earliest_date = date.fromisoformat(earliest)
+        days_elapsed = (date.today() - earliest_date).days
+    except ValueError:
+        return {"ready": False, "reason": "日期解析失败", "warning": "预测文件名格式异常"}
+    if days_elapsed < 90:
+        return {
+            "ready": False,
+            "reason": f"仅积累 {days_elapsed} 天（需 ≥90）",
+            "warning": f"Tier-1 指标层验证样本不足（{days_elapsed}/90 天），当前所有权重调整均为「实验性/未经确认」，不可直接触发正式参数变更。仅 Tier-2 价格层可进入观察日志。"
+        }
+    return {"ready": True, "reason": f"已积累 {days_elapsed} 天", "warning": ""}
+
+
+def _calc_dynamic_threshold(fid, index_data):
+    """按板块动态计算 Tier-2 判定阈值：周涨跌标准差 × 0.5"""
+    returns = []
+    for entry in index_data:
+        f = entry.get("funds", {}).get(fid, {})
+        r = f.get("fund_return_pct")
+        if r is not None:
+            returns.append(r)
+    if len(returns) < 5:
+        return 1.0  # fallback to default 1%
+    # 按周分组（每5个交易日一组），算周涨跌
+    weekly = []
+    for i in range(0, len(returns), 5):
+        chunk = returns[i:i+5]
+        if len(chunk) >= 3:  # 至少 3 个交易日才算有效周
+            weekly.append(sum(chunk))
+    if len(weekly) < 4:
+        return 1.0
+    import statistics
+    std = statistics.stdev(weekly)
+    threshold = round(std * DYNAMIC_THRESHOLD_COEFFICIENT, 2)
+    return max(threshold, 0.3)  # 不低于 0.3%，避免阈值过小
+
+
+def _count_oscillation_predictions(predictions_data):
+    """统计震荡/flat 预测占比"""
+    total = 0
+    neutral = 0
+    for entry in predictions_data:
+        for fid, p in entry.get("predictions", {}).items():
+            total += 1
+            if p.get("direction", "") in ("flat", "flat-down"):
+                neutral += 1
+    return total, neutral
+
+
+def _compute_confidence_calibration(predictions_data, index_data):
+    """按置信度分桶计算原始准确率"""
+    buckets = {"高": {"total": 0, "correct": 0}, "中": {"total": 0, "correct": 0}, "低": {"total": 0, "correct": 0}}
+    for pred_entry in predictions_data:
+        pred_date = pred_entry.get("date", "")
+        for fid, p in pred_entry.get("predictions", {}).items():
+            conf = p.get("confidence", "低")
+            if conf not in buckets:
+                conf = "低"
+            buckets[conf]["total"] += 1
+            direction = p.get("direction", "")
+            verify_date = p.get("verify_date", "")
+            # 查找验证日的实际收益
+            actual = None
+            for idx_entry in index_data:
+                if idx_entry.get("date") == verify_date:
+                    f = idx_entry.get("funds", {}).get(fid, {})
+                    actual = f.get("fund_return_pct")
+                    break
+            if actual is None:
+                continue
+            # 判定
+            threshold = 1.0  # 使用默认阈值（动态阈值需要额外计算）
+            if direction == "up" and actual >= threshold:
+                buckets[conf]["correct"] += 1
+            elif direction == "up" and actual >= 0:
+                buckets[conf]["correct"] += 0.5
+            elif direction == "down" and actual <= -threshold:
+                buckets[conf]["correct"] += 1
+            elif direction == "down" and actual <= 0:
+                buckets[conf]["correct"] += 0.5
+            elif direction in ("flat", "flat-down") and abs(actual) <= threshold:
+                buckets[conf]["correct"] += 1
+    return buckets
+
+
+def _tier2_verdict(direction, actual, threshold):
+    """Tier-2 判定：方向 + 强度"""
+    if direction == "up":
+        if actual >= threshold:       return "✅"
+        elif actual >= 0:             return "➡️"
+        else:                          return "❌"
+    elif direction == "down":
+        if actual <= -threshold:      return "✅"
+        elif actual <= 0:             return "➡️"
+        else:                          return "❌"
+    else:  # flat / flat-down — 跟 up/down 同样严格
+        if abs(actual) <= threshold:  return "✅"
+        elif abs(actual) <= threshold * 2: return "➡️"
+        else:                          return "❌"
+    # 注：flat 预测错误不再享受隐性减罚——超出阈值 2 倍直接 ❌
+
+
 def _generate_monthly_review():
-    """生成月度复盘（内部函数，由调度器调用）"""
     today = date.today()
     month_str = today.strftime("%Y-%m")
 
@@ -328,50 +750,141 @@ def _generate_monthly_review():
         print("  ⚠ 本月暂无快照，跳过复盘")
         return
 
+    # 收集预测数据
+    predictions_data = []
+    preds_dir = os.path.join(PROJECT_DIR, "predictions")
+    if os.path.exists(preds_dir):
+        for fname in sorted(os.listdir(preds_dir)):
+            if fname.endswith(".json") and not fname.startswith("_"):
+                try:
+                    with open(os.path.join(preds_dir, fname), "r", encoding="utf-8") as f:
+                        predictions_data.append(json.load(f))
+                except Exception:
+                    pass
+
+    # ── Tier-1 门禁 ──
+    gate = _check_tier1_gate()
+
+    # ── 统计 ──
+    total_preds = sum(len(pe.get("predictions", {})) for pe in predictions_data)
+    n = total_preds
+    small_warn = f"\n> ⚠️ 样本量较小（n={n}），准确率数字仅供参考，暂不建议据此调整权重。\n" if 0 < n < MIN_SAMPLE_SIZE_WARNING else ""
+
     lines = [
         f"# 月度复盘 — {month_str}",
         f"\n生成时间: {today.strftime('%Y-%m-%d')}",
-        f"\n快照天数: {len(snapshots)}",
-        f"\n---\n",
+        f"\n快照天数: {len(snapshots)} | 有效预测: {n} 条",
     ]
+    if not gate["ready"]:
+        lines.append(f"\n> 🔒 **Tier-1 门禁未通过**: {gate['reason']}")
+        lines.append(f"\n> ⚠️ {gate['warning']}")
+    if small_warn:
+        lines.append(small_warn)
+    lines.append(f"\n---\n")
 
+    # ═══ Tier-2 价格层 ═══
+    lines.append(f"## Tier-2 价格层验证（30天窗口）")
+    lines.append(f"\n> 仅作短期噪音监控，不作为方法论对错证据。")
+    lines.append(f"\n| 板块 | 预测日 | 方向 | 置信度 | 验证日 | 实际 | 动态阈值 | 判定 |")
+    lines.append(f"|------|--------|------|--------|--------|------|---------|------|")
+
+    all_verdicts = []
+    for pe in predictions_data:
+        pred_date = pe.get("date", "")
+        for fid, p in pe.get("predictions", {}).items():
+            direction = p.get("direction", "")
+            conf = p.get("confidence", "低")
+            verify_date = p.get("verify_date", "")
+            actual = None
+            for snap in snapshots:
+                if snap.get("date") == verify_date:
+                    actual = snap.get("funds", {}).get(fid, {}).get("fund_return_pct")
+                    break
+            if actual is None:
+                continue
+            threshold = _calc_dynamic_threshold(fid, snapshots)
+            verdict = _tier2_verdict(direction, actual, threshold)
+            all_verdicts.append({"fid": fid, "conf": conf, "verdict": verdict, "direction": direction})
+            name = FUNDS.get(fid, {}).get("short", fid)
+            lines.append(f"| {name} | {pred_date} | {p.get('label','?')} | {conf} | {verify_date} | {actual:+.2f}% | ±{threshold}% | {verdict} |")
+
+    vd = {"✅": sum(1 for v in all_verdicts if v["verdict"] == "✅"),
+          "➡️": sum(1 for v in all_verdicts if v["verdict"] == "➡️"),
+          "❌": sum(1 for v in all_verdicts if v["verdict"] == "❌")}
+    lines.append(f"\n### Tier-2 汇总")
+    lines.append(f"\n✅ {vd['✅']} / ➡️ {vd['➡️']} / ❌ {vd['❌']}（共 {len(all_verdicts)} 条）")
+
+    # ── 震荡预测占比 ──
+    osc_total, osc_neutral = _count_oscillation_predictions(predictions_data)
+    if osc_total > 0:
+        osc_ratio = osc_neutral / osc_total * 100
+        drift_msg = f" ⚠️ 震荡/flat 预测占比偏高，系统可能在往保守方向漂移" if osc_ratio > 40 else ""
+        lines.append(f"\n### 震荡预测占比监控")
+        lines.append(f"\n震荡/flat 预测: {osc_neutral}/{osc_total}（{osc_ratio:.1f}%）{drift_msg}")
+
+    # ═══ 对照组超额收益 ═══
+    lines.append(f"\n---\n## 对照组：超额收益分析")
+    lines.append(f"\n| 板块 | 板块累计 | 基准指数 | 超额收益 | 买入持有 |")
+    lines.append(f"|------|---------|---------|---------|---------|")
+    for fid in FUNDS:
+        name = FUNDS[fid]["short"]
+        fund_returns = [snap.get("funds", {}).get(fid, {}).get("fund_return_pct")
+                        for snap in snapshots if snap.get("funds", {}).get(fid, {}).get("fund_return_pct") is not None]
+        fund_cum = round(sum(fund_returns), 2) if fund_returns else None
+        bm_ticker = CONTROL_BENCHMARKS.get(fid, "")
+        bm_returns = []
+        if bm_ticker:
+            for snap in snapshots:
+                fdata = snap.get("funds", {}).get(fid, {})
+                for src_key in ["indices", "stocks"]:
+                    if bm_ticker in fdata.get(src_key, {}):
+                        bm_returns.append(fdata[src_key][bm_ticker].get("chg_pct", 0))
+                        break
+        bm_cum = round(sum(bm_returns), 2) if bm_returns else None
+        excess = round(fund_cum - bm_cum, 2) if (fund_cum is not None and bm_cum is not None) else None
+        lines.append(f"| {name} | {fund_cum or '--'}% | {bm_cum or '--'}% | {excess or '--'}% | {fund_cum or '--'}% |")
+
+    # ═══ 置信度校准 ═══
+    lines.append(f"\n---\n## 置信度校准报告")
+    lines.append(f"\n> 按置信度分桶展示「未加权」原始准确率，检验高置信度是否真的更准。")
+    calib = _compute_confidence_calibration(predictions_data, snapshots)
+    lines.append(f"\n| 置信度 | 预测数 | 正确/半对 | 原始准确率 |")
+    lines.append(f"|--------|--------|----------|-----------|")
+    for conf in ["高", "中", "低"]:
+        b = calib[conf]
+        if b["total"] > 0:
+            lines.append(f"| {conf} | {b['total']} | {b['correct']:.1f} | {round(b['correct']/b['total']*100,1)}% |")
+        else:
+            lines.append(f"| {conf} | 0 | — | — |")
+
+    # ═══ 各板块明细 ═══
+    lines.append(f"\n---\n## 各板块评分走势")
     for fid, fund_info in FUNDS.items():
-        lines.append(f"\n## {fund_info['short']} ({fid})")
-        lines.append(f"\n| 日期 | 评分 | 结论 | 研判细节 |")
-        lines.append("|------|-----|------|---------|")
+        lines.append(f"\n### {fund_info['short']} ({fid})")
+        lines.append(f"\n| 日期 | 评分 | 结论 | 实际涨跌 |")
+        lines.append(f"|------|-----|------|---------|")
         for snap in snapshots:
             fs = snap.get("funds", {}).get(fid)
             if fs:
-                detail_str = "；".join(fs.get("details", []))[:80] or "—"
-                lines.append(f"| {snap['date']} | {fs['score']}/10 | {fs['conclusion']} | {detail_str} |")
-
+                r = fs.get("fund_return_pct")
+                lines.append(f"| {snap['date']} | {fs['score']}/10 | {fs['conclusion']} | {f'{r:+.2f}%' if r is not None else '—'} |")
         scores = [snap.get("funds", {}).get(fid, {}).get("score", 5)
                   for snap in snapshots if snap.get("funds", {}).get(fid)]
         if scores:
             avg = sum(scores) / len(scores)
             trend = "上升" if len(scores) >= 2 and scores[-1] > scores[0] else \
                     "下降" if len(scores) >= 2 and scores[-1] < scores[0] else "持平"
-            lines.append(f"\n- 本月平均综合评分: {avg:.1f}/10")
-            lines.append(f"- 趋势: {trend}")
-            lines.append(f"- 最高: {max(scores)}/10, 最低: {min(scores)}/10")
+            lines.append(f"\n- 本月平均评分: {avg:.1f}/10 | 趋势: {trend} | 最高: {max(scores)}/10, 最低: {min(scores)}/10")
 
-    lines.append(f"\n---\n## Tier-1 指标层验证（方法论对错）")
-    lines.append(f"\n验证方式：对比预测的指标趋势 vs 实际公布的数据")
-    lines.append(f"\n- [ ] 各板块领先指标预测是否准确？")
-    lines.append(f"- [ ] 哪些指标的趋势判断有系统性偏差？")
-    lines.append(f"\n## Tier-2 价格层验证（短期噪音监控）")
-    lines.append(f"\n验证方式：对比预测方向 vs 实际7日走势")
-    lines.append(f"\n注意：价格层仅作短期监控，不作为方法论对错证据。")
-    lines.append(f"牛市里\"看涨→没跌就算对\"会制造虚假高准确率，需配合强度偏差校准。")
-    lines.append(f"\n| 板块 | 预测 | 实际方向 | 强度偏差 | 判定 |")
-    lines.append(f"|------|------|---------|---------|------|")
-    lines.append(f"| — | — | — | — | 待本月数据 |")
-    lines.append(f"\n## 复盘要点")
+    # ═══ 复盘要点 ═══
+    lines.append(f"\n---\n## 复盘要点")
+    if not gate["ready"]:
+        lines.append(f"\n- 🔒 Tier-1 门禁未通过: 禁止基于 Tier-2 结果触发正式参数变更。Tier-2 结果仅进入观察日志")
     lines.append(f"\n- [ ] 是否有误报或漏报？")
-    lines.append(f"- [ ] 阈值/权重是否需要调整？")
-    lines.append(f"- [ ] 共享瓶颈敞口是否在可接受范围？")
-    lines.append(f"- [ ] 瓶颈破坏条件有无新进展？")
-    lines.append(f"\n> 自动生成于 {today.strftime('%Y-%m-%d %H:%M')}\n")
+    lines.append(f"- [ ] 震荡预测占比是否偏高？")
+    lines.append(f"- [ ] 高置信度预测是否真的更准？")
+    lines.append(f"- [ ] 超额收益是否为正？系统是否提供了超越 beta 的增量价值？")
+    lines.append(f"\n> 自动生成于 {today.strftime('%Y-%m-%d %H:%M')}")
 
     report = "\n".join(lines)
     os.makedirs(REVIEWS_DIR, exist_ok=True)
@@ -443,6 +956,43 @@ def api_status():
     })
 
 
+@app.route("/api/health")
+def api_health():
+    """数据健康检测：指标过期 + 遗漏事件 + 过期未分析"""
+    staleness = check_indicator_staleness()
+    missing_events = detect_missing_events()
+    recently_passed = check_recently_passed_events()
+
+    # 汇总统计
+    critical_stale = [s for s in staleness if s["severity"] == "critical"]
+    health_score = 100
+    health_score -= len(critical_stale) * 10
+    health_score -= len([s for s in staleness if s["severity"] == "warning"]) * 3
+    health_score -= len(missing_events) * 5
+    health_score -= len(recently_passed) * 2
+    health_score = max(0, health_score)
+
+    return jsonify({
+        "health_score": health_score,
+        "status": "healthy" if health_score >= 80 else "warning" if health_score >= 50 else "critical",
+        "staleness": {
+            "total": len(staleness),
+            "critical": len(critical_stale),
+            "warning": len(staleness) - len(critical_stale),
+            "items": staleness,
+        },
+        "missing_events": {
+            "total": len(missing_events),
+            "items": missing_events,
+        },
+        "recently_passed": {
+            "total": len(recently_passed),
+            "items": recently_passed,
+        },
+        "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    })
+
+
 # ══════════════════════════════════════════════════════════
 # 历史快照 API
 # ══════════════════════════════════════════════════════════
@@ -463,7 +1013,8 @@ def api_history_date(date_str):
     if not os.path.exists(snap_path):
         return jsonify({"error": "not found"}), 404
     with open(snap_path, "r", encoding="utf-8") as f:
-        return jsonify(json.load(f))
+        data = json.load(f)
+    return jsonify(_sanitize_json(data))
 
 
 # ══════════════════════════════════════════════════════════
@@ -528,84 +1079,10 @@ def api_review():
 
 @app.route("/api/review/generate", methods=["POST"])
 def api_review_generate():
-    """生成月度复盘报告"""
-    today = date.today()
-    month_str = today.strftime("%Y-%m")
-
-    # 读取本月所有快照
-    snapshots = []
-    for i in range(31):
-        d = today - timedelta(days=30 - i)
-        snap_path = os.path.join(HISTORY_DIR, f"{d.strftime('%Y-%m-%d')}.json")
-        if os.path.exists(snap_path):
-            with open(snap_path, "r", encoding="utf-8") as f:
-                snapshots.append(json.load(f))
-
-    if not snapshots:
-        return jsonify({"error": "本月暂无快照数据"}), 404
-
-    # 生成复盘报告
-    lines = [
-        f"# 月度复盘 — {month_str}",
-        f"\n生成时间: {today.strftime('%Y-%m-%d')}",
-        f"\n快照天数: {len(snapshots)}",
-        f"\n---\n",
-    ]
-
-    for fid, fund_info in FUNDS.items():
-        lines.append(f"\n## {fund_info['short']} ({fid})")
-        lines.append(f"\n| 日期 | 评分 | 结论 | 研判细节 |")
-        lines.append("|------|-----|------|---------|")
-        for snap in snapshots:
-            fs = snap.get("funds", {}).get(fid)
-            if fs:
-                detail_str = "；".join(fs.get("details", []))[:100] or "—"
-                lines.append(f"| {snap['date']} | {fs['score']}/10 | {fs['conclusion']} | {detail_str} |")
-
-        # 趋势分析
-        scores = []
-        for snap in snapshots:
-            fs = snap.get("funds", {}).get(fid)
-            if fs:
-                scores.append(fs.get("score", 5))
-        if scores:
-            avg = sum(scores) / len(scores)
-            trend = "上升" if len(scores) >= 2 and scores[-1] > scores[0] else \
-                    "下降" if len(scores) >= 2 and scores[-1] < scores[0] else "持平"
-            lines.append(f"\n- 本月平均综合评分: {avg:.1f}/10")
-            lines.append(f"- 趋势: {trend}")
-            lines.append(f"- 最高: {max(scores)}/10, 最低: {min(scores)}/10")
-
-    lines.append(f"\n---\n## Tier-1 指标层验证（方法论对错）")
-    lines.append(f"\n验证方式：对比预测的指标趋势 vs 实际公布的数据")
-    lines.append(f"\n- [ ] 各板块领先指标预测是否准确？趋势延续假设有哪些被打破？")
-    lines.append(f"\n## Tier-2 价格层验证（短期噪音监控）")
-    lines.append(f"\n验证方式：对比预测方向 vs 实际7日走势（不作为方法论对错证据）")
-    lines.append(f"\n| 板块 | 预测 | 实际方向 | 强度偏差 | 判定 |")
-    lines.append(f"|------|------|---------|---------|------|")
-    lines.append(f"| — | — | — | — | 待本月数据 |")
-    lines.append(f"\n## 复盘要点")
-    lines.append(f"\n- [ ] 是否有误报或漏报？阈值/权重是否需要调整？")
-    lines.append(f"- [ ] 共享瓶颈敞口是否在可接受范围？")
-    lines.append(f"- [ ] 瓶颈破坏条件有无新进展？")
-    lines.append(f"\n> 此报告由系统自动生成，请结合实际情况人工复核。\n")
-
-    report = "\n".join(lines)
-    os.makedirs(REVIEWS_DIR, exist_ok=True)
-    report_path = os.path.join(REVIEWS_DIR, f"{month_str}.md")
-    with open(report_path, "w", encoding="utf-8") as f:
-        f.write(report)
-
+    """生成月度复盘报告（委托给 _generate_monthly_review）"""
+    _generate_monthly_review()
+    month_str = date.today().strftime("%Y-%m")
     return jsonify({"status": "generated", "month": month_str, "file": f"{month_str}.md"})
-
-
-# ══════════════════════════════════════════════════════════
-# 逃跑信号计算（与之前相同）
-# ══════════════════════════════════════════════════════════
-
-# ══════════════════════════════════════════════════════════
-# P0-任务1：共享瓶颈敞口 API
-# ══════════════════════════════════════════════════════════
 
 @app.route("/api/bottleneck-exposure")
 def api_bottleneck_exposure():
@@ -991,15 +1468,16 @@ def _generate_prediction(fund_id, assessment, leading, cycle):
         }
 
     # 验证日期
-    verify_date = (today + timedelta(days=7)).strftime("%Y-%m-%d")
+    verify_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")  # 月度验证
     indicator_verify_date = (today + timedelta(days=90)).strftime("%Y-%m-%d")  # 指标层按季度验证
 
     return {
         "direction": direction,
+        "prediction_type": "neutral" if direction in ("flat", "flat-down") else "directional",
         "label": label,
         "emoji": emoji,
         "confidence": confidence,
-        "timeframe": "未来1周",
+        "timeframe": "未来1月",
         "verify_date": verify_date,
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "reasons": reasons,
@@ -1013,7 +1491,7 @@ def _generate_prediction(fund_id, assessment, leading, cycle):
                 "verify_by": indicator_verify_date,
             },
             "tier2_price": {
-                "desc": "价格层验证（7天）：预测的方向 vs 实际走势 — 仅作短期噪音监控，不作为方法论对错证据",
+                "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
                 "verify_by": verify_date,
                 "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)",
             },
@@ -1025,10 +1503,26 @@ def _generate_prediction(fund_id, assessment, leading, cycle):
 # 启动
 # ══════════════════════════════════════════════════════════
 
+def _warmup_cache():
+    """后台预热：启动后自动拉取全部板块数据"""
+    _time.sleep(2)  # 等 Flask 完全启动
+    print("🔥 缓存预热中...")
+    _refresh_all()
+    print("✅ 缓存预热完成")
+
+
 if __name__ == "__main__":
+    import os as _os
     _start_scheduler()
+
+    # Flask debug reloader fork 两个进程，只在子进程预热
+    if _os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
+        warmup_thread = threading.Thread(target=_warmup_cache, daemon=True)
+        warmup_thread.start()
+
     print("⏰ 定时刷新已启动（每日 14:00）")
     print("📊 Investment Dashboard 基金监控仪表盘")
     print(f"   已配置 {len(FUNDS)} 只基金")
     print("   打开 http://localhost:5000")
+
     app.run(debug=True, host="127.0.0.1", port=5000)

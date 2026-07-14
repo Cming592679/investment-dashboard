@@ -19,6 +19,7 @@
     </div>
     <div id="top-indices" class="index-row"></div>
     <div class="top-bar-right">
+      <span id="health-dot" class="health-dot" title="数据健康状态">⚪</span>
       <span id="loading-indicator" class="loading-indicator" style="display:none">⏳ 刷新中...</span>
       <span id="update-time" class="update-time">--</span>
       <button id="refresh-btn" class="refresh-btn" title="手动刷新全部数据">🔄</button>
@@ -273,13 +274,14 @@ function renderAll(d) {
 
   renderTopIndices(d.indices);
   renderStocks(d.stocks, d.exit_thresholds || {rsi_overbought:70,rsi_oversold:30});
-  renderLeading(d.leading_indicators || {});
+  renderLeading(d.leading_indicators || {}, d.health || {});
   renderKeyDates(d.key_dates || []);
   renderCycle(d.cycle_assessment || {}, d.disruption_status || {});
   renderSpecials(d.specials);
   renderPrediction(d.prediction);
   renderExitBanner(d.assessment);
   renderExitDetail(d.assessment);
+  renderHealthIndicator(d.health || {});
 
   // 更新时间
   const cachedAt = d.cached_at || d.updated_at;
@@ -344,20 +346,23 @@ function renderIndicesPanel(indices) {
 }
 
 // ── 领先指标 ──────────────────────────────
-function renderLeading(data) {
+function renderLeading(data, healthData) {
   const container = $('#leading-panel');
   const entries = Object.entries(data);
   if (!entries.length) {
     container.innerHTML = '<div class="opt-empty">暂无领先指标数据</div>';
     return;
   }
+  const staleNames = new Set((healthData?.stale_indicators || []).map(s => s.indicator));
   container.innerHTML = entries.map(([name, v]) => {
     const icon = v.trend === 'up' ? '📈' : v.trend === 'down' ? '📉' : '📊';
     const cls = v.trend === 'up' ? 'lead-up' : v.trend === 'down' ? 'lead-down' : 'lead-flat';
-    return `<div class="lead-row">
+    const isStale = staleNames.has(name);
+    const staleBadge = isStale ? `<span class="stale-badge" title="数据可能过期，请检查更新">⚠ 过期</span>` : '';
+    return `<div class="lead-row ${isStale ? 'lead-stale' : ''}">
       <span class="lead-icon">${icon}</span>
       <div class="lead-info">
-        <span class="lead-name">${name}</span>
+        <span class="lead-name">${staleBadge}${name}</span>
         <span class="lead-value ${cls}">${v.value}</span>
         <span class="lead-note">${v.note || ''}</span>
       </div>
@@ -372,10 +377,14 @@ function renderKeyDates(data) {
     container.innerHTML = '<div class="opt-empty">暂无关键事件</div>';
     return;
   }
+  const today = new Date().toISOString().split('T')[0];
   const upcoming = data.filter(e => !e.passed).sort((a,b) => a.days_left - b.days_left);
-  const passed = data.filter(e => e.passed);
+  const recentlyPassed = data.filter(e => e.passed && e.days_left >= -14).sort((a,b) => b.days_left - a.days_left);
   let html = '';
+
+  // 即将到来
   if (upcoming.length) {
+    html += '<div class="event-section-label">⏳ 即将到来</div>';
     html += upcoming.map(e => {
       const badgeCls = e.importance === 'critical' ? 'badge-critical' : e.importance === 'high' ? 'badge-high' : 'badge-normal';
       const urgency = e.days_left <= 3 ? 'badge-urgent' : '';
@@ -386,6 +395,24 @@ function renderKeyDates(data) {
       </div>`;
     }).join('');
   }
+
+  // 最近过期（需跟进分析）
+  if (recentlyPassed.length) {
+    html += '<div class="event-section-label">📋 最近过期（需跟进）</div>';
+    html += recentlyPassed.map(e => {
+      const hasResult = e.result && e.result.trim();
+      const analysisHtml = hasResult
+        ? `<div class="event-result">📝 ${e.result}</div>`
+        : `<span class="event-passed-hint">待分析 — 在 config.py 对应事件添加 "result" 字段</span>`;
+      return `<div class="event-row ${hasResult ? 'event-passed-done' : 'event-passed'}">
+        <span class="badge badge-passed">${Math.abs(e.days_left)}天前</span>
+        <span class="event-name">${e.event}</span>
+        <span class="event-date">${e.date_str}</span>
+        ${analysisHtml}
+      </div>`;
+    }).join('');
+  }
+
   container.innerHTML = html || '<div class="opt-empty">近期无关键事件</div>';
 }
 
@@ -577,7 +604,9 @@ function renderHistory(history) {
       const c = f.conclusion || '';
       const icon = c.includes('安心') ? '🟢' : c.includes('忍着') ? '🟡' : c.includes('跑路') ? '🔴' : (f.score >= 6 ? '🟢' : f.score >= 3 ? '🟡' : '🔴');
       const name = (FUND_SHORTS || {})[fid] || fid;
-      return `<span class="opt-hist-chip">${icon} ${name} ${f.score}/10 ${c}</span>`;
+      const ret = f.return_pct != null ? (f.return_pct > 0 ? '+' : '') + f.return_pct.toFixed(1) + '%' : '--';
+      const retCls = f.return_pct > 0 ? 'up' : f.return_pct < 0 ? 'down' : 'flat';
+      return `<span class="opt-hist-chip">${icon} ${name} <span class="chg ${retCls}">${ret}</span> ${f.score}/10</span>`;
     }).join('');
     return `<div class="opt-hist-day">
       <span class="opt-hist-date">${h.date}</span>
@@ -650,6 +679,31 @@ $('#refresh-btn').addEventListener('click', async () => {
     $('#loading-indicator').style.display = 'none';
   }
 });
+
+// ── 数据健康指示器 ──────────────────────────
+function renderHealthIndicator(healthData) {
+  const dot = $('#health-dot');
+  const staleCount = healthData?.stale_count || 0;
+  if (staleCount === 0) {
+    dot.textContent = '🟢';
+    dot.title = '数据健康：所有指标未过期';
+  } else if (staleCount <= 2) {
+    dot.textContent = '🟡';
+    dot.title = `数据警告：${staleCount} 项指标可能过期，点击查看`;
+    dot.style.cursor = 'pointer';
+    dot.onclick = () => {
+      // 滚动到领先指标面板
+      $('#leading-panel').scrollIntoView({behavior: 'smooth'});
+    };
+  } else {
+    dot.textContent = '🔴';
+    dot.title = `数据异常：${staleCount} 项指标过期，需要立即更新`;
+    dot.style.cursor = 'pointer';
+    dot.onclick = () => {
+      $('#leading-panel').scrollIntoView({behavior: 'smooth'});
+    };
+  }
+}
 
 // ── 共享瓶颈敞口 ──────────────────────────
 async function loadBottleneckExposure() {
