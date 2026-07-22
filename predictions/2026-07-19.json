@@ -1,6 +1,6 @@
 {
-  "date": "2026-07-14",
-  "generated_at": "2026-07-14 14:03:36",
+  "date": "2026-07-19",
+  "generated_at": "2026-07-19 14:00:48",
   "predictions": {
     "019633": {
       "direction": "up",
@@ -9,14 +9,14 @@
       "emoji": "📈",
       "confidence": "低",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-18",
+      "generated_at": "2026-07-19 14:00",
       "reasons": [
         "4/5 领先指标向上，基本面强劲",
         "周期处于增速峰值区，警惕见顶"
       ],
       "watchpoints": [
-        "台积电 Q2 法说会 ⚠（07/16）后重新评估",
+        "SEMI 6月 Billings（07/21）后重新评估",
         "关注 1 项走弱指标是否改善"
       ],
       "indicator_predictions": {
@@ -51,15 +51,15 @@
           "update_cycle": "季末 Hyperscaler 财报后更新"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-17",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-17"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-18",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -71,15 +71,15 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-18",
+      "generated_at": "2026-07-19 14:00",
       "reasons": [
         "5/5 领先指标向上，基本面强劲",
         "周期处于早期，上升空间大",
         "综合评分高，基本面+技术面共振向上"
       ],
       "watchpoints": [
-        "中国集成电路 6 月产量（07/15）后重新评估"
+        "北方华创 H1 业绩预告(预计)（07/20）后重新评估"
       ],
       "indicator_predictions": {
         "北方华创合同负债 QoQ【⑥设备瓶颈】": {
@@ -113,15 +113,15 @@
           "update_cycle": "季度/事件驱动"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-17",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-17"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-18",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -133,15 +133,14 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-18",
+      "generated_at": "2026-07-19 14:00",
       "reasons": [
         "4/5 领先指标向上，基本面强劲",
-        "周期处于早期，上升空间大",
-        "综合评分高，基本面+技术面共振向上"
+        "周期处于早期，上升空间大"
       ],
       "watchpoints": [
-        "台积电 Q2 法说会 ⚠（07/16）后重新评估",
+        "中际旭创 H1 业绩预告(预计)（07/25）后重新评估",
         "关注 1 项走弱指标是否改善"
       ],
       "indicator_predictions": {
@@ -176,15 +175,15 @@
           "update_cycle": "年度（盯NVDA/Google集群架构白皮书）"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-17",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-17"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-18",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -196,14 +195,14 @@
       "emoji": "📈",
       "confidence": "低",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-18",
+      "generated_at": "2026-07-19 14:00",
       "reasons": [
         "5/5 领先指标向上，基本面强劲",
         "周期处于AI算力扩张中后期（Bottleneck主题），警惕见顶"
       ],
       "watchpoints": [
-        "台积电 Q2 法说会 ⚠（07/16）后重新评估"
+        "SK海力士 Q2 财报(HBM)（07/25）后重新评估"
       ],
       "indicator_predictions": {
         "NVDA 数据中心营收 QoQ【②单源卡脖子】": {
@@ -237,15 +236,15 @@
           "update_cycle": "季报后"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-17",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-17"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-18",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -257,14 +256,16 @@
       "emoji": "📊",
       "confidence": "低",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-18",
+      "generated_at": "2026-07-19 14:00",
       "reasons": [
-        "2/4 领先指标向上，2项走平待观察"
+        "2/4 领先指标向上，2项走平待观察",
+        "综合评分偏低 2/10，保持谨慎"
       ],
       "watchpoints": [
         "深南电路 H1 业绩预告(预计)（07/20）后重新评估",
-        "关注 2 项走弱指标是否改善"
+        "关注 2 项走弱指标是否改善",
+        "综合评分若跌破3 → 果断跑路"
       ],
       "indicator_predictions": {
         "AI服务器PCB层数升级【④BOM普适+⑧供应链】": {
@@ -292,15 +293,15 @@
           "update_cycle": "月度/季报"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-17",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-17"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-18",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -312,14 +313,15 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-18",
+      "generated_at": "2026-07-19 14:00",
       "reasons": [
         "4/4 领先指标向上，基本面强劲",
-        "周期处于早期，上升空间大"
+        "周期处于早期，上升空间大",
+        "综合评分高，基本面+技术面共振向上"
       ],
       "watchpoints": [
-        "SpaceX H1 发射统计（07/15）后重新评估"
+        "Rocket Lab Q2 财报（08/10）后重新评估"
       ],
       "indicator_predictions": {
         "SpaceX 发射频次【②发射产能单源】": {
@@ -347,15 +349,15 @@
           "update_cycle": "季度（盯RKLB季报+首飞日期）"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-17",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-17"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-18",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -367,13 +369,13 @@
       "emoji": "📊",
       "confidence": "低",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-18",
+      "generated_at": "2026-07-19 14:00",
       "reasons": [
         "3/4 领先指标向上，1项走平待观察"
       ],
       "watchpoints": [
-        "6月新能源装机数据（07/15）后重新评估",
+        "国网 H1 投资进度公告(预计)（07/20）后重新评估",
         "关注 1 项走弱指标是否改善",
         "综合评分若跌破3 → 果断跑路"
       ],
@@ -403,15 +405,78 @@
           "update_cycle": "日度（铜HG=F）+月度（硅钢）"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-17",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-17"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-18",
+          "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
+        }
+      }
+    },
+    "020608": {
+      "direction": "up",
+      "prediction_type": "directional",
+      "label": "看涨",
+      "emoji": "📈",
+      "confidence": "中",
+      "timeframe": "未来1月",
+      "verify_date": "2026-08-18",
+      "generated_at": "2026-07-19 14:00",
+      "reasons": [
+        "4/5 领先指标向上，基本面强劲",
+        "周期处于早期，上升空间大",
+        "综合评分高，基本面+技术面共振向上"
+      ],
+      "watchpoints": [
+        "Tesla Q2 财报(Optimus进度) ⚠（07/20）后重新评估",
+        "关注 1 项走弱指标是否改善"
+      ],
+      "indicator_predictions": {
+        "绿的谐波 谐波减速器订单积压【②HD垄断→国产替代】": {
+          "current_value": "在手订单排至2027年底，产能利用率>90%，全球份额~25%",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后（4/8/10月底）+ 特斯拉季报"
+        },
+        "行星滚柱丝杠 国产良率突破【②进口垄断+③产能售罄】": {
+          "current_value": "国产良率~60%（海外>85%），全球年产能仅120万套，缺口>400万套",
+          "current_trend": "flat",
+          "predicted_next_trend": "flat",
+          "update_cycle": "季报后 + 特斯拉供应链动态"
+        },
+        "六维力传感器 送样验证进度【②进口垄断→精度追赶】": {
+          "current_value": "国产化率<30%，是核心零部件中最低品类。柯力传感已获特斯拉盐雾测试通过",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后 + 柯力传感月度出货跟踪"
+        },
+        "日发精机 数控螺纹磨床出货【⑥设备瓶颈+⑦前机构冷门】": {
+          "current_value": "SK76系列已交付五洲新春/贝斯特/领益智造，丝杠装配线2026年10月交付",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯日发精机公告+合同签署）"
+        },
+        "钕铁硼出口管制→海外产能转移【①材料垄断→结构重构】": {
+          "current_value": "2026年初对日稀土出口清零，日企高端产线关停，中国承接75%转移订单",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯稀土出口数据+金力永磁季报）"
+        }
+      },
+      "indicator_verify_date": "2026-10-17",
+      "verification_tiers": {
+        "tier1_indicator": {
+          "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
+          "verify_by": "2026-10-17"
+        },
+        "tier2_price": {
+          "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
+          "verify_by": "2026-08-18",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -422,7 +487,7 @@
       "price_prediction": {
         "direction": "up",
         "label": "看涨",
-        "verify_date": "2026-08-13"
+        "verify_date": "2026-08-18"
       },
       "indicator_predictions": {
         "SEMI 北美设备 Billings": {
@@ -456,13 +521,13 @@
           "update_cycle": "季末 Hyperscaler 财报后更新"
         }
       },
-      "indicator_verify_date": "2026-10-12"
+      "indicator_verify_date": "2026-10-17"
     },
     "014194": {
       "price_prediction": {
         "direction": "up",
         "label": "看涨",
-        "verify_date": "2026-08-13"
+        "verify_date": "2026-08-18"
       },
       "indicator_predictions": {
         "北方华创合同负债 QoQ【⑥设备瓶颈】": {
@@ -496,13 +561,13 @@
           "update_cycle": "季度/事件驱动"
         }
       },
-      "indicator_verify_date": "2026-10-12"
+      "indicator_verify_date": "2026-10-17"
     },
     "CPO": {
       "price_prediction": {
         "direction": "up",
         "label": "看涨",
-        "verify_date": "2026-08-13"
+        "verify_date": "2026-08-18"
       },
       "indicator_predictions": {
         "中际旭创 800G 订单积压【③产能售罄】": {
@@ -536,13 +601,13 @@
           "update_cycle": "年度（盯NVDA/Google集群架构白皮书）"
         }
       },
-      "indicator_verify_date": "2026-10-12"
+      "indicator_verify_date": "2026-10-17"
     },
     "024239": {
       "price_prediction": {
         "direction": "up",
         "label": "看涨",
-        "verify_date": "2026-08-13"
+        "verify_date": "2026-08-18"
       },
       "indicator_predictions": {
         "NVDA 数据中心营收 QoQ【②单源卡脖子】": {
@@ -576,13 +641,13 @@
           "update_cycle": "季报后"
         }
       },
-      "indicator_verify_date": "2026-10-12"
+      "indicator_verify_date": "2026-10-17"
     },
     "021528": {
       "price_prediction": {
         "direction": "flat",
         "label": "震荡偏强",
-        "verify_date": "2026-08-13"
+        "verify_date": "2026-08-18"
       },
       "indicator_predictions": {
         "AI服务器PCB层数升级【④BOM普适+⑧供应链】": {
@@ -610,13 +675,13 @@
           "update_cycle": "月度/季报"
         }
       },
-      "indicator_verify_date": "2026-10-12"
+      "indicator_verify_date": "2026-10-17"
     },
     "015789": {
       "price_prediction": {
         "direction": "up",
         "label": "看涨",
-        "verify_date": "2026-08-13"
+        "verify_date": "2026-08-18"
       },
       "indicator_predictions": {
         "SpaceX 发射频次【②发射产能单源】": {
@@ -644,13 +709,13 @@
           "update_cycle": "季度（盯RKLB季报+首飞日期）"
         }
       },
-      "indicator_verify_date": "2026-10-12"
+      "indicator_verify_date": "2026-10-17"
     },
     "025856": {
       "price_prediction": {
         "direction": "flat",
         "label": "震荡偏强",
-        "verify_date": "2026-08-13"
+        "verify_date": "2026-08-18"
       },
       "indicator_predictions": {
         "国网/南网年度投资计划【⑧单一大客户】": {
@@ -678,7 +743,47 @@
           "update_cycle": "日度（铜HG=F）+月度（硅钢）"
         }
       },
-      "indicator_verify_date": "2026-10-12"
+      "indicator_verify_date": "2026-10-17"
+    },
+    "020608": {
+      "price_prediction": {
+        "direction": "up",
+        "label": "看涨",
+        "verify_date": "2026-08-18"
+      },
+      "indicator_predictions": {
+        "绿的谐波 谐波减速器订单积压【②HD垄断→国产替代】": {
+          "current_value": "在手订单排至2027年底，产能利用率>90%，全球份额~25%",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后（4/8/10月底）+ 特斯拉季报"
+        },
+        "行星滚柱丝杠 国产良率突破【②进口垄断+③产能售罄】": {
+          "current_value": "国产良率~60%（海外>85%），全球年产能仅120万套，缺口>400万套",
+          "current_trend": "flat",
+          "predicted_next_trend": "flat",
+          "update_cycle": "季报后 + 特斯拉供应链动态"
+        },
+        "六维力传感器 送样验证进度【②进口垄断→精度追赶】": {
+          "current_value": "国产化率<30%，是核心零部件中最低品类。柯力传感已获特斯拉盐雾测试通过",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后 + 柯力传感月度出货跟踪"
+        },
+        "日发精机 数控螺纹磨床出货【⑥设备瓶颈+⑦前机构冷门】": {
+          "current_value": "SK76系列已交付五洲新春/贝斯特/领益智造，丝杠装配线2026年10月交付",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯日发精机公告+合同签署）"
+        },
+        "钕铁硼出口管制→海外产能转移【①材料垄断→结构重构】": {
+          "current_value": "2026年初对日稀土出口清零，日企高端产线关停，中国承接75%转移订单",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯稀土出口数据+金力永磁季报）"
+        }
+      },
+      "indicator_verify_date": "2026-10-17"
     }
   }
 }

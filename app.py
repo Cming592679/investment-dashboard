@@ -587,34 +587,22 @@ def _attach_meta(data, fetched_at, is_fetching):
 
 
 # ══════════════════════════════════════════════════════════
-# 后台定时刷新（每日 14:00）
+# 后台定时刷新（每日 18:00）
 # ══════════════════════════════════════════════════════════
 
 def _scheduler_loop():
-    """后台线程：每日 14:00 刷新快照 + 每月1日复盘"""
+    """后台线程：每日 18:00 刷新快照"""
     global _last_auto_refresh_date
-    _last_review_month = None
     while True:
         _time.sleep(30)
         now = datetime.now()
         today = now.date()
 
-        # 每日 14:00-14:02 刷新
-        if now.hour == 14 and now.minute <= 2:
+        # 每日 18:00-18:02 刷新
+        if now.hour == 18 and now.minute <= 2:
             if _last_auto_refresh_date != today:
                 print(f"⏰ 定时刷新触发 {now.strftime('%H:%M:%S')}")
                 _refresh_all()
-
-        # 每月 1 日 10:00-10:02 生成复盘
-        if today.day == 1 and now.hour == 10 and now.minute <= 2:
-            month_key = today.strftime("%Y-%m")
-            if _last_review_month != month_key:
-                _last_review_month = month_key
-                print(f"📋 月度复盘触发 {now.strftime('%H:%M:%S')}")
-                try:
-                    _generate_monthly_review()
-                except Exception as e:
-                    print(f"  ⚠ 复盘失败: {e}")
 
 
 # ══════════════════════════════════════════════════════════
@@ -838,7 +826,9 @@ def _generate_monthly_review():
                 fdata = snap.get("funds", {}).get(fid, {})
                 for src_key in ["indices", "stocks"]:
                     if bm_ticker in fdata.get(src_key, {}):
-                        bm_returns.append(fdata[src_key][bm_ticker].get("chg_pct", 0))
+                        val = fdata[src_key][bm_ticker].get("chg_pct")
+                        if val is not None:
+                            bm_returns.append(val)
                         break
         bm_cum = round(sum(bm_returns), 2) if bm_returns else None
         excess = round(fund_cum - bm_cum, 2) if (fund_cum is not None and bm_cum is not None) else None
@@ -1520,7 +1510,7 @@ if __name__ == "__main__":
         warmup_thread = threading.Thread(target=_warmup_cache, daemon=True)
         warmup_thread.start()
 
-    print("⏰ 定时刷新已启动（每日 14:00）")
+    print("⏰ 定时刷新已启动（每日 18:00）")
     print("📊 Investment Dashboard 基金监控仪表盘")
     print(f"   已配置 {len(FUNDS)} 只基金")
     print("   打开 http://localhost:5000")

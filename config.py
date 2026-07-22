@@ -204,6 +204,34 @@ FUNDS = {
             "special_drop_red": -5, "special_drop_yellow": -3,
         },
     },
+
+    "020608": {
+        "name": "南方中证机器人ETF联接C",
+        "short": "机器人",
+        "benchmark": "159258.SZ",
+        "market": "a",
+        "stocks": {
+            "688017.SS": "绿的谐波",
+            "601100.SS": "恒立液压",
+            "603662.SS": "柯力传感",
+            "002520.SZ": "日发精机",
+            "300748.SZ": "金力永磁",
+        },
+        "indices": {
+            "000688.SS": "科创50",
+            "399006.SZ": "创业板指",
+        },
+        "specials": {
+            "TSLA": {"name": "特斯拉(Optimus)", "note": "人形机器人最强催化剂。Optimus V3定型=产业链从0到1"},
+        },
+        "exit_thresholds": {
+            "rsi_overbought": 75, "rsi_oversold": 25,
+            "drop_red": -5, "drop_yellow": -3,
+            "index_drop_red": -3, "index_drop_yellow": -1.5,
+            "ma50_red_count": 2, "ma50_yellow_count": 1,
+            "special_drop_red": -5, "special_drop_yellow": -3,
+        },
+    },
 }
 
 # ══════════════════════════════════════════════════════════
@@ -213,34 +241,36 @@ FUNDS = {
 LEADING_INDICATORS = {
     "019633": {
         "SEMI 北美设备 Billings": {
-            "value": "2026年5月 $2.3B",
-            "trend": "up",  # up / flat / down
-            "note": "连续6个月环比增长，设备订单仍在扩张",
-            "update_cycle": "每月中旬 SEMI 发布后更新",
+            "value": "6月 B/B值0.98(连续两月<1)，订单$15.1B(-2.6% MoM)，出货$15.4B(+16.2% YoY)",
+            "trend": "flat",
+            "note": "H1维持正增长但短期订单动能放缓。B/B连续<1是黄灯，但出货仍同比+16%，非收缩信号。关注7-8月是否回升至>1",
+            "update_cycle": "每月下旬 SEMI 发布后更新",
+            "last_updated": "2026-07-21",
         },
         "DRAM 合约价 QoQ": {
             "value": "Q2 +64% → Q3 预计 +8~13%",
             "trend": "flat",
-            "note": "涨幅大幅收窄！存储器周期可能进入平台期",
+            "note": "涨幅大幅收窄！存储器周期可能进入平台期。Q2法说会台积电确认HBM需求仍极强→SK海力士Q2(7/25)是关键验证",
             "update_cycle": "季末 TrendForce/DRAMeXchange 发布后更新",
         },
         "台积电月度营收 YoY": {
-            "value": "6月 +32% YoY（Q2合计 +31% YoY）",
+            "value": "Q2营收1.27兆NTD(+36% YoY)创新高，Q3指引季增11-15%。全年美元营收上修至+40%",
             "trend": "up",
-            "note": "Q2营收超预期，先进制程满产，CoWoS 产能仍是瓶颈。Q2法说会7/16是关键",
-            "update_cycle": "每月10日 TSMC 发布后更新",
-            "last_updated": "2026-07-10",
+            "note": "Q2法说会(7/16)确认：CoWoS年底14万片/月→2027年17万片。Capex上调至$600-640亿。魏哲家：2030年前产能仍难满足AI需求。先进制程+封装持续供不应求",
+            "update_cycle": "每月10日 TSMC 发布后更新 + 季报法说会",
+            "last_updated": "2026-07-21",
         },
         "ASML EUV 积压订单": {
-            "value": "Q1 新增 €3.6B 订单",
+            "value": "Q2营收€93.27亿(+21% YoY)，全年指引上修至€430-450亿。2027年EUV产能+30%至~85台",
             "trend": "up",
-            "note": "EUV 交期 18 月+，2028 年前产能已被锁定",
+            "note": "EUV交期18月+，2027年产能已被锁定。High-NA EUV已用于Intel 18A量产(酷睿Ultra 3)。2028年评估再扩30%至~110台",
             "update_cycle": "季末 ASML 财报后更新",
+            "last_updated": "2026-07-21",
         },
         "四大云厂 CapEx 合计 YoY": {
-            "value": "Q1 合计 +44% YoY",
+            "value": "Q1合计$730亿(+44% YoY)，Q2财报7/27-8/1密集发布",
             "trend": "up",
-            "note": "⚠ Q2 财报 7/27-8/1 发布，CapEx 指引是最大变量",
+            "note": "⚠ Q2 CapEx指引是当前最大变量。台积电Q2 Capex上修至$600-640亿→正向先行信号。若云厂CapEx>+30%=继续扩张；<+20%=警惕",
             "update_cycle": "季末 Hyperscaler 财报后更新",
         },
     },
@@ -326,10 +356,11 @@ LEADING_INDICATORS = {
             "update_cycle": "季报后（8月底Q2）",
         },
         "TSMC CoWoS 产能扩张【②先进封装瓶颈】": {
-            "value": "2026年底CoWoS月产能目标50K片（+80% YoY）",
+            "value": "Q2法说会确认：2026年底CoWoS月产能14万片，2027年底目标17万片",
             "trend": "up",
-            "note": "【②CoWoS单源】TSMC CoWoS=所有NVDA GPU必经之路。产能扩张速度=GPU出货上限。产能翻倍=供应瓶颈缓解→NVDA营收天花板打开",
+            "note": "【②CoWoS单源】TSMC CoWoS=所有NVDA GPU必经之路。产能仍在快速扩张但需求增长更快→2030年前仍难满足AI需求。魏哲家：乐见更多先进封装方案协助解决瓶颈",
             "update_cycle": "TSMC季报/法说会",
+            "last_updated": "2026-07-21",
         },
         "HBM3e 供应紧张度【②存储瓶颈】": {
             "value": "SK海力士HBM3e 2026产能全部售罄，2027已预订>60%",
@@ -344,10 +375,11 @@ LEADING_INDICATORS = {
             "update_cycle": "季报后（7月底/1月底/4月底/10月底）",
         },
         "ASML EUV 订单→GPU产能前置【⑥设备垄断】": {
-            "value": "Q1 EUV新增订单€3.6B，积压>€40B",
+            "value": "Q2营收€93.27亿超预期。全年指引上修至€430-450亿。2027年EUV产能+30%至~85台",
             "trend": "up",
-            "note": "【⑥设备垄断→②的根源】EUV交期18月+→TSMC扩产受限→CoWoS扩产受限→GPU出货受限。ASML订单是AI硬件供应链最上游的6-18月领先指标",
+            "note": "【⑥设备垄断→②的根源】EUV交期18月+→TSMC扩产受限→CoWoS扩产受限→GPU出货受限。ASML Q2指引上修=AI硬件2-3年扩张周期确认。High-NA EUV已量产(Intel 18A)",
             "update_cycle": "季报后",
+            "last_updated": "2026-07-21",
         },
     },
 
@@ -362,10 +394,11 @@ LEADING_INDICATORS = {
             "update_cycle": "季度（盯服务器ODM出货数据）",
         },
         "深南电路高层PCB产能利用率【③产能售罄】": {
-            "value": "南通三期工厂（20层+）产能利用率>95%",
+            "value": "H1归母净利21-23亿(+54-69% YoY)，无锡AI算力PCB项目(投资45亿)预计2027H1量产",
             "trend": "up",
-            "note": "【③产能售罄】高层PCB产能紧张→深南/沪电有定价权。产能利用率>90%持续=扩产信号→设备投资→行业景气确认",
+            "note": "【③产能售罄→扩产验证】H1业绩超预期，AI服务器+存储双驱动。南通三期满产+泰国/南通四期爬坡。无锡新项目专注AI服务器高层PCB(20-30层)，2027年投产=长期增长确认",
             "update_cycle": "季报后",
+            "last_updated": "2026-07-21",
         },
         "铜价 YoY【成本压力】": {
             "value": "LME铜 $9,800/吨（+12% YoY），Q2小幅回落",
@@ -416,10 +449,11 @@ LEADING_INDICATORS = {
     # 瓶颈原型：③变压器产能售罄 ⑧国网单一大客户 ⑥设备产能
     "025856": {
         "国网/南网年度投资计划【⑧单一大客户】": {
-            "value": "2026年国网计划投资¥6300亿（+8% YoY），南网¥1200亿",
+            "value": "Q1固投1290亿(+37% YoY)。H1物资招标>2500亿(+17%)。7月特高压第三批招标108.7亿",
             "trend": "up",
-            "note": "【⑧巨头依赖】国网+南网=电网设备行业唯一大客户。年度投资增速>5%=行业景气；<0%=收缩。2026年+8%仍在扩张区间",
-            "update_cycle": "年初国网/南网工作会议（1月）",
+            "note": "【⑧巨头依赖】国网H1投资进度超预期(+37%→远超年初+8%计划)。特高压+配电网双轮驱动。若H2维持节奏→全年固投可能上修至7000亿+",
+            "update_cycle": "月度跟踪（国网电子商务平台+基建部公告）",
+            "last_updated": "2026-07-21",
         },
         "大型变压器交付周期【③产能售罄】": {
             "value": "全球大型变压器交期18-24月（正常12月），供给严重不足",
@@ -428,16 +462,53 @@ LEADING_INDICATORS = {
             "update_cycle": "季度（盯ABB/西门子能源/特变电工季报交期数据）",
         },
         "新能源装机增速→电网消纳压力": {
-            "value": "2026年1-5月风光新增装机92GW（+28% YoY）",
+            "value": "6月新增3825个新能源项目(风电32+光伏3787)。截至5月底全国装机突破40.1亿kW(非化石62%)",
             "trend": "up",
-            "note": "新能源装机>电网消纳能力=弃风弃光=倒逼电网投资。装机增速越快→电网改造越紧迫→设备需求越确定",
-            "update_cycle": "月度（国家能源局）",
+            "note": "新能源装机>电网消纳能力=弃风弃光=倒逼电网投资。装机增速越快→电网改造越紧迫→设备需求越确定。煤电占比已降至32%(2010年>60%)",
+            "update_cycle": "月度（国家能源局，每月15日前后）",
+            "last_updated": "2026-07-21",
         },
         "铜/硅钢价格 YoY【成本端】": {
             "value": "铜$9,800(+12%) 硅钢¥8,500/吨(+5%)",
             "trend": "flat",
             "note": "铜+硅钢占变压器/电缆成本50%+。当前温和上涨但未暴涨→成本压力可控。若铜价破$11,000=毛利显著承压→需警惕",
             "update_cycle": "日度（铜HG=F）+月度（硅钢）",
+        },
+    },
+
+    # ═══ 机器人 · 人形机器人产业链（Bottleneck：核心零部件卡脖子） ═══
+    # 5层链：人形机器人量产→执行器总成→减速器/丝杠/传感器→精密磨床/绕线机→钕铁硼/特种钢
+    # 瓶颈原型：②HD谐波减速器垄断 ②行星滚柱丝杠进口垄断 ②六维力传感器进口垄断 ⑥螺纹磨床设备瓶颈 ①稀土磁材垄断
+    "020608": {
+        "绿的谐波 谐波减速器订单积压【②HD垄断→国产替代】": {
+            "value": "在手订单排至2027年底，产能利用率>90%，全球份额~25%。6月工业机器人产量+28.1% YoY→下游需求旺盛",
+            "trend": "up",
+            "note": "【②单源卡脖子】日本HD占全球>60%，绿的谐波是国内唯一量产厂商。三次谐波新技术传动精度<10弧秒、刚性3x，已独家供货特斯拉墨西哥工厂。产能从50万→100万台/年扩产中。Tesla Q2财报(7/22)是近期最大催化剂",
+            "update_cycle": "季报后（4/8/10月底）+ 特斯拉季报",
+        },
+        "行星滚柱丝杠 国产良率突破【②进口垄断+③产能售罄】": {
+            "value": "国产良率~60%（海外>85%），全球年产能仅120万套，缺口>400万套",
+            "trend": "flat",
+            "note": "【②+③叠加=最强瓶颈】行星滚柱丝杠占整机BOM 14-19%，单台Optimus需10-14根，是价值量最高的单一零部件。瑞士Rollvis/GSA/Ewellix垄断全球>80%。国产恒立液压已获特斯拉小批量订单，良率从40%→60%是关键突破。五洲新春反向丝杠规划100万套/年。若良率突破80%→国产替代拐点确认",
+            "update_cycle": "季报后 + 特斯拉供应链动态",
+        },
+        "六维力传感器 送样验证进度【②进口垄断→精度追赶】": {
+            "value": "国产化率<30%，是核心零部件中最低品类。柯力传感已获特斯拉盐雾测试通过",
+            "trend": "up",
+            "note": "【②传感器瓶颈】ATI/OnRobot占全球>70%。技术差距在精度(国产0.5-1%FS vs 海外0.2%FS)和良率(40-60% vs 90%+)。但国产价格仅为进口1/3。柯力传感月出货突破1000只、送样70+客户。工信部2026年将其纳入专项支持。2028-2029年国产化率预计60-70%",
+            "update_cycle": "季报后 + 柯力传感月度出货跟踪",
+        },
+        "日发精机 数控螺纹磨床出货【⑥设备瓶颈+⑦前机构冷门】": {
+            "value": "SK76系列已交付五洲新春/贝斯特/领益智造，丝杠装配线2026年10月交付",
+            "trend": "up",
+            "note": "【⑥⑦=被忽视的卖铲人】行星滚柱丝杠疯狂扩产→但加工丝杠的精密螺纹磨床本身也产能有限！日发精机是国内唯一量产数控螺纹磨床的公司（精度微米级）。欧洲/日本设备交期12-18月→国产设备替代窗口打开。当前市值小、卖方覆盖少，是真正的'卖铲子'冷门标的",
+            "update_cycle": "季度（盯日发精机公告+合同签署）",
+        },
+        "钕铁硼出口管制→海外产能转移【①材料垄断→结构重构】": {
+            "value": "2026年初对日稀土出口清零，日企高端产线关停，中国承接75%转移订单",
+            "trend": "up",
+            "note": "【①上游材料垄断】一台Optimus消耗3.2-4.5kg高性能钕铁硼(N52-UH级)。中国垄断全球90%稀土加工+出口管制=永久性结构重构。日本信越/Proterial/TDK断供→订单流向金力永磁/中科三环。金力永磁是特斯拉Optimus独家磁材供应商，墨西哥基地规避关税",
+            "update_cycle": "季度（盯稀土出口数据+金力永磁季报）",
         },
     },
 }
@@ -448,9 +519,12 @@ KEY_DATES = {
     "019633": [
         {"date": date(2026, 7, 10), "event": "台积电 6 月营收", "importance": "critical",
          "result": "6月营收 NT$2,484亿（+32% YoY），Q2合计 NT$6,735亿（+31% YoY），双超预期。CoWoS 满载，3nm/5nm 产能利用率 100%"},
-        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical"},
-        {"date": date(2026, 7, 17), "event": "ASML Q2 财报",     "importance": "critical"},
-        {"date": date(2026, 7, 21), "event": "SEMI 6月 Billings", "importance": "critical"},
+        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical",
+         "result": "Q2营收1.27兆NTD(+36% YoY)创新高，毛利率67.7%超预期。CoWoS年底月产能14万片(2027→17万)。Capex上调至$600-640亿。全年美元营收上修至+40%。魏哲家：2030年前产能仍难满足AI需求"},
+        {"date": date(2026, 7, 17), "event": "ASML Q2 财报",     "importance": "critical",
+         "result": "营收€93.27亿(+21% YoY)超预期，EUV出货16台。全年指引上修至€430-450亿。2027年EUV产能+30%至~85台。High-NA EUV已用于Intel 18A量产"},
+        {"date": date(2026, 7, 21), "event": "SEMI 6月 Billings", "importance": "critical",
+         "result": "B/B值0.98(连续两月<1)。6月订单$15.1B(-2.6% MoM, +3.5% YoY)，出货$15.4B(+16.2% YoY)。H1维持正增长，但短期订单动能放缓"},
         {"date": date(2026, 7, 25), "event": "SK海力士 Q2 财报(HBM)", "importance": "critical"},
         {"date": date(2026, 7, 27), "event": "GOOGL Q2 财报",    "importance": "high"},
         {"date": date(2026, 7, 29), "event": "MSFT Q2 财报",     "importance": "high"},
@@ -460,27 +534,30 @@ KEY_DATES = {
     "014194": [
         {"date": date(2026, 7, 10),  "event": "台积电 6 月营收",        "importance": "high",
          "result": "6月营收 +32% YoY，先进制程满产，利好国产设备订单预期"},
-        {"date": date(2026, 7, 15),  "event": "中国集成电路 6 月产量",    "importance": "high"},
-        {"date": date(2026, 7, 15),  "event": "中国集成电路 6 月产量",    "importance": "high"},
-        {"date": date(2026, 7, 16),  "event": "台积电 Q2 法说会 ⚠",     "importance": "critical"},
-        {"date": date(2026, 7, 17),  "event": "ASML Q2 财报(EUV订单)",   "importance": "critical"},
-        {"date": date(2026, 7, 20),  "event": "北方华创 H1 业绩预告(预计)", "importance": "critical"},
+        {"date": date(2026, 7, 15),  "event": "中国集成电路 6 月产量",    "importance": "high",
+         "result": "6月517亿块(+18.8% YoY)。H1累计2798亿块(+23.1% YoY)，日均>15亿块。AI高端芯片+存储需求爆发是主驱动力"},
+        {"date": date(2026, 7, 16),  "event": "台积电 Q2 法说会 ⚠",     "importance": "critical",
+         "result": "CoWoS年底月产能14万片→2027年17万片，3nm/5nm满载。先进制程+先进封装持续供不应求→国产设备替代窗口延长"},
+        {"date": date(2026, 7, 17),  "event": "ASML Q2 财报(EUV订单)",   "importance": "critical",
+         "result": "全年营收指引€430-450亿(上调16%)，2027 EUV产能+30%。中国占比降至14%(前期采购消化)。EUV交期18月+=供给刚性"},
+        {"date": date(2026, 7, 20),  "event": "北方华创 H1 业绩预告(预计)", "importance": "critical",
+         "result": "H1正式预告尚未发布。Q1合同负债42.03亿(环比-2.05%)，研发投入+37%。关注H1订单质量和存货周转"},
         {"date": date(2026, 8, 15),  "event": "中芯国际 Q2 财报(预计)",    "importance": "critical"},
         {"date": date(2026, 8, 25),  "event": "北方华创 Q2 财报(预计)",    "importance": "high"},
     ],
     "CPO": [
-        {"date": date(2026, 7, 10), "event": "台积电 6 月营收", "importance": "high",
-         "result": "6月营收超预期 → AI算力需求强劲 → 800G/1.6T 光模块需求确定性强"},
-        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical"},
-        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical"},
+        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical",
+         "result": "Q2营收+36% YoY创新高，CoWoS年底14万片/月。AI算力需求持续爆炸→800G/1.6T光模块需求确定性极强"},
         {"date": date(2026, 7, 25), "event": "中际旭创 H1 业绩预告(预计)", "importance": "critical"},
         {"date": date(2026, 8, 5),  "event": "Lumentum Q2 财报(光芯片)", "importance": "high"},
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报", "importance": "critical"},
         {"date": date(2026, 8, 25), "event": "中际旭创 Q2 财报(预计)", "importance": "critical"},
     ],
     "024239": [
-        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical"},
-        {"date": date(2026, 7, 17), "event": "ASML Q2 财报(EUV订单)", "importance": "critical"},
+        {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical",
+         "result": "CoWoS年底14万片/月(2027→17万)。Capex上调至$600-640亿。2030年前产能仍难满足AI需求→GPU出货瓶颈短期无解"},
+        {"date": date(2026, 7, 17), "event": "ASML Q2 财报(EUV订单)", "importance": "critical",
+         "result": "全年指引上修至€430-450亿。2027 EUV产能+30%。EUV交期18月+=GPU产能扩张的最上游硬约束"},
         {"date": date(2026, 7, 25), "event": "SK海力士 Q2 财报(HBM)", "importance": "critical"},
         {"date": date(2026, 7, 27), "event": "GOOGL Q2(CapEx指引)", "importance": "critical"},
         {"date": date(2026, 7, 29), "event": "MSFT Q2(CapEx指引)", "importance": "critical"},
@@ -489,20 +566,38 @@ KEY_DATES = {
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报", "importance": "critical"},
     ],
     "021528": [
-        {"date": date(2026, 7, 20), "event": "深南电路 H1 业绩预告(预计)", "importance": "critical"},
+        {"date": date(2026, 7, 20), "event": "深南电路 H1 业绩预告(预计)", "importance": "critical",
+         "result": "归母净利21-23亿(+54-69% YoY)，扣非+64-80%。AI算力+存储双驱动。无锡AI算力PCB项目(投资45亿)预计2027H1量产"},
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(服务器需求)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "沪电股份 Q2 财报(预计)", "importance": "high"},
     ],
     "015789": [
-        {"date": date(2026, 7, 15), "event": "SpaceX H1 发射统计", "importance": "high"},
+        {"date": date(2026, 7, 15), "event": "SpaceX H1 发射统计", "importance": "high",
+         "result": "H1完成75次发射(59次Starlink)，部署1589颗卫星。年化150次+。全球发射占比>60%，垄断地位稳固"},
         {"date": date(2026, 8, 10), "event": "Rocket Lab Q2 财报", "importance": "critical"},
         {"date": date(2026, 10, 1), "event": "中国航天发射计划H2更新", "importance": "high"},
     ],
     "025856": [
-        {"date": date(2026, 7, 15), "event": "6月新能源装机数据", "importance": "high"},
-        {"date": date(2026, 7, 20), "event": "国网 H1 投资进度公告(预计)", "importance": "critical"},
+        {"date": date(2026, 7, 15), "event": "6月新能源装机数据", "importance": "high",
+         "result": "6月新增3825个项目(风电32+光伏3787)。截至5月底全国装机突破40.1亿kW，非化石能源占62%"},
+        {"date": date(2026, 7, 20), "event": "国网 H1 投资进度公告(预计)", "importance": "critical",
+         "result": "Q1固投1290亿(+37% YoY)。H1物资招标>2500亿(+17%)。110kV+工程投产完成年度53%。7月特高压第三批招标108.7亿"},
         {"date": date(2026, 8, 25), "event": "特变电工 Q2 财报(预计)", "importance": "high"},
         {"date": date(2026, 8, 30), "event": "国电南瑞 Q2 财报(预计)", "importance": "critical"},
+    ],
+    "020608": [
+        {"date": date(2026, 7, 15), "event": "6月工业机器人产量", "importance": "high",
+         "result": "6月11.07万套(+28.1% YoY)，H1累计+28.0%。连续多月>25%高增，制造业自动化加速"},
+        {"date": date(2026, 7, 22), "event": "Tesla Q2 财报(Optimus进度) ⚠", "importance": "critical"},
+        {"date": date(2026, 7, 25), "event": "绿的谐波 H1 业绩预告(预计)", "importance": "critical"},
+        {"date": date(2026, 8, 5),  "event": "柯力传感 Q2 财报(六维力出货)", "importance": "critical"},
+        {"date": date(2026, 8, 15), "event": "世界机器人大会(北京)", "importance": "critical"},
+        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(机器人平台)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "恒立液压 Q2 财报(丝杠进度)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "绿的谐波 Q2 财报", "importance": "critical"},
+        {"date": date(2026, 8, 25), "event": "金力永磁 Q2 财报(磁材出货)", "importance": "high"},
+        {"date": date(2026, 9, 1),  "event": "日发精机 丝杠装配线交付节点", "importance": "high"},
+        {"date": date(2026, 9, 15), "event": "Tesla AI Day 2026(预计) ⚠", "importance": "critical"},
     ],
 }
 
@@ -549,6 +644,12 @@ CYCLE_ASSESSMENTS = {
         "stage": "mid",
         "label": "电网改造扩张期（Evolution主题）",
         "note": "【Evolution】新能源装机暴增→电网消纳能力不足→电网投资确定性高。核心瓶颈在③变压器产能（全球交期18-24月）。不同于科技板块的情绪驱动，电网设备是政策+物理需求驱动：变压器不够就是不够，没有替代方案。关注：国网H1投资进度、特高压项目批复、铜/硅钢价格。风险在成本端而非需求端。",
+        "risk": "green",
+    },
+    "020608": {
+        "stage": "early",
+        "label": "人形机器人量产前夜（Bottleneck主题，5瓶颈原型交叉）",
+        "note": "【Bottleneck密集区】人形机器人是当前瓶颈密度最高的赛道之一：①钕铁硼磁材中国垄断+出口管制→结构重构 ②HD谐波减速器→绿的谐波突破 ②行星滚柱丝杠进口垄断→恒立液压/五洲新春追赶 ②六维力传感器<30%国产化 ⑥精密螺纹磨床被忽视的卖铲人。当前Optimus V3定型在即、特斯拉年底目标稳定2000-2500台/周，产业链各层级的瓶颈紧张度将逐层暴露。最适合埋伏的是【⑥⑦设备层(日发精机)+①材料层(金力永磁)】——机构覆盖少、但产能扩张绕不开。关键变量：①7/20 Tesla Q2→Optimus量产时间表 ②绿的谐波/恒立液压H1业绩→验证订单放量 ③行星滚柱丝杠良率突破60%→80%是关键阈值。",
         "risk": "green",
     },
 }
@@ -616,6 +717,36 @@ BOTTLENECK_CLUSTERS = {
         "label": "政府/国防预算驱动",
         "desc": "航天+电网受政策预算周期影响",
         "funds": ["015789", "025856"],  # 航天卫星 / 电网设备
+    },
+    "harmonic_reducer": {
+        "label": "谐波减速器 HD 垄断",
+        "desc": "日本 HD 占全球 >60%，绿的谐波国内唯一量产替代",
+        "funds": ["020608"],
+    },
+    "planetary_roller_screw": {
+        "label": "行星滚柱丝杠进口垄断",
+        "desc": "瑞士 Rollvis/GSA/Ewellix 垄断 >80%，国产良率仅 60%",
+        "funds": ["020608"],
+    },
+    "six_axis_force_sensor": {
+        "label": "六维力传感器进口垄断",
+        "desc": "ATI/OnRobot 占全球 >70%，国产化率 <30%，最大短板",
+        "funds": ["020608"],
+    },
+    "thread_grinder_equipment": {
+        "label": "精密螺纹磨床设备瓶颈",
+        "desc": "日发精机国内唯一量产，欧洲/日本设备交期 12-18 月",
+        "funds": ["020608"],
+    },
+    "ndfeb_magnet_monopoly": {
+        "label": "钕铁硼稀土磁材垄断",
+        "desc": "中国垄断全球 90% 加工 + 出口管制 → 永久结构重构",
+        "funds": ["020608"],
+    },
+    "optimus_catalyst": {
+        "label": "Tesla Optimus 量产催化剂",
+        "desc": "Optimus V3 定型 + 周产目标 2000-2500 台 = 最强情绪驱动",
+        "funds": ["020608"],
     },
 }
 
@@ -701,6 +832,58 @@ BOTTLENECK_DISRUPTION = {
         ],
         "affected_funds": ["025856"],
     },
+    "harmonic_reducer": {
+        "label": "谐波减速器日本 HD 垄断",
+        "conditions": [
+            {"desc": "绿的谐波全球份额突破 30%（当前~25%）", "status": "watching", "note": "墨西哥工厂独家配套特斯拉，三次谐波技术差异化"},
+            {"desc": "HD 在中国建厂降价反击", "status": "none", "note": "HD 当前策略是高端垄断而非价格战"},
+            {"desc": "行星减速器等低成本方案部分替代谐波", "status": "watching", "note": "广发证券提示行星减速器可能替代部分谐波场景"},
+        ],
+        "affected_funds": ["020608"],
+    },
+    "planetary_roller_screw": {
+        "label": "行星滚柱丝杠进口垄断",
+        "conditions": [
+            {"desc": "恒立液压/五洲新春良率突破 80%", "status": "watching", "note": "当前国产良率~60%，突破80%可规模替代进口"},
+            {"desc": "国产丝杠进入特斯拉 Optimus 批量供应", "status": "watching", "note": "恒立液压已获小批量订单，五洲新春在验证中"},
+            {"desc": "Rollvis/GSA 大规模扩产打破供给瓶颈", "status": "none", "note": "欧洲扩产保守，12-18月内难以改变格局"},
+        ],
+        "affected_funds": ["020608"],
+    },
+    "six_axis_force_sensor": {
+        "label": "六维力传感器进口垄断",
+        "conditions": [
+            {"desc": "柯力传感精度达 0.2%FS（ATI同级）", "status": "watching", "note": "当前国产精度 0.5-1%FS，差距在缩小"},
+            {"desc": "国产传感器进入特斯拉批量供应", "status": "watching", "note": "柯力传感已通过特斯拉盐雾测试，待批量定点"},
+            {"desc": "工信部专项支持落地→国产替代加速", "status": "watching", "note": "2026年已纳入专项，宁波推出\"机智保\"降低试用门槛"},
+        ],
+        "affected_funds": ["020608"],
+    },
+    "thread_grinder_equipment": {
+        "label": "精密螺纹磨床设备瓶颈",
+        "conditions": [
+            {"desc": "日发精机获主流丝杠厂批量订单", "status": "watching", "note": "已交付五洲新春/贝斯特，但尚未大规模量产"},
+            {"desc": "欧洲/日本设备商扩产或缩短交期", "status": "none", "note": "高端磨床扩产周期长，短期无解"},
+        ],
+        "affected_funds": ["020608"],
+    },
+    "ndfeb_magnet_monopoly": {
+        "label": "钕铁硼中国垄断+出口管制",
+        "conditions": [
+            {"desc": "海外建成稀土分离产能（Lynas/MP Materials）", "status": "watching", "note": "海外仅能分离轻稀土，镝铽仍100%依赖中国"},
+            {"desc": "无重稀土配方突破→降低镝铽需求", "status": "watching", "note": "金力永磁晶界渗透已降镝铽50-70%，但在极限推进"},
+        ],
+        "affected_funds": ["020608"],
+    },
+    "optimus_catalyst": {
+        "label": "Tesla Optimus 量产进度",
+        "conditions": [
+            {"desc": "Optimus 宣布对外销售时间表", "status": "watching", "note": "2027年目标对外销售，7/20 Q2财报是近期关键节点"},
+            {"desc": "特斯拉周产稳定>2000台", "status": "watching", "note": "马斯克红线：2026年底稳定2000-2500台/周"},
+            {"desc": "Optimus 获得外部客户订单", "status": "none", "note": "目前仅有特斯拉内部使用计划"},
+        ],
+        "affected_funds": ["020608"],
+    },
 }
 
 # ══════════════════════════════════════════════════════════
@@ -717,6 +900,7 @@ CYCLE_COUNTER_HYPOTHESIS = {
     "021528": "如果铜价暴涨至 $12,000 → 成本端严重恶化，当前 mid 判断需要重新评估",
     "015789": "如果 Neutron 首飞失败 → 发射垄断短期内无解，早期阶段可能持续更久（利空商业航天板块）",
     "025856": "如果国网投资增速降至 <3% → 需求端逻辑弱化，当前 mid 判断偏高",
+    "020608": "如果 Tesla Optimus 对外销售推迟到 2028+ 或量产良率持续<50% → 整条供应链的量产故事短期无法兑现，核心零部件厂商的机器人业务收入占比可能停滞在<10%，板块可能回调 30-50%",
 }
 
 # ══════════════════════════════════════════════════════════
@@ -745,4 +929,5 @@ CONTROL_BENCHMARKS = {
     "021528":  "159997.SZ", # PCB → 电子ETF
     "015789":  "512660.SS", # 航天卫星 → 军工ETF
     "025856":  "159611.SZ", # 电网设备 → 电力ETF
+    "020608":  "000688.SS", # 机器人 → 科创50
 }

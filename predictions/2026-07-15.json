@@ -1,466 +1,6 @@
 {
-  "date": "2026-07-14",
-  "fetched_at": "2026-07-14 14:03:36",
-  "funds": {
-    "019633": {
-      "name": "国泰半导体材料设备ETF联接C",
-      "score": 5,
-      "conclusion": "忍着不动",
-      "emoji": "🟡",
-      "details": [
-        "领先指标 4/5 向好 → +5",
-        "周期中后期（增速峰值区）→ +1",
-        "MA50 大面积破位（成分4/5 指数0/3）→ +0",
-        "联动降级: DRAM 合约价→flat（来自019633）-1"
-      ],
-      "fund_return_pct": -0.72,
-      "stocks": {
-        "AMAT": {
-          "name": "应用材料",
-          "price": 575.39,
-          "chg_pct": -4.5,
-          "rsi": 43.7,
-          "above_ma50": true
-        },
-        "LRCX": {
-          "name": "泛林研究",
-          "price": 329.92,
-          "chg_pct": -5.83,
-          "rsi": 36.9,
-          "above_ma50": false
-        },
-        "ASML": {
-          "name": "阿斯麦",
-          "price": 1726.04,
-          "chg_pct": -3.97,
-          "rsi": 39.6,
-          "above_ma50": true
-        },
-        "KLAC": {
-          "name": "科磊",
-          "price": 222.25,
-          "chg_pct": -4.0,
-          "rsi": 39.3,
-          "above_ma50": true
-        },
-        "TOELY": {
-          "name": "东京电子",
-          "price": 218.25,
-          "chg_pct": -4.39,
-          "rsi": 39.8,
-          "above_ma50": true
-        }
-      },
-      "indices": {
-        "SOXX": {
-          "name": "iShares半导体ETF",
-          "price": 553.61,
-          "chg_pct": -4.77,
-          "above_ma50": false
-        },
-        "SMH": {
-          "name": "VanEck半导体ETF",
-          "price": 585.62,
-          "chg_pct": -4.16,
-          "above_ma50": false
-        },
-        "^SOX": {
-          "name": "费城半导体指数",
-          "price": 12347.78,
-          "chg_pct": -4.78,
-          "above_ma50": false
-        }
-      }
-    },
-    "014194": {
-      "name": "汇添富中证芯片指数增强C",
-      "score": 7,
-      "conclusion": "安心持有",
-      "emoji": "🟢",
-      "details": [
-        "领先指标 5/5 向好 → +5",
-        "周期早期 → +2",
-        "MA50 大面积破位（成分5/5 指数0/1）→ +0",
-        "⚠ 双重计分提示: \"光刻胶进口依存度\" 同时出现在领先指标和周期判断中，可能被计入两个因子"
-      ],
-      "fund_return_pct": -0.48,
-      "stocks": {
-        "688981.SS": {
-          "name": "中芯国际",
-          "price": 157.5,
-          "chg_pct": -3.72,
-          "rsi": 53.3,
-          "above_ma50": true
-        },
-        "002371.SZ": {
-          "name": "北方华创",
-          "price": 760.9,
-          "chg_pct": -0.44,
-          "rsi": 49.1,
-          "above_ma50": true
-        },
-        "603501.SS": {
-          "name": "韦尔股份",
-          "price": 101.9,
-          "chg_pct": -0.58,
-          "rsi": 64.6,
-          "above_ma50": true
-        },
-        "688012.SS": {
-          "name": "中微公司",
-          "price": 398.31,
-          "chg_pct": -2.52,
-          "rsi": 52.7,
-          "above_ma50": true
-        },
-        "603986.SS": {
-          "name": "兆易创新",
-          "price": 572.51,
-          "chg_pct": 3.94,
-          "rsi": 38.5,
-          "above_ma50": true
-        }
-      },
-      "indices": {
-        "000688.SS": {
-          "name": "科创50",
-          "price": 1984.67,
-          "chg_pct": 0.0,
-          "above_ma50": null
-        },
-        "159995.SZ": {
-          "name": "芯片ETF",
-          "price": 1.45,
-          "chg_pct": -0.48,
-          "above_ma50": false
-        }
-      }
-    },
-    "CPO": {
-      "name": "光模块(CPO)板块监测",
-      "score": 8,
-      "conclusion": "安心持有",
-      "emoji": "🟢",
-      "details": [
-        "领先指标 4/5 向好 → +5",
-        "周期早期 → +2",
-        "MA50 部分破位（成分3/5 指数1/1）→ +1"
-      ],
-      "fund_return_pct": 6.41,
-      "stocks": {
-        "300308.SZ": {
-          "name": "中际旭创",
-          "price": 1178.97,
-          "chg_pct": 6.41,
-          "rsi": 39.2,
-          "above_ma50": true
-        },
-        "300502.SZ": {
-          "name": "新易盛",
-          "price": 562.95,
-          "chg_pct": 9.84,
-          "rsi": 50.9,
-          "above_ma50": true
-        },
-        "300394.SZ": {
-          "name": "天孚通信",
-          "price": 271.17,
-          "chg_pct": 4.57,
-          "rsi": 36.1,
-          "above_ma50": false
-        },
-        "002281.SZ": {
-          "name": "光迅科技",
-          "price": 230.3,
-          "chg_pct": 6.62,
-          "rsi": 39.7,
-          "above_ma50": true
-        },
-        "688313.SS": {
-          "name": "仕佳光子",
-          "price": 150.03,
-          "chg_pct": 7.47,
-          "rsi": 27.4,
-          "above_ma50": false
-        }
-      },
-      "indices": {
-        "159997.SZ": {
-          "name": "电子ETF",
-          "price": 2.48,
-          "chg_pct": 1.8,
-          "above_ma50": true
-        },
-        "399006.SZ": {
-          "name": "创业板指",
-          "price": 3813.39,
-          "chg_pct": 0.0,
-          "above_ma50": null
-        }
-      }
-    },
-    "024239": {
-      "name": "华夏全球科技先锋QDII C",
-      "score": 5,
-      "conclusion": "忍着不动",
-      "emoji": "🟡",
-      "details": [
-        "领先指标 5/5 向好 → +5",
-        "周期中后期（AI算力扩张中后期（Bottleneck主题））→ +1",
-        "MA50 大面积破位（成分2/5 指数0/3）→ +0",
-        "联动降级: DRAM 合约价→flat（来自019633）-1"
-      ],
-      "fund_return_pct": -1.9,
-      "stocks": {
-        "NVDA": {
-          "name": "英伟达",
-          "price": 203.53,
-          "chg_pct": -3.52,
-          "rsi": 45.4,
-          "above_ma50": false
-        },
-        "AMD": {
-          "name": "超威",
-          "price": 534.39,
-          "chg_pct": -4.21,
-          "rsi": 47.3,
-          "above_ma50": true
-        },
-        "AVGO": {
-          "name": "博通",
-          "price": 384.05,
-          "chg_pct": -3.98,
-          "rsi": 46.8,
-          "above_ma50": false
-        },
-        "ANET": {
-          "name": "Arista",
-          "price": 181.15,
-          "chg_pct": -3.11,
-          "rsi": 53.5,
-          "above_ma50": true
-        },
-        "SMCI": {
-          "name": "超微电脑",
-          "price": 27.66,
-          "chg_pct": -2.3,
-          "rsi": 22.7,
-          "above_ma50": false
-        }
-      },
-      "indices": {
-        "^NDX": {
-          "name": "纳斯达克100",
-          "price": 29264.1,
-          "chg_pct": -1.88,
-          "above_ma50": false
-        },
-        "SMH": {
-          "name": "VanEck半导体ETF",
-          "price": 585.62,
-          "chg_pct": -4.16,
-          "above_ma50": false
-        },
-        "QQQ": {
-          "name": "纳指100ETF",
-          "price": 711.74,
-          "chg_pct": -1.9,
-          "above_ma50": false
-        }
-      }
-    },
-    "021528": {
-      "name": "财通成长优选C",
-      "score": 5,
-      "conclusion": "忍着不动",
-      "emoji": "🟡",
-      "details": [
-        "领先指标 2↑2→0↓ 偏多 → +3",
-        "周期中期 → +1",
-        "MA50 部分破位（成分3/5 指数1/1）→ +1"
-      ],
-      "fund_return_pct": 1.68,
-      "stocks": {
-        "002916.SZ": {
-          "name": "深南电路",
-          "price": 401.16,
-          "chg_pct": 1.92,
-          "rsi": 44.7,
-          "above_ma50": true
-        },
-        "002384.SZ": {
-          "name": "东山精密",
-          "price": 260.37,
-          "chg_pct": 10.0,
-          "rsi": 50.8,
-          "above_ma50": true
-        },
-        "002463.SZ": {
-          "name": "沪电股份",
-          "price": 137.13,
-          "chg_pct": 10.0,
-          "rsi": 47.1,
-          "above_ma50": true
-        },
-        "300476.SZ": {
-          "name": "胜宏科技",
-          "price": 288.94,
-          "chg_pct": 5.83,
-          "rsi": 36.5,
-          "above_ma50": false
-        },
-        "603228.SS": {
-          "name": "景旺电子",
-          "price": 68.29,
-          "chg_pct": 4.05,
-          "rsi": 45.7,
-          "above_ma50": false
-        }
-      },
-      "indices": {
-        "159997.SZ": {
-          "name": "电子ETF",
-          "price": 2.48,
-          "chg_pct": 1.68,
-          "above_ma50": true
-        },
-        "399006.SZ": {
-          "name": "创业板指",
-          "price": 3811.91,
-          "chg_pct": 0.0,
-          "above_ma50": null
-        }
-      }
-    },
-    "015789": {
-      "name": "永赢高端装备智选A",
-      "score": 6,
-      "conclusion": "安心持有",
-      "emoji": "🟢",
-      "details": [
-        "领先指标 4/4 向好 → +5",
-        "周期早期 → +2",
-        "MA50 大面积破位（成分0/5 指数0/2）→ +0",
-        "极端暴跌（600118.SS, 600879.SS, 688568.SS, 603698.SS >8%）→ -1"
-      ],
-      "fund_return_pct": -3.86,
-      "stocks": {
-        "600118.SS": {
-          "name": "中国卫星",
-          "price": 82.13,
-          "chg_pct": -10.0,
-          "rsi": 59.3,
-          "above_ma50": false
-        },
-        "600879.SS": {
-          "name": "航天电子",
-          "price": 19.23,
-          "chg_pct": -9.97,
-          "rsi": 49.9,
-          "above_ma50": false
-        },
-        "688568.SS": {
-          "name": "中科星图",
-          "price": 34.24,
-          "chg_pct": -8.45,
-          "rsi": 34.7,
-          "above_ma50": false
-        },
-        "600391.SS": {
-          "name": "航发科技",
-          "price": 26.98,
-          "chg_pct": -2.95,
-          "rsi": 36.0,
-          "above_ma50": false
-        },
-        "603698.SS": {
-          "name": "航天工程",
-          "price": 35.71,
-          "chg_pct": -10.01,
-          "rsi": 47.5,
-          "above_ma50": false
-        }
-      },
-      "indices": {
-        "512660.SS": {
-          "name": "军工ETF",
-          "price": 1.15,
-          "chg_pct": -3.86,
-          "above_ma50": false
-        },
-        "000300.SS": {
-          "name": "沪深300",
-          "price": 4750.12,
-          "chg_pct": -0.64,
-          "above_ma50": false
-        }
-      }
-    },
-    "025856": {
-      "name": "华夏中证电网设备ETF联接A",
-      "score": 4,
-      "conclusion": "忍着不动",
-      "emoji": "🟡",
-      "details": [
-        "领先指标 3↑1→0↓ 偏多 → +3",
-        "周期中期 → +1",
-        "MA50 大面积破位（成分0/5 指数0/2）→ +0",
-        "⚠ 双重计分提示: \"铜/硅钢价格\" 同时出现在领先指标和周期判断中，可能被计入两个因子"
-      ],
-      "fund_return_pct": 0.7,
-      "stocks": {
-        "600406.SS": {
-          "name": "国电南瑞",
-          "price": 21.75,
-          "chg_pct": 0.23,
-          "rsi": 40.4,
-          "above_ma50": false
-        },
-        "000400.SZ": {
-          "name": "许继电气",
-          "price": 19.6,
-          "chg_pct": -0.41,
-          "rsi": 19.9,
-          "above_ma50": false
-        },
-        "600089.SS": {
-          "name": "特变电工",
-          "price": 19.03,
-          "chg_pct": -0.57,
-          "rsi": 6.8,
-          "above_ma50": false
-        },
-        "601179.SS": {
-          "name": "中国西电",
-          "price": 12.26,
-          "chg_pct": -1.05,
-          "rsi": 10.1,
-          "above_ma50": false
-        },
-        "601126.SS": {
-          "name": "四方股份",
-          "price": 51.28,
-          "chg_pct": 0.16,
-          "rsi": 24.9,
-          "above_ma50": false
-        }
-      },
-      "indices": {
-        "159611.SZ": {
-          "name": "电力ETF",
-          "price": 1.01,
-          "chg_pct": 0.7,
-          "above_ma50": false
-        },
-        "000300.SS": {
-          "name": "沪深300",
-          "price": 4750.12,
-          "chg_pct": -0.64,
-          "above_ma50": false
-        }
-      }
-    }
-  },
+  "date": "2026-07-15",
+  "generated_at": "2026-07-15 14:00:36",
   "predictions": {
     "019633": {
       "direction": "up",
@@ -469,8 +9,8 @@
       "emoji": "📈",
       "confidence": "低",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-14",
+      "generated_at": "2026-07-15 14:00",
       "reasons": [
         "4/5 领先指标向上，基本面强劲",
         "周期处于增速峰值区，警惕见顶"
@@ -511,15 +51,15 @@
           "update_cycle": "季末 Hyperscaler 财报后更新"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-13",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-13"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-14",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -531,15 +71,15 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-14",
+      "generated_at": "2026-07-15 14:00",
       "reasons": [
         "5/5 领先指标向上，基本面强劲",
         "周期处于早期，上升空间大",
         "综合评分高，基本面+技术面共振向上"
       ],
       "watchpoints": [
-        "中国集成电路 6 月产量（07/15）后重新评估"
+        "台积电 Q2 法说会 ⚠（07/16）后重新评估"
       ],
       "indicator_predictions": {
         "北方华创合同负债 QoQ【⑥设备瓶颈】": {
@@ -573,15 +113,15 @@
           "update_cycle": "季度/事件驱动"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-13",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-13"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-14",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -593,8 +133,8 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-14",
+      "generated_at": "2026-07-15 14:00",
       "reasons": [
         "4/5 领先指标向上，基本面强劲",
         "周期处于早期，上升空间大",
@@ -636,15 +176,15 @@
           "update_cycle": "年度（盯NVDA/Google集群架构白皮书）"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-13",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-13"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-14",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -656,11 +196,12 @@
       "emoji": "📈",
       "confidence": "低",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-14",
+      "generated_at": "2026-07-15 14:00",
       "reasons": [
         "5/5 领先指标向上，基本面强劲",
-        "周期处于AI算力扩张中后期（Bottleneck主题），警惕见顶"
+        "周期处于AI算力扩张中后期（Bottleneck主题），警惕见顶",
+        "综合评分高，基本面+技术面共振向上"
       ],
       "watchpoints": [
         "台积电 Q2 法说会 ⚠（07/16）后重新评估"
@@ -697,15 +238,15 @@
           "update_cycle": "季报后"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-13",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-13"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-14",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -717,14 +258,15 @@
       "emoji": "📊",
       "confidence": "低",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-14",
+      "generated_at": "2026-07-15 14:00",
       "reasons": [
         "2/4 领先指标向上，2项走平待观察"
       ],
       "watchpoints": [
         "深南电路 H1 业绩预告(预计)（07/20）后重新评估",
-        "关注 2 项走弱指标是否改善"
+        "关注 2 项走弱指标是否改善",
+        "综合评分若跌破3 → 果断跑路"
       ],
       "indicator_predictions": {
         "AI服务器PCB层数升级【④BOM普适+⑧供应链】": {
@@ -752,15 +294,15 @@
           "update_cycle": "月度/季报"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-13",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-13"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-14",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -772,14 +314,14 @@
       "emoji": "📈",
       "confidence": "中",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-14",
+      "generated_at": "2026-07-15 14:00",
       "reasons": [
         "4/4 领先指标向上，基本面强劲",
         "周期处于早期，上升空间大"
       ],
       "watchpoints": [
-        "SpaceX H1 发射统计（07/15）后重新评估"
+        "Rocket Lab Q2 财报（08/10）后重新评估"
       ],
       "indicator_predictions": {
         "SpaceX 发射频次【②发射产能单源】": {
@@ -807,15 +349,15 @@
           "update_cycle": "季度（盯RKLB季报+首飞日期）"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-13",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-13"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-14",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
@@ -827,13 +369,13 @@
       "emoji": "📊",
       "confidence": "低",
       "timeframe": "未来1月",
-      "verify_date": "2026-08-13",
-      "generated_at": "2026-07-14 14:03",
+      "verify_date": "2026-08-14",
+      "generated_at": "2026-07-15 14:00",
       "reasons": [
         "3/4 领先指标向上，1项走平待观察"
       ],
       "watchpoints": [
-        "6月新能源装机数据（07/15）后重新评估",
+        "国网 H1 投资进度公告(预计)（07/20）后重新评估",
         "关注 1 项走弱指标是否改善",
         "综合评分若跌破3 → 果断跑路"
       ],
@@ -863,18 +405,282 @@
           "update_cycle": "日度（铜HG=F）+月度（硅钢）"
         }
       },
-      "indicator_verify_date": "2026-10-12",
+      "indicator_verify_date": "2026-10-13",
       "verification_tiers": {
         "tier1_indicator": {
           "desc": "指标层验证（季度）：预测的指标趋势 vs 实际公布数据是否吻合 — 验证瓶颈逻辑是否正确",
-          "verify_by": "2026-10-12"
+          "verify_by": "2026-10-13"
         },
         "tier2_price": {
           "desc": "价格层验证（30天）：预测的方向 vs 实际走势 — 仅作噪音监控，不作为方法论对错证据",
-          "verify_by": "2026-08-13",
+          "verify_by": "2026-08-14",
           "grading": "三档：✅(方向+强度吻合) / ➡️(方向对但强度偏弱) / ❌(方向错)"
         }
       }
+    }
+  },
+  "two_tier_predictions": {
+    "019633": {
+      "price_prediction": {
+        "direction": "up",
+        "label": "看涨",
+        "verify_date": "2026-08-14"
+      },
+      "indicator_predictions": {
+        "SEMI 北美设备 Billings": {
+          "current_value": "2026年5月 $2.3B",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "每月中旬 SEMI 发布后更新"
+        },
+        "DRAM 合约价 QoQ": {
+          "current_value": "Q2 +64% → Q3 预计 +8~13%",
+          "current_trend": "flat",
+          "predicted_next_trend": "flat",
+          "update_cycle": "季末 TrendForce/DRAMeXchange 发布后更新"
+        },
+        "台积电月度营收 YoY": {
+          "current_value": "6月 +32% YoY（Q2合计 +31% YoY）",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "每月10日 TSMC 发布后更新"
+        },
+        "ASML EUV 积压订单": {
+          "current_value": "Q1 新增 €3.6B 订单",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季末 ASML 财报后更新"
+        },
+        "四大云厂 CapEx 合计 YoY": {
+          "current_value": "Q1 合计 +44% YoY",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季末 Hyperscaler 财报后更新"
+        }
+      },
+      "indicator_verify_date": "2026-10-13"
+    },
+    "014194": {
+      "price_prediction": {
+        "direction": "up",
+        "label": "看涨",
+        "verify_date": "2026-08-14"
+      },
+      "indicator_predictions": {
+        "北方华创合同负债 QoQ【⑥设备瓶颈】": {
+          "current_value": "Q1 合同负债 ¥85亿（+18% QoQ）",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后（4/8/10月底）"
+        },
+        "SMIC Capex/折旧比【⑧巨头依赖】": {
+          "current_value": "Q1 Capex/折旧=1.8x（激进扩张）",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后"
+        },
+        "光刻胶进口依存度【①材料垄断】": {
+          "current_value": "2026Q1 进口占比 78%（同比-5pp）",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度海关数据"
+        },
+        "BIS实体清单新增频率【②单源卡脖子】": {
+          "current_value": "2026年6月新一轮酝酿中，涉及AI芯片+设备",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "事件驱动（盯BIS公告+联邦公报）"
+        },
+        "大基金三期实际投放率": {
+          "current_value": "¥3000亿承诺 → Q2首批项目公告3个/¥180亿",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度/事件驱动"
+        }
+      },
+      "indicator_verify_date": "2026-10-13"
+    },
+    "CPO": {
+      "price_prediction": {
+        "direction": "up",
+        "label": "看涨",
+        "verify_date": "2026-08-14"
+      },
+      "indicator_predictions": {
+        "中际旭创 800G 订单积压【③产能售罄】": {
+          "current_value": "2026年800G产能已售罄，1.6T Q3量产",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后更新"
+        },
+        "NVDA GPU→光模块速率升级节奏【②DSP瓶颈】": {
+          "current_value": "Blackwell→800G标配，Rubin→1.6T/CPO 2027",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "NVDA GTC/季报后"
+        },
+        "InP 衬底供应【①材料垄断】": {
+          "current_value": "AXTI/IQE占全球InP衬底>70%，无国产替代",
+          "current_trend": "flat",
+          "predicted_next_trend": "flat",
+          "update_cycle": "季度（盯AXTI/IQE季报）"
+        },
+        "800G→1.6T 渗透率": {
+          "current_value": "2026年800G占数据中心光模块>60%，1.6T刚起步",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（LightCounting报告）"
+        },
+        "数据中心内部带宽增速": {
+          "current_value": "AI集群东西向流量年增3-5x，远超摩尔定律",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "年度（盯NVDA/Google集群架构白皮书）"
+        }
+      },
+      "indicator_verify_date": "2026-10-13"
+    },
+    "024239": {
+      "price_prediction": {
+        "direction": "up",
+        "label": "看涨",
+        "verify_date": "2026-08-14"
+      },
+      "indicator_predictions": {
+        "NVDA 数据中心营收 QoQ【②单源卡脖子】": {
+          "current_value": "Q1 数据中心 $42B（+18% QoQ），Q2指引$48B",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后（8月底Q2）"
+        },
+        "TSMC CoWoS 产能扩张【②先进封装瓶颈】": {
+          "current_value": "2026年底CoWoS月产能目标50K片（+80% YoY）",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "TSMC季报/法说会"
+        },
+        "HBM3e 供应紧张度【②存储瓶颈】": {
+          "current_value": "SK海力士HBM3e 2026产能全部售罄，2027已预订>60%",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯SK海力士/三星/MU季报）"
+        },
+        "Hyperscaler CapEx 指引 QoQ": {
+          "current_value": "Q1合计$730亿（+44% YoY），Q2指引7月底见分晓",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后（7月底/1月底/4月底/10月底）"
+        },
+        "ASML EUV 订单→GPU产能前置【⑥设备垄断】": {
+          "current_value": "Q1 EUV新增订单€3.6B，积压>€40B",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后"
+        }
+      },
+      "indicator_verify_date": "2026-10-13"
+    },
+    "021528": {
+      "price_prediction": {
+        "direction": "flat",
+        "label": "震荡偏强",
+        "verify_date": "2026-08-14"
+      },
+      "indicator_predictions": {
+        "AI服务器PCB层数升级【④BOM普适+⑧供应链】": {
+          "current_value": "传统服务器8-12层→AI服务器20-30层，单价3-5x",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯服务器ODM出货数据）"
+        },
+        "深南电路高层PCB产能利用率【③产能售罄】": {
+          "current_value": "南通三期工厂（20层+）产能利用率>95%",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季报后"
+        },
+        "铜价 YoY【成本压力】": {
+          "current_value": "LME铜 $9,800/吨（+12% YoY），Q2小幅回落",
+          "current_trend": "flat",
+          "predicted_next_trend": "flat",
+          "update_cycle": "日度自动（yfinance: HG=F）"
+        },
+        "CCL覆铜板价格【上游传导】": {
+          "current_value": "生益科技Q2 CCL报价环比持平，涨价预期减弱",
+          "current_trend": "flat",
+          "predicted_next_trend": "flat",
+          "update_cycle": "月度/季报"
+        }
+      },
+      "indicator_verify_date": "2026-10-13"
+    },
+    "015789": {
+      "price_prediction": {
+        "direction": "up",
+        "label": "看涨",
+        "verify_date": "2026-08-14"
+      },
+      "indicator_predictions": {
+        "SpaceX 发射频次【②发射产能单源】": {
+          "current_value": "2026 H1已完成89次发射（年化178次），全球占比>60%",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "月度（SpaceX官网+spaceflightnow）"
+        },
+        "中国星网卫星发射进度【⑨政策驱动】": {
+          "current_value": "星网首批试验星已发12颗，2026年目标108颗",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯航天科技集团公告）"
+        },
+        "全球航天经济总量增速": {
+          "current_value": "2025年$570B→2030年预计$1T+（CAGR 12%）",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "年度（Space Foundation报告）"
+        },
+        "Rocket Lab 发射+订单【商业航天风向标】": {
+          "current_value": "Neutron火箭2026H2首飞，积压订单$1.2B",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯RKLB季报+首飞日期）"
+        }
+      },
+      "indicator_verify_date": "2026-10-13"
+    },
+    "025856": {
+      "price_prediction": {
+        "direction": "flat",
+        "label": "震荡偏强",
+        "verify_date": "2026-08-14"
+      },
+      "indicator_predictions": {
+        "国网/南网年度投资计划【⑧单一大客户】": {
+          "current_value": "2026年国网计划投资¥6300亿（+8% YoY），南网¥1200亿",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "年初国网/南网工作会议（1月）"
+        },
+        "大型变压器交付周期【③产能售罄】": {
+          "current_value": "全球大型变压器交期18-24月（正常12月），供给严重不足",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "季度（盯ABB/西门子能源/特变电工季报交期数据）"
+        },
+        "新能源装机增速→电网消纳压力": {
+          "current_value": "2026年1-5月风光新增装机92GW（+28% YoY）",
+          "current_trend": "up",
+          "predicted_next_trend": "up",
+          "update_cycle": "月度（国家能源局）"
+        },
+        "铜/硅钢价格 YoY【成本端】": {
+          "current_value": "铜$9,800(+12%) 硅钢¥8,500/吨(+5%)",
+          "current_trend": "flat",
+          "predicted_next_trend": "flat",
+          "update_cycle": "日度（铜HG=F）+月度（硅钢）"
+        }
+      },
+      "indicator_verify_date": "2026-10-13"
     }
   }
 }
