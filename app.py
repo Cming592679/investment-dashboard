@@ -17,6 +17,7 @@ from config import (
     MIN_SAMPLE_SIZE_WARNING, CONTROL_BENCHMARKS,
 )
 from data_fetcher import get_index_snapshot, get_stock_snapshot
+from trading_rules import evaluate_daily_actions
 
 # ══════════════════════════════════════════════════════════
 # 数据健康检测 — 指标过期 & 缺失事件
@@ -94,7 +95,7 @@ CORPORATE_CALENDAR = {
         "ticker": "300308.SZ",
         "aliases": ["中际旭创"],
         "events": [
-            {"date": date(2026, 8, 25), "event": "Q2 财报", "importance": "critical"},
+            {"date": date(2026, 8, 24), "event": "半年报", "importance": "critical"},
         ],
         "affected_funds": ["CPO"],
     },
@@ -1150,215 +1151,216 @@ def _check_cascade_downgrade(fund_id, leading):
 
 
 def _check_disruption_trigger(fund_id):
-    """检查瓶颈破坏条件是否有实质突破 → 硬触发降级"""
-    triggers = []
+    """检查瓶颈破坏条件是否有实质突破 → 硬触发降级
+    返回 (negative_triggers, positive_triggers) 分别对应利空和利好"""
+    negative = []
+    positive = []
     for tag, info in BOTTLENECK_DISRUPTION.items():
         if fund_id not in info["affected_funds"]:
             continue
         for cond in info["conditions"]:
             if cond["status"] == "breakthrough":
-                triggers.append({
+                entry = {
                     "bottleneck": info["label"],
                     "condition": cond["desc"],
                     "note": cond.get("note", ""),
-                })
-    return triggers
+                }
+                # 检查该突破是否对本基金是利好
+                positive_for = cond.get("positive_for", [])
+                if fund_id in positive_for:
+                    positive.append(entry)
+                else:
+                    negative.append(entry)
+    return negative, positive
+
 
 
 def compute_assessment(fund, stocks, indices, specials, fund_id=None):
-    """综合研判：领先指标(0-5) + 周期(0-2) + 技术面(0-3) = 0-10
-       → 🟢 安心持有(≥6) / 🟡 忍着不动(3-5) / 🔴 考虑跑路(0-2)
-       日涨跌幅已大幅降权（基金无法盘中交易，单日波动=噪音）"""
+    """三层架构 + 决策树判定
+
+    Layer 1 · 即时信号 — 暴跌/RSI极端/MA50趋势（日报级别）
+    Layer 2 · 瓶颈状态 — 破坏条件 + 联动降级（周/月级别）
+    Layer 3 · 周期锚点 — 调节 Layer1 的解读权重（季/年级别）
+
+    不再算单一总分。走决策树得出最终判定。"""
     details = []
-    score = 0
-
-    # ═══ 一、领先指标 (0-5分，权重最高) ═══
+    t = fund.get("exit_thresholds", {})
     leading = LEADING_INDICATORS.get(fund_id, {}) if fund_id else {}
-    if leading:
-        up_count = sum(1 for v in leading.values() if v.get("trend") == "up")
-        down_count = sum(1 for v in leading.values() if v.get("trend") == "down")
-        flat_count = sum(1 for v in leading.values() if v.get("trend") == "flat")
-        total = len(leading)
-        up_ratio = up_count / total if total else 0
-
-        if up_ratio >= 0.8:
-            details.append(f"领先指标 {up_count}/{total} 向好 → +5")
-            score += 5
-        elif up_ratio >= 0.5:
-            details.append(f"领先指标 {up_count}↑{flat_count}→{down_count}↓ 偏多 → +3")
-            score += 3
-        elif down_count >= 2:
-            details.append(f"领先指标 {down_count} 项向下 → +0")
-            score += 0
-        elif down_count >= 1:
-            details.append(f"领先指标走弱（{down_count}↓）→ +1")
-            score += 1
-        else:
-            details.append(f"领先指标分歧（{up_count}↑{flat_count}→{down_count}↓）→ +2")
-            score += 2
-    else:
-        details.append("领先指标数据缺失 → +2（默认中性）")
-        score += 2
-
-    # ═══ 二、周期位置 (0-2分) ═══
     cycle = CYCLE_ASSESSMENTS.get(fund_id, {}) if fund_id else {}
     stage = cycle.get("stage", "")
-    if stage == "early":
-        details.append("周期早期 → +2")
-        score += 2
-    elif stage == "mid":
-        details.append("周期中期 → +1")
-        score += 1
-    elif stage in ("mid-to-late",):
-        details.append(f"周期中后期（{cycle.get('label','')}）→ +1")
-        score += 1
-    elif stage == "late":
-        details.append("周期晚期 → +0")
-        score += 0
-    else:
-        details.append("周期未知 → +1")
-        score += 1
 
-    # ═══ 三、技术面 (0-3分，日涨跌大幅降权) ═══
-    # MA50 趋势 (0-2分)
+    # ══════════════════════════════════════════════════
+    # Layer 1 · 即时信号（日报）
+    # ══════════════════════════════════════════════════
+
+    # 领先指标方向
+    up_count = sum(1 for v in leading.values() if v.get("trend") == "up")
+    down_count = sum(1 for v in leading.values() if v.get("trend") == "down")
+    flat_count = sum(1 for v in leading.values() if v.get("trend") == "flat")
+    total_leading = len(leading)
+    up_ratio = up_count / total_leading if total_leading else 0
+    leading_bullish = up_ratio >= 0.5
+
+    # MA50 趋势
     ma_ok = sum(1 for s in stocks.values() if s.get("above_ma50"))
     ma_total = sum(1 for s in stocks.values() if s.get("above_ma50") is not None)
     ma_ratio = ma_ok / ma_total if ma_total else 1
     idx_ok = sum(1 for s in indices.values() if s.get("above_ma50"))
     idx_total = sum(1 for s in indices.values() if s.get("above_ma50") is not None)
     idx_ratio = idx_ok / idx_total if idx_total else 1
+    ma_healthy = ma_ratio >= 0.8 and idx_ratio >= 0.8
+    ma_broken = ma_ratio < 0.5 or idx_ratio < 0.5
 
-    if ma_ratio >= 0.8 and idx_ratio >= 0.8:
-        details.append(f"MA50 趋势完好（成分{ma_ok}/{ma_total} 指数{idx_ok}/{idx_total}）→ +2")
-        score += 2
-    elif ma_ratio >= 0.5 and idx_ratio >= 0.5:
-        details.append(f"MA50 部分破位（成分{ma_ok}/{ma_total} 指数{idx_ok}/{idx_total}）→ +1")
-        score += 1
+    # RSI 状态
+    oversold_threshold = t.get("rsi_oversold", 30)
+    overbought_threshold = t.get("rsi_overbought", 75)
+    rsi_low = sum(1 for s in stocks.values() if s.get("rsi") and s["rsi"] <= oversold_threshold)
+    rsi_high = sum(1 for s in stocks.values() if s.get("rsi") and s["rsi"] >= overbought_threshold)
+    deep_oversold = rsi_low >= 3
+    broad_overbought = rsi_high >= 4
+
+    # 暴跌信号
+    crash_drops = [tk for tk, s in stocks.items() if (s.get("day_change_pct") or 0) <= -8]
+    warn_drops = [tk for tk, s in stocks.items() if (s.get("day_change_pct") or 0) <= -5]
+    special_crash = [s.get('name', tk) for tk, s in specials.items() if (s.get("day_change_pct") or 0) <= -8]
+    special_warn = [s.get('name', tk) for tk, s in specials.items() if (s.get("day_change_pct") or 0) <= -5]
+    has_crash = bool(crash_drops) or bool(special_crash)
+    has_warning = bool(warn_drops) or bool(special_warn)
+
+    # Layer 1 摘要
+    if has_crash:
+        details.append(f"🚨 Layer1 暴跌预警: {', '.join(crash_drops + special_crash)}")
+    elif has_warning:
+        details.append(f"⚠ Layer1 异常下跌: {', '.join(warn_drops + special_warn)}")
+    if deep_oversold:
+        details.append(f"⚡ Layer1 RSI深度超卖({rsi_low}/{len(stocks)}只) — 反弹概率大")
+    if broad_overbought:
+        details.append(f"🔥 Layer1 RSI极端超买({rsi_high}/{len(stocks)}只) — 回调风险高")
+    if ma_healthy:
+        details.append(f"📈 Layer1 MA50趋势完好（成分{ma_ok}/{ma_total} 指数{idx_ok}/{idx_total}）")
+    elif ma_broken:
+        details.append(f"📉 Layer1 MA50大面积破位（成分{ma_ok}/{ma_total} 指数{idx_ok}/{idx_total}）")
     else:
-        details.append(f"MA50 大面积破位（成分{ma_ok}/{ma_total} 指数{idx_ok}/{idx_total}）→ +0")
-        score += 0
+        details.append(f"📊 Layer1 MA50部分破位（成分{ma_ok}/{ma_total} 指数{idx_ok}/{idx_total}）")
+    details.append(f"📋 Layer1 领先指标: {up_count}↑{flat_count}→{down_count}↓ ({'偏多' if leading_bullish else '偏空'})")
 
-    # RSI 极端 + 暴跌 (0-1分，降权到极致)
-    t = fund.get("exit_thresholds", {})
-    rsi_high = sum(1 for s in stocks.values() if s.get("rsi") and s["rsi"] >= t.get("rsi_overbought", 75))
-    if rsi_high >= 4:
-        details.append(f"RSI 极端超买（{rsi_high}/{len(stocks)} 只）→ -1")
-        score -= 1
-
-    # 单日暴跌只保留极端情况（>8%），且只扣1分
-    extreme_drops = [tk for tk, s in stocks.items() if (s.get("day_change_pct") or 0) <= -8]
-    if len(extreme_drops) >= 3:
-        details.append(f"极端暴跌（{', '.join(extreme_drops)} >8%）→ -1")
-        score -= 1
-    elif extreme_drops:
-        details.append(f"部分极端暴跌（{', '.join(extreme_drops)} >8%）→ -0")
-        # just note it, don't penalize
-
-    # 特殊标的极端暴跌
-    for tk, s in specials.items():
-        if (s.get("day_change_pct") or 0) <= -8:
-            details.append(f"{s.get('name', tk)} 极端暴跌 {s['day_change_pct']:.1f}% → -1")
-            score -= 1
-
-    # ═══ P1-任务7：双重计分检查 ═══
-    if fund_id and cycle:
-        cycle_note = cycle.get("note", "")
-        for name in leading:
-            # 检查领先指标关键词是否也出现在周期判断依据中
-            keywords = name.split("【")[0].strip().rstrip("QoQYoY").strip()
-            if len(keywords) >= 4 and keywords in cycle_note:
-                details.append(f"⚠ 双重计分提示: \"{keywords}\" 同时出现在领先指标和周期判断中，可能被计入两个因子")
-                break  # 只提示一次
-
-    # ═══ P0-任务4：瓶颈破坏条件硬触发 ═══
-    disruption_triggers = _check_disruption_trigger(fund_id) if fund_id else []
-    disruption_downgrade = False
-    if disruption_triggers:
-        disruption_downgrade = True
-        details.append("⚠ 瓶颈破坏条件触发！逻辑基础动摇 → 强制降级")
-        for dt in disruption_triggers:
-            details.append(f"  {dt['bottleneck']}: {dt['condition']} ({dt['note']})")
-
-    # ═══ P0-任务2：共享指标联动降级 ═══
+    # ══════════════════════════════════════════════════
+    # Layer 2 · 瓶颈状态（周/月）
+    # ══════════════════════════════════════════════════
+    disruption_negative, disruption_positive = _check_disruption_trigger(fund_id) if fund_id else ([], [])
+    disruption_downgrade = bool(disruption_negative)
+    disruption_upgrade = bool(disruption_positive)
     cascade_downgrades = _check_cascade_downgrade(fund_id, leading) if fund_id else []
-    cascade_downgrade = False
-    if cascade_downgrades:
-        cascade_downgrade = True
-        total_weight = sum(cd["weight"] for cd in cascade_downgrades)
-        score -= total_weight
+    cascade_active = bool(cascade_downgrades)
+
+    if disruption_downgrade:
+        details.append("⚠ Layer2 瓶颈破坏(利空): 逻辑基础动摇")
+        for dt in disruption_negative:
+            details.append(f"  {dt['bottleneck']}: {dt['condition']}")
+    if disruption_upgrade:
+        details.append("🟢 Layer2 瓶颈突破(利好): 国产替代方向受益")
+        for dt in disruption_positive:
+            details.append(f"  {dt['bottleneck']}: {dt['condition']}")
+    if cascade_active:
         for cd in cascade_downgrades:
-            details.append(f"联动降级: {cd['indicator']}→{cd['trend']}（来自{cd['from_fund']}）-{cd['weight']}")
+            details.append(f"🔗 Layer2 联动降级: {cd['indicator']}→{cd['trend']}（来自{cd['from_fund']}）")
 
-    # ═══ P1-任务6：技术面/基本面背离检测 ═══
-    divergence_active = False
-    if fund_id:
-        tech_score = 0
-        # 技术面评分推断：从 details 中反向解析
-        for d in details:
-            if "MA50 趋势完好" in d:
-                tech_score = 2
-            elif "MA50 部分破位" in d:
-                tech_score = 1
-        fundamental_score = score - tech_score  # 近似：总分-技术分=基本分
-        if tech_score == 0 and fundamental_score >= 4 and not disruption_downgrade:
-            # 技术面弱但基本面强 → 检测背离
-            today = date.today()
-            tracker = _divergence_tracker.get(fund_id, {"weeks": 0, "started": today})
-            last_started = tracker.get("started", today)
-            if (today - last_started).days >= 7:  # 新的一周
-                tracker["weeks"] += 1
-                tracker["started"] = today
-            elif tracker["weeks"] == 0:
-                tracker["weeks"] = 1
-                tracker["started"] = today
-            _divergence_tracker[fund_id] = tracker
+    # ══════════════════════════════════════════════════
+    # Layer 3 · 周期锚点（季/年）— 调节解读权重
+    # ══════════════════════════════════════════════════
+    cycle_weights = {
+        "early":       {"label": "早期", "oversold_read": "机会", "overbought_read": "正常初期热度"},
+        "mid":         {"label": "中期", "oversold_read": "观望", "overbought_read": "关注"},
+        "mid-to-late": {"label": "中后期", "oversold_read": "警惕", "overbought_read": "减仓信号"},
+        "late":        {"label": "晚期", "oversold_read": "陷阱", "overbought_read": "坚决减仓"},
+    }
+    w = cycle_weights.get(stage, {"label": "未知", "oversold_read": "观望", "overbought_read": "关注"})
+    details.append(f"🎯 Layer3 周期锚点: {cycle.get('label', stage or '未知')} → 超卖={w['oversold_read']} 超买={w['overbought_read']}")
 
-            if tracker["weeks"] >= DIVERGENCE_DOWNGRADE_WEEKS:
-                details.append(f"技术面/基本面持续背离 {tracker['weeks']} 周 → 强制降级到🟡")
-                divergence_active = True
-        else:
-            # 背离解除，重置
-            if fund_id in _divergence_tracker:
-                del _divergence_tracker[fund_id]
+    # ══════════════════════════════════════════════════
+    # 决策树判定
+    # ══════════════════════════════════════════════════
 
-    # ═══ 综合判定 ═══
-    score = max(0, min(10, score))  # clamp 0-10
-
-    # 硬触发降级 > 综合评分
+    # 分支1: 瓶颈破坏(利空) → 最强信号，直接红色
     if disruption_downgrade:
         conclusion = "考虑跑路"
         emoji = "🔴"
         desc = "瓶颈破坏条件触发！逻辑基础动摇，需重新评估整个投资假设"
-    elif divergence_active or (cascade_downgrade and score >= 6):
-        conclusion = "忍着不动"
-        emoji = "🟡"
-        desc = "因联动降级或技术面背离触发，暂时观望"
-    elif score >= 6:
-        conclusion = "安心持有"
-        emoji = "🟢"
-        desc = "领先指标+技术面共振，按计划持有，回调可加仓"
-    elif score >= 3:
-        conclusion = "忍着不动"
-        emoji = "🟡"
-        desc = "信号有分歧，多看少动，等关键事件落地后再判断"
-    else:
+        if disruption_upgrade:
+            desc += "（但同时有国产替代利好，需区分对待）"
+
+    # 分支2: 基本面+技术面双杀
+    elif not leading_bullish and has_crash and ma_broken:
         conclusion = "考虑跑路"
         emoji = "🔴"
-        desc = "领先指标恶化或趋势破位，反弹减仓/清仓"
+        desc = "领先指标转空 + 暴跌 + MA50破位 = 三重利空叠加，反弹减仓"
+
+    # 分支3: 技术面恶化但周期早期 + 基本面完好
+    elif has_crash and stage == "early" and leading_bullish:
+        conclusion = "超卖观望"
+        emoji = "🟡"
+        desc = f"暴跌发生在周期早期+基本面完好 → 不宜追卖，等企稳。超卖解读: {w['oversold_read']}"
+
+    # 分支4: 深度超卖 + 基本面完好 → 逆向机会
+    elif deep_oversold and leading_bullish and not disruption_downgrade:
+        if stage == "early":
+            conclusion = "关注加仓"
+            emoji = "🟢"
+            desc = f"周期早期+基本面向好+深度超卖 → 反弹概率大，可考虑分批加仓"
+        else:
+            conclusion = "超卖观望"
+            emoji = "🟡"
+            desc = f"深度超卖但周期{stage} → 等企稳信号确认后再操作"
+
+    # 分支5: 基本面完好 + 周期早期 + 趋势完好 → 安心
+    elif leading_bullish and stage == "early" and not ma_broken:
+        conclusion = "安心持有"
+        emoji = "🟢"
+        desc = "领先指标向好+周期早期+趋势完好 → 按计划持有，回调可加仓"
+
+    # 分支6: 全面超买 + 周期中后期 → 警惕
+    elif broad_overbought and stage in ("mid-to-late", "late"):
+        conclusion = "高位警惕"
+        emoji = "🔴"
+        desc = f"周期{stage}+RSI极端超买 → {w['overbought_read']}，考虑分批减仓锁定利润"
+
+    # 分支7: 基本面好但技术面破位 → 背离观望
+    elif leading_bullish and ma_broken and not has_crash:
+        conclusion = "忍着不动"
+        emoji = "🟡"
+        desc = "基本面与技术面背离 → 多看少动，等关键事件落地后方向明确"
+
+    # 分支8: 正常状态
+    elif leading_bullish:
+        conclusion = "安心持有"
+        emoji = "🟢"
+        desc = "领先指标向好，按计划持有"
+    elif has_warning:
+        conclusion = "忍着不动"
+        emoji = "🟡"
+        desc = "有异常信号但未到跑路级别，保持关注"
+    else:
+        conclusion = "忍着不动"
+        emoji = "🟡"
+        desc = "信号分歧，多看少动"
+
+    # ── 附加联动降级提示 ──
+    if cascade_active and conclusion == "安心持有":
+        conclusion = "忍着不动"
+        emoji = "🟡"
+        desc += "（联动降级触发，暂时降档）"
 
     return {
-        "score": score,
-        "max_score": 10,
+        "score": 0,  # 不再用线性分数，返回0表示"见决策树"
+        "max_score": 0,
         "conclusion": conclusion,
         "emoji": emoji,
         "desc": desc,
         "details": details,
         "cascade_downgrades": cascade_downgrades,
-        "disruption_triggers": disruption_triggers,
-        "divergence_weeks": _divergence_tracker.get(fund_id, {}).get("weeks", 0) if fund_id else 0,
+        "disruption_triggers": disruption_negative,
+        "divergence_weeks": 0,
     }
-
-
 def _generate_prediction(fund_id, assessment, leading, cycle):
     """基于领先指标 + 周期位置 + 综合评分，生成可验证的结构化预测"""
     up_count = sum(1 for v in leading.values() if v.get("trend") == "up")
@@ -1400,12 +1402,13 @@ def _generate_prediction(fund_id, assessment, leading, cycle):
             bull_score -= 1
             reasons.append("周期风险标记为红色")
 
-    # 综合评分修正
-    if score >= 7:
-        reasons.append("综合评分高，基本面+技术面共振向上")
-    elif score <= 3:
+    # 综合判定修正（使用结论而非已弃用的score字段）
+    conclusion = assessment.get("conclusion", "")
+    if conclusion in ("安心持有", "关注加仓"):
+        reasons.append("Dashboard判定偏正面，基本面+技术面共振向上")
+    elif conclusion in ("考虑跑路", "高位警惕"):
         bull_score -= 1
-        reasons.append(f"综合评分偏低 {score}/10，保持谨慎")
+        reasons.append("Dashboard判定偏负面，保持谨慎")
 
     # 方向判定
     if bull_score >= 2:
@@ -1487,6 +1490,132 @@ def _generate_prediction(fund_id, assessment, leading, cycle):
             },
         },
     }
+
+
+# ══════════════════════════════════════════════════════════
+# 交易操作 API
+# ══════════════════════════════════════════════════════════
+
+@app.route("/api/action")
+def api_action():
+    """返回今日操作建议（叠层信号交易系统）"""
+    pf = _load_portfolio()
+    if not pf:
+        return jsonify({"error": "portfolio.json not found"}), 404
+
+    # 构建 dashboard_cache: {fund_id: {"data": ..., "fetched_at": ...}}
+    dash_cache = {}
+    with _cache_lock:
+        for fid in FUNDS:
+            entry = _cache.get(fid)
+            if entry:
+                dash_cache[fid] = entry
+
+    result = evaluate_daily_actions(pf, dash_cache)
+    return jsonify(_sanitize_json(result))
+
+
+# ══════════════════════════════════════════════════════════
+# 持仓总览
+# ══════════════════════════════════════════════════════════
+
+PORTFOLIO_PATH = os.path.join(PROJECT_DIR, "portfolio.json")
+
+
+def _load_portfolio():
+    if not os.path.exists(PORTFOLIO_PATH):
+        return None
+    with open(PORTFOLIO_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _save_portfolio(data):
+    data["updated"] = date.today().strftime("%Y-%m-%d")
+    with open(PORTFOLIO_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+@app.route("/portfolio")
+def portfolio_page():
+    return render_template("portfolio.html")
+
+
+@app.route("/api/portfolio")
+def api_portfolio():
+    """返回持仓数据 + 实时 Dashboard 判定"""
+    pf = _load_portfolio()
+    if not pf:
+        return jsonify({"error": "portfolio.json not found"}), 404
+
+    # 用缓存中的实时判定覆盖 sector 状态
+    enriched_sectors = {}
+    for sector, info in pf.get("sector_allocation", {}).items():
+        enriched = dict(info)
+        # 找到该板块对应 dashboard 基金的最新判定
+        dash_ids = info.get("funds", [])
+        conclusions = []
+        for did in dash_ids:
+            with _cache_lock:
+                entry = _cache.get(did)
+            if entry and "assessment" in entry["data"]:
+                a = entry["data"]["assessment"]
+                conclusions.append({
+                    "conclusion": a["conclusion"],
+                    "emoji": a["emoji"],
+                    "desc": a.get("desc", ""),
+                    "return_pct": entry["data"].get("fund_return_pct"),
+                })
+        if conclusions:
+            # 取最差的判定
+            worst = min(conclusions, key=lambda c: {
+                "安心持有": 0, "关注加仓": 0, "继续持有": 1,
+                "忍着不动": 2, "超卖观望": 2, "高位警惕": 3,
+                "考虑跑路": 4,
+            }.get(c["conclusion"], 2))
+            enriched["live_conclusion"] = worst["conclusion"]
+            enriched["live_emoji"] = worst["emoji"]
+            enriched["live_return_pct"] = worst["return_pct"]
+        enriched_sectors[sector] = enriched
+
+    pf["sector_allocation_live"] = enriched_sectors
+
+    # 添加各持仓的实时判定
+    for h in pf.get("holdings", []):
+        did = h.get("dashboard_id")
+        if did:
+            with _cache_lock:
+                entry = _cache.get(did)
+            if entry and "assessment" in entry["data"]:
+                a = entry["data"]["assessment"]
+                h["live_conclusion"] = a["conclusion"]
+                h["live_emoji"] = a["emoji"]
+                h["live_return_pct"] = entry["data"].get("fund_return_pct")
+                h["live_prediction"] = entry["data"].get("prediction", {}).get("label", "")
+
+    return jsonify(pf)
+
+
+@app.route("/api/portfolio/update", methods=["POST"])
+def api_portfolio_update():
+    """更新持仓数据（手动触发）"""
+    data = request.json
+    pf = _load_portfolio() or {}
+    pf.update(data)
+    _save_portfolio(pf)
+    return jsonify({"status": "saved", "updated": pf["updated"]})
+
+
+@app.route("/api/portfolio/action", methods=["POST"])
+def api_portfolio_add_action():
+    """追加操作日志"""
+    pf = _load_portfolio()
+    if not pf:
+        return jsonify({"error": "portfolio.json not found"}), 404
+    action = request.json
+    action["date"] = date.today().strftime("%Y-%m-%d")
+    pf.setdefault("action_log", []).insert(0, action)
+    _save_portfolio(pf)
+    return jsonify({"status": "logged"})
 
 
 # ══════════════════════════════════════════════════════════

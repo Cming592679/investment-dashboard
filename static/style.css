@@ -307,6 +307,12 @@ body {
 .badge-normal   { background: rgba(139,148,158,.12); color: var(--text-dim); }
 .badge-urgent   { animation: dot-pulse .8s ease-in-out infinite; }
 
+/* 技术指标摘要图标 */
+.badge { display: inline-block; font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-left: 2px; }
+.badge-bull { background: rgba(63,185,80,.12); color: var(--green); }
+.badge-bear { background: rgba(248,81,73,.10); color: var(--red); }
+.ind-badges { display: inline-flex; gap: 2px; flex-wrap: wrap; }
+
 .event-name { flex: 1; font-size: 12px; }
 .event-date { font-size: 11px; color: var(--text-dim); }
 

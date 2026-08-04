@@ -13,6 +13,7 @@
   <!-- ═══ 顶部栏 ═══ -->
   <header class="top-bar">
     <h1>📊 基金监控</h1>
+    <a href="/portfolio" style="font-size:12px;color:#8b8fa3;text-decoration:none;padding:4px 10px;border:1px solid #2a2d3a;border-radius:6px;margin-left:8px;">💰 仓位</a>
     <div class="top-bar-center">
       <span id="fund-name" class="fund-title">--</span>
       <span id="fund-code" class="fund-code">--</span>
@@ -171,6 +172,27 @@ function rsiClass(rsi, t) {
   return 'rsi-neutral';
 }
 
+// ── 指标摘要图标 ──────────────────────────
+function indicatorBadges(ind) {
+  if (!ind) return '';
+  let badges = [];
+  const m = ind.macd || {};
+  if (m.signal === 'golden_cross') badges.push('<span class="badge badge-bull" title="MACD金叉">🔺MACD</span>');
+  if (m.signal === 'death_cross') badges.push('<span class="badge badge-bear" title="MACD死叉">🔻MACD</span>');
+  const k = ind.kdj || {};
+  if (k.status === 'oversold') badges.push('<span class="badge badge-bull" title="KDJ超卖">⚡KDJ</span>');
+  if (k.status === 'overbought') badges.push('<span class="badge badge-bear" title="KDJ超买">🔥KDJ</span>');
+  const b = ind.bollinger || {};
+  if (b.position === 'below_lower') badges.push('<span class="badge badge-bull" title="触及布林下轨">📉下轨</span>');
+  if (b.position === 'above_upper') badges.push('<span class="badge badge-bear" title="触及布林上轨">📈上轨</span>');
+  const ma = ind.ma_system || {};
+  if (ma.alignment === 'bullish') badges.push('<span class="badge badge-bull" title="均线多头排列">↗多头</span>');
+  if (ma.alignment === 'bearish') badges.push('<span class="badge badge-bear" title="均线空头排列">↘空头</span>');
+  if (ma.crosses && ma.crosses.includes('ma5_cross_above_ma20')) badges.push('<span class="badge badge-bull" title="MA5上穿MA20">🔺MA</span>');
+  if (ma.crosses && ma.crosses.includes('ma5_cross_below_ma20')) badges.push('<span class="badge badge-bear" title="MA5下穿MA20">🔻MA</span>');
+  return badges.join('');
+}
+
 // ── 状态 ──────────────────────────────────
 let currentFund = null;
 let fundData = null;
@@ -319,12 +341,14 @@ function renderStocks(stocks, t) {
     const rsic = rsiClass(v.rsi, t);
     const rlbl = rsiLabel(v.rsi, t);
     const ma = v.above_ma50 ? '<span class="ma-up">↑MA50</span>' : (v.above_ma50===false ? '<span class="ma-down">↓MA50</span>' : '');
+    const badges = indicatorBadges(v.indicators);
     return `<div class="stock-row">
       <span class="name">${k}<small>${v.name||''}</small></span>
       <span class="price">${fmt(v.price)}</span>
       <span class="chg ${cls}">${fmtPct(v.day_change_pct)}</span>
       ${v.rsi!=null ? `<span class="rsi ${rsic}">RSI ${fmt(v.rsi,1)} ${rlbl}</span>` : ''}
       ${ma}
+      ${badges ? `<span class="ind-badges">${badges}</span>` : ''}
     </div>`;
   }).join('');
 }
@@ -379,7 +403,9 @@ function renderKeyDates(data) {
   }
   const today = new Date().toISOString().split('T')[0];
   const upcoming = data.filter(e => !e.passed).sort((a,b) => a.days_left - b.days_left);
-  const recentlyPassed = data.filter(e => e.passed && e.days_left >= -14).sort((a,b) => b.days_left - a.days_left);
+  const recentlyPassedAll = data.filter(e => e.passed && e.days_left >= -14).sort((a,b) => b.days_left - a.days_left);
+  const recentlyDone = recentlyPassedAll.filter(e => e.result);
+  const recentlyPassed = recentlyPassedAll.filter(e => !e.result);
   let html = '';
 
   // 即将到来
@@ -397,6 +423,9 @@ function renderKeyDates(data) {
   }
 
   // 最近过期（需跟进分析）
+  if (recentlyDone.length) {
+    html += '<div class="event-section-label" style="opacity:0.6">✅ 已跟进 ' + recentlyDone.length + ' 项</div>';
+  }
   if (recentlyPassed.length) {
     html += '<div class="event-section-label">📋 最近过期（需跟进）</div>';
     html += recentlyPassed.map(e => {

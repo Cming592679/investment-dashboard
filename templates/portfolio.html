@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仓位总览 — Investment Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d28;
+    --card2: #212433;
+    --border: #2a2d3a;
+    --text: #e1e4ed;
+    --text2: #8b8fa3;
+    --red: #f85149;
+    --green: #3fb950;
+    --yellow: #d2991d;
+    --blue: #58a6ff;
+    --purple: #a371f7;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  a { color: var(--blue); text-decoration: none; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 16px 20px; }
+
+  /* ═══ 顶部导航 ═══ */
+  .top-nav {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    background: var(--card);
+  }
+  .top-nav h1 { font-size: 18px; white-space: nowrap; }
+  .top-nav a { color: var(--text2); font-size: 14px; padding: 4px 12px; border-radius: 6px; }
+  .top-nav a.active { color: var(--text); background: var(--card2); }
+  .top-nav a:hover { color: var(--text); }
+
+  /* ═══ 总览卡片 ═══ */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+  }
+  .stat-card .label { font-size: 12px; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .value { font-size: 24px; font-weight: 700; }
+  .stat-card .sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .stat-card.highlight { border-color: var(--blue); background: rgba(88,166,255,0.06); }
+  .val-red { color: var(--red); }
+  .val-green { color: var(--green); }
+  .val-yellow { color: var(--yellow); }
+
+  /* ═══ 板块分配柱 ═══ */
+  .section-title {
+    font-size: 14px; font-weight: 600; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin: 24px 0 12px 0; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .allocation-bar-wrap { display: flex; height: 32px; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+  .allocation-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #000; min-width: 0; transition: filter 0.2s; cursor: pointer; }
+  .allocation-seg:hover { filter: brightness(1.2); }
+  .allocation-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend-limits { font-size: 11px; color: var(--text2); }
+
+  /* ═══ 板块状态行 ═══ */
+  .sector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+  .sector-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sector-card.warn { border-color: var(--red); background: rgba(248,81,73,0.06); }
+  .sector-card .sector-emoji { font-size: 28px; }
+  .sector-card .sector-info { flex: 1; min-width: 0; }
+  .sector-card .sector-name { font-weight: 600; font-size: 14px; }
+  .sector-card .sector-status { font-size: 12px; color: var(--text2); display: flex; gap: 12px; }
+  .sector-card .sector-amount { text-align: right; }
+  .sector-card .sector-pct { font-size: 18px; font-weight: 700; }
+  .sector-card .sector-amount-val { font-size: 12px; color: var(--text2); }
+
+  /* ═══ 持仓明细表 ═══ */
+  .holdings-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--card); border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .holdings-table th {
+    text-align: left; padding: 10px 14px; font-size: 11px;
+    color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px;
+    background: var(--card2); border-bottom: 1px solid var(--border);
+  }
+  .holdings-table td {
+    padding: 10px 14px; font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .holdings-table tr:last-child td { border-bottom: none; }
+  .holdings-table tr:hover { background: rgba(255,255,255,0.02); }
+  .holdings-table .fund-name { font-weight: 500; }
+  .holdings-table .fund-code { font-size: 11px; color: var(--text2); }
+  .holdings-table .note { font-size: 11px; color: var(--text2); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row-warn { border-left: 3px solid var(--red); }
+  .tag-overlap { display: inline-block; background: rgba(163,113,247,0.2); color: var(--purple); font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
+
+  /* ═══ 操作日志 ═══ */
+  .log-list { list-style: none; }
+  .log-item {
+    display: flex; gap: 12px; padding: 10px 14px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 6px; font-size: 13px;
+  }
+  .log-date { color: var(--text2); font-size: 12px; white-space: nowrap; min-width: 80px; }
+  .log-action { font-weight: 600; min-width: 80px; }
+  .log-reason { color: var(--text2); }
+
+  /* ═══ 底部 ═══ */
+  .footer-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; margin-top: 24px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text2);
+  }
+  .loading { text-align: center; padding: 40px; color: var(--text2); }
+  .refresh-small { cursor: pointer; color: var(--blue); font-size: 12px; }
+  .refresh-small:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- ═══ 顶部导航 ═══ -->
+<nav class="top-nav">
+  <h1>💰 仓位总览</h1>
+  <a href="/">📊 基金监控</a>
+  <a href="/portfolio" class="active">💰 仓位总览</a>
+</nav>
+
+<div class="container" id="app">
+  <div class="loading">⏳ 加载中...</div>
+</div>
+
+<script>
+const SECTOR_COLORS = {
+  'AI硬件':    '#58a6ff',
+  '半导体设备': '#3fb950',
+  '芯片指数':  '#a371f7',
+  '航天卫星':  '#f85149',
+  'CPO':       '#d2991d',
+  'PCB':       '#f0883e',
+  '电网设备':  '#7ee787',
+  '机器人':    '#f778ba',
+};
+
+const CONCLUSION_COLORS = {
+  '安心持有': 'var(--green)',
+  '关注加仓': 'var(--green)',
+  '忍着不动': 'var(--yellow)',
+  '超卖观望': 'var(--yellow)',
+  '高位警惕': 'var(--red)',
+  '考虑跑路': 'var(--red)',
+};
+
+async function load() {
+  try {
+    const r = await fetch('/api/portfolio');
+    const data = await r.json();
+    if (data.error) { document.getElementById('app').innerHTML = `<div class="loading">❌ ${data.error}</div>`; return; }
+    render(data);
+  } catch(e) {
+    document.getElementById('app').innerHTML = `<div class="loading">❌ 加载失败: ${e.message}</div>`;
+  }
+}
+
+function fmt(n) { return n != null ? '¥' + Number(n).toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2}) : '--'; }
+function fmtPct(n) { return n != null ? (n > 0 ? '+' : '') + Number(n).toFixed(2) + '%' : '--'; }
+function clr(n) { return n == null ? '' : (n >= 0 ? 'val-green' : 'val-red'); }
+
+function render(data) {
+  const sectorsLive = data.sector_allocation_live || data.sector_allocation || {};
+  const sectors = data.sector_allocation || {};
+  const totalAmount = data.total_assets || 0;
+  const totalHoldingReturn = data.holding_return || 0;
+  const totalReturnPct = totalAmount > 0 ? (totalHoldingReturn / (totalAmount - totalHoldingReturn) * 100) : 0;
+
+  // ── 板块分配柱 ──
+  let barHTML = '';
+  let legendHTML = '';
+  const sectorEntries = Object.entries(sectors).sort((a,b) => b[1].pct - a[1].pct);
+  for (const [name, info] of sectorEntries) {
+    const color = SECTOR_COLORS[name] || '#666';
+    const live = sectorsLive[name] || {};
+    barHTML += `<div class="allocation-seg" style="width:${info.pct}%;background:${color}" title="${name} ${info.pct}%">${info.pct >= 8 ? info.pct+'%' : ''}</div>`;
+    const limitOk = info.pct <= 20;
+    legendHTML += `<div class="legend-item">
+      <span class="legend-dot" style="background:${color}"></span>
+      ${live.live_emoji||info.dashboard_emoji||''} ${name}
+      <strong>${info.pct}%</strong>
+      ${live.live_return_pct != null ? `<span class="${clr(live.live_return_pct)}">${fmtPct(live.live_return_pct)}</span>` : ''}
+      ${!limitOk ? '<span style="color:var(--red);font-size:10px">⚠超限</span>' : ''}
+    </div>`;
+  }
+
+  // ── 板块状态卡 ──
+  let sectorCardsHTML = '';
+  for (const [name, info] of sectorEntries) {
+    const live = sectorsLive[name] || {};
+    const liveConc = live.live_conclusion || info.dashboard_conclusion || '--';
+    const liveEmoji = live.live_emoji || info.dashboard_emoji || '⚪';
+    const concColor = CONCLUSION_COLORS[liveConc] || 'var(--text2)';
+    const isWarn = info.pct > 20 || liveConc === '考虑跑路' || liveConc === '高位警惕';
+    sectorCardsHTML += `<div class="sector-card${isWarn ? ' warn' : ''}">
+      <span class="sector-emoji">${liveEmoji}</span>
+      <div class="sector-info">
+        <div class="sector-name">${name}</div>
+        <div class="sector-status">
+          <span style="color:${concColor}">${liveConc}</span>
+          <span>${info.funds.length}只基金</span>
+        </div>
+      </div>
+      <div class="sector-amount">
+        <div class="sector-pct">${info.pct}%</div>
+        <div class="sector-amount-val">${fmt(info.total_amount)}</div>
+      </div>
+    </div>`;
+  }
+
+  // ── 持仓明细表 ──
+  let tableHTML = '';
+  const holdings = data.holdings || [];
+  // 按金额降序
+  const sorted = [...holdings].sort((a,b) => b.amount - a.amount);
+  for (const h of sorted) {
+    const liveEmoji = h.live_emoji || '';
+    const liveConc = h.live_conclusion || '';
+    const livePred = h.live_prediction || '';
+    const liveRet = h.live_return_pct;
+    const isWarn = h.holding_return_pct < -25;
+    const isOverlap = h.notes && h.notes.includes('重叠');
+    tableHTML += `<tr class="${isWarn ? 'row-warn' : ''}">
+      <td>
+        <div class="fund-name">${liveEmoji} ${h.fund_name}</div>
+        <div class="fund-code">${h.fund_code} · ${h.sector}${isOverlap ? '<span class="tag-overlap">重复</span>' : ''}</div>
+      </td>
+      <td>${fmt(h.amount)}</td>
+      <td class="${clr(h.holding_return_pct)}">${fmtPct(h.holding_return_pct)}</td>
+      <td class="${clr(h.holding_return)}">${fmt(h.holding_return)}</td>
+      <td class="${clr(liveRet)}">${liveRet != null ? fmtPct(liveRet) : '--'}</td>
+      <td>${liveConc || '--'} ${livePred ? '· '+livePred : ''}</td>
+      <td class="note" title="${h.notes||''}">${h.notes||'--'}</td>
+    </tr>`;
+  }
+
+  // ── 操作日志 ──
+  let logHTML = '';
+  const log = data.action_log || [];
+  for (const a of log.slice(0, 10)) {
+    logHTML += `<li class="log-item">
+      <span class="log-date">${a.date}</span>
+      <span class="log-action">${a.action}</span>
+      <span class="log-reason">${a.reason || ''} ${a.amount ? fmt(a.amount) : ''}</span>
+    </li>`;
+  }
+
+  // ── 组装 ──
+  document.getElementById('app').innerHTML = `
+
+    <!-- 总览卡片 -->
+    <div class="summary-row">
+      <div class="stat-card">
+        <div class="label">总资产</div>
+        <div class="value">${fmt(totalAmount)}</div>
+        <div class="sub">更新于 ${data.updated}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">持有收益</div>
+        <div class="value ${clr(totalHoldingReturn)}">${fmt(totalHoldingReturn)}</div>
+        <div class="sub ${clr(totalReturnPct)}">${fmtPct(totalReturnPct)} 整体</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">账户余额（可用资金）</div>
+        <div class="value" style="font-size:22px">${fmt(data.cash || 0)}</div>
+        <div class="sub">占比 ${totalAmount > 0 ? (data.cash / totalAmount * 100).toFixed(1) : '--'}%</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="label">持仓基金数</div>
+        <div class="value">${holdings.length} <span style="font-size:14px;color:var(--text2)">只</span></div>
+        <div class="sub">${holdings.filter(h => h.amount < 2000).length} 只 &lt; ¥2,000 微量仓位</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">昨日收益</div>
+        <div class="value ${clr(data.daily_return)}">${fmt(data.daily_return)}</div>
+        <div class="sub">${data.daily_return != null && totalAmount > 0 ? fmtPct(data.daily_return/(totalAmount - data.daily_return)*100) : '--'} 日涨跌</div>
+      </div>
+    </div>
+
+    <!-- ═══ 今日操作建议 ═══ -->
+    <div id="action-section"></div>
+
+    <!-- 板块分配 -->
+    <div class="section-title">📊 板块分配 <span class="legend-limits">（上限 20%/板块）</span></div>
+    <div class="allocation-bar-wrap">${barHTML}</div>
+    <div class="allocation-legend">${legendHTML}</div>
+
+    <!-- 板块实时状态 -->
+    <div class="section-title">🎯 板块实时判定</div>
+    <div class="sector-grid">${sectorCardsHTML}</div>
+
+    <!-- 持仓明细 -->
+    <div class="section-title">📋 持仓明细</div>
+    <div style="overflow-x:auto;">
+    <table class="holdings-table">
+      <thead>
+        <tr>
+          <th>基金名称</th>
+          <th>持有金额</th>
+          <th>持有收益率</th>
+          <th>持有收益</th>
+          <th>今日涨跌</th>
+          <th>实时判定</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody>${tableHTML}</tbody>
+    </table>
+    </div>
+
+    <!-- 操作日志 -->
+    <div class="section-title">📝 操作日志</div>
+    <ul class="log-list">${logHTML || '<li class="log-item"><span class="log-reason">暂无记录</span></li>'}</ul>
+
+    <!-- 底部 -->
+    <div class="footer-bar">
+      <span>数据源: portfolio.json + Dashboard 实时缓存</span>
+      <span class="refresh-small" onclick="load()">🔄 刷新</span>
+    </div>
+  `;
+}
+
+load();
+loadActions();
+
+async function loadActions() {
+  try {
+    const r = await fetch('/api/action');
+    const data = await r.json();
+    renderActions(data);
+  } catch(e) {
+    document.getElementById('action-section').innerHTML = '';
+  }
+}
+
+function renderActions(data) {
+  const container = document.getElementById('action-section');
+  if (!container) return;
+
+  if (data.no_action) {
+    container.innerHTML = `<div class="section-title">📋 今日操作建议</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:32px;text-align:center;color:var(--text2);font-size:15px;">
+        ✅ 今日无操作建议<br><span style="font-size:12px">所有板块信号正常，无需买卖</span>
+      </div>`;
+    return;
+  }
+
+  let html = '<div class="section-title">📋 今日操作建议 <span style="font-size:11px;color:var(--text2);font-weight:400">' + data.date + '</span></div>';
+
+  // Regime 摘要
+  const regimeColors = {Normal:'var(--green)',Panic:'var(--yellow)',Structural:'var(--red)','Pre-Event':'var(--purple)'};
+  const regimeLabels = {Normal:'🟢正常',Panic:'🟡恐慌',Structural:'🔴结构','Pre-Event':'⚪事件'};
+  html += '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:14px;font-size:12px">';
+  for (const [fid, regime] of Object.entries(data.regimes || {})) {
+    html += `<span style="color:${regimeColors[regime]||'var(--text2)'}">${regimeLabels[regime]||regime} ${fid}</span>`;
+  }
+  html += '</div>';
+
+  // 卖出信号 (红色优先)
+  const allSells = [...(data.sell_stop||[]), ...(data.sell_profit||[])];
+  if (allSells.length > 0) {
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">';
+    for (const s of allSells) {
+      html += `<div style="background:rgba(248,81,73,0.08);border:1px solid var(--red);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:24px">🔴</span>
+        <div style="flex:1"><div style="font-weight:600">卖出 ${s.sector || s.fund_id} · ${s.track || ''}</div>
+        <div style="font-size:12px;color:var(--text2)">${s.reason||''}</div></div>
+        <div style="text-align:right"><div style="font-size:20px;font-weight:700;color:var(--red)">¥${(s.amount||0).toLocaleString('zh-CN',{maximumFractionDigits:0})}</div>
+        <div style="font-size:12px;color:var(--text2)">${(s.sell_pct||0).toFixed(0)}%</div></div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  // 买入信号
+  if ((data.buy_signals||[]).length > 0) {
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">';
+    for (const b of data.buy_signals) {
+      html += `<div style="background:rgba(63,185,80,0.06);border:1px solid var(--green);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:24px">🟢</span>
+        <div style="flex:1"><div style="font-weight:600">买入 ${b.sector || b.fund_id}</div>
+        <div style="font-size:11px;color:var(--text2)">${b.reason||''}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:2px">RSI系数:${b.rsi_coefficient||'?'} 信心:${b.confidence_coefficient||'?'}</div></div>
+        <div style="text-align:right"><div style="font-size:20px;font-weight:700;color:var(--green)">¥${(b.amount||0).toLocaleString('zh-CN',{maximumFractionDigits:0})}</div></div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  // 被否决信号
+  if ((data.conflicts_resolved||[]).length > 0) {
+    html += '<details style="margin-bottom:12px"><summary style="font-size:12px;color:var(--text2);cursor:pointer;padding:4px 0">⚪ 被否决的信号 (${data.conflicts_resolved.length}条)</summary>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">';
+    for (const c of data.conflicts_resolved) {
+      html += `<div style="font-size:12px;color:var(--text2);padding:4px 10px;background:var(--card);border-radius:4px">
+        ${c.fund_id||c.sector||'?'} · ${c._reject_reason||c.reason||''}
+      </div>`;
+    }
+    html += '</div></details>';
+  }
+
+  // 仓位健康
+  const h = data.portfolio_health || {};
+  if ((h.warnings||[]).length > 0) {
+    html += '<div style="font-size:12px;color:var(--yellow);margin-top:8px">';
+    for (const w of h.warnings) {
+      html += `⚠ ${w}<br>`;
+    }
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+}
+</script>
+</body>
+</html>
