@@ -15,8 +15,10 @@ from config import (
     CYCLE_COUNTER_HYPOTHESIS, DIVERGENCE_DOWNGRADE_WEEKS,
     DYNAMIC_THRESHOLD_COEFFICIENT, DYNAMIC_THRESHOLD_LOOKBACK_DAYS,
     MIN_SAMPLE_SIZE_WARNING, CONTROL_BENCHMARKS,
+    DATA_DIR,
 )
 from data_fetcher import get_index_snapshot, get_stock_snapshot
+from fund_nav_fetcher import update_portfolio_nav, backfill_portfolio_history
 from trading_rules import evaluate_daily_actions
 
 # ══════════════════════════════════════════════════════════
@@ -168,7 +170,7 @@ def _get_max_age_days(update_cycle):
     if '月度' in update_cycle or '每月' in update_cycle:
         return 35
     if '季度' in update_cycle or '季末' in update_cycle or '季报' in update_cycle:
-        return 110
+        return 130  # Q1数据4月发布→Q2数据8月发布，间隔约4个月
     if '年度' in update_cycle or '年初' in update_cycle:
         return 370
     return None  # 事件驱动型，无法自动判断
@@ -281,8 +283,9 @@ def check_recently_passed_events():
 app = Flask(__name__)
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-HISTORY_DIR = os.path.join(PROJECT_DIR, "history")
-REVIEWS_DIR = os.path.join(PROJECT_DIR, "reviews")
+# 个人数据目录（portfolio.json / history / predictions / reviews 等）与代码分离
+HISTORY_DIR = os.path.join(DATA_DIR, "history")
+REVIEWS_DIR = os.path.join(DATA_DIR, "reviews")
 OPTIMIZE_TOPICS_PATH = os.path.join(PROJECT_DIR, "optimize", "topics.json")
 HISTORY_INDEX_PATH = os.path.join(HISTORY_DIR, "_index.json")
 
@@ -356,20 +359,65 @@ def _fetch_one_fund(fund_id, fund):
                         "note": cond.get("note", ""),
                     }
 
-    # 拉基准 ETF 实际涨跌作为 fund_return_pct
-    bm_ticker = fund.get("benchmark", "")
+    # 拉基金真实净值涨跌 + 盘中估算
     fund_return_pct = None
-    if bm_ticker:
-        # 优先从已拉取的数据中找
-        for src in [stocks, indices, specials]:
-            if bm_ticker in src and not src[bm_ticker].get("error"):
-                fund_return_pct = src[bm_ticker].get("day_change_pct")
-                break
-        # 没找到就单独拉
-        if fund_return_pct is None:
-            bm_snap = get_stock_snapshot(bm_ticker)
-            if not bm_snap.get("error"):
-                fund_return_pct = bm_snap.get("day_change_pct")
+    fund_nav_date = None
+    try:
+        import urllib.request, re
+        url = f'http://fund.eastmoney.com/pingzhongdata/{fund_id}.js'
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'Referer': 'http://fund.eastmoney.com/'})
+        resp = urllib.request.urlopen(req, timeout=5).read().decode('utf-8')
+        nav_match = re.search(r'Data_netWorthTrend\s*=\s*(\[.*?\])', resp, re.DOTALL)
+        if nav_match:
+            nav_data = json.loads(nav_match.group(1))
+            if len(nav_data) >= 2:
+                latest = nav_data[-1]
+                fund_return_pct = latest.get('equityReturn', None)
+                from datetime import datetime
+                fund_nav_date = datetime.fromtimestamp(latest['x']/1000).strftime('%m/%d')
+    except Exception:
+        pass
+
+    # 盘中估值：三级 fallback — apizero真实估值 → 代理股票加权 → 基准ETF
+    fund_return_est = None
+    est_source = None
+    today_str = date.today().strftime('%m/%d')
+    is_today_nav = (fund_nav_date == today_str)
+
+    # 只有净值已更新到今日时，才直接用净值，不再估算
+    if not is_today_nav:
+        # 一级：apizero 基金实时估值
+        try:
+            from fund_nav_fetcher import get_fund_estimate_apizero
+            apz = get_fund_estimate_apizero(fund_id)
+            if apz and apz.get('change_rate') is not None:
+                fund_return_est = float(apz['change_rate'])
+                est_source = 'apizero'
+        except: pass
+
+        # 二级：代理股票加权（真实持仓权重，无条件计算）
+        if fund_return_est is None:
+            est, src = _weighted_proxy_estimate(fund_id, stocks)
+            if est is not None:
+                fund_return_est = est
+                est_source = src
+
+        # 三级：基准ETF
+        if fund_return_est is None:
+            bm_ticker = fund.get("benchmark", "")
+            if bm_ticker:
+                for src in [stocks, indices, specials]:
+                    if bm_ticker in src and not src[bm_ticker].get("error"):
+                        fund_return_est = src[bm_ticker].get("day_change_pct")
+                        est_source = 'benchmark'
+                        break
+                if fund_return_est is None:
+                    try:
+                        bm_snap = get_stock_snapshot(bm_ticker)
+                        if not bm_snap.get("error"):
+                            fund_return_est = bm_snap.get("day_change_pct")
+                            est_source = 'benchmark'
+                    except: pass
 
     return {
         "fund_id": fund_id,
@@ -386,6 +434,9 @@ def _fetch_one_fund(fund_id, fund):
         "prediction": prediction,
         "disruption_status": disruption_status,
         "fund_return_pct": fund_return_pct,
+        "fund_nav_date": fund_nav_date,
+        "fund_return_est": fund_return_est,
+        "est_source": est_source,
     }
 
 
@@ -505,7 +556,7 @@ def _save_daily_snapshot():
         json.dump(snapshot, f, ensure_ascii=False, indent=2)
 
     # 同时写一份纯预测记录到 predictions/（含双轨验证）
-    preds_dir = os.path.join(PROJECT_DIR, "predictions")
+    preds_dir = os.path.join(DATA_DIR, "predictions")
     os.makedirs(preds_dir, exist_ok=True)
     pred_path = os.path.join(preds_dir, f"{today_str}.json")
     # Extract indicator predictions for the prediction file
@@ -605,6 +656,20 @@ def _scheduler_loop():
                 print(f"⏰ 定时刷新触发 {now.strftime('%H:%M:%S')}")
                 _refresh_all()
 
+        # 每日 20:00-20:02 更新基金净值
+        if now.hour == 20 and now.minute <= 2:
+            try:
+                pf = _load_portfolio()
+                if pf:
+                    pf = update_portfolio_nav(pf)
+                    _save_portfolio(pf)
+                    # 保存当日快照
+                    hist_dir = os.path.join(DATA_DIR, "portfolio_history")
+                    backfill_portfolio_history(pf, hist_dir, days=3)
+                    print(f"📊 净值更新完成 {now.strftime('%H:%M:%S')}")
+            except Exception as e:
+                print(f"  ⚠ 净值更新失败: {e}")
+
 
 # ══════════════════════════════════════════════════════════
 # 复盘辅助函数
@@ -613,7 +678,7 @@ def _scheduler_loop():
 def _check_tier1_gate():
     """Tier-1 门禁：检查指标层是否有 ≥1 季度的验证样本"""
     # 检查最早的预测是否已过 90 天
-    preds_dir = os.path.join(PROJECT_DIR, "predictions")
+    preds_dir = os.path.join(DATA_DIR, "predictions")
     if not os.path.exists(preds_dir):
         return {"ready": False, "reason": "无预测记录", "warning": "尚未生成任何预测，无法进行 Tier-1 验证"}
     files = sorted([f for f in os.listdir(preds_dir) if f.endswith(".json")])
@@ -741,7 +806,7 @@ def _generate_monthly_review():
 
     # 收集预测数据
     predictions_data = []
-    preds_dir = os.path.join(PROJECT_DIR, "predictions")
+    preds_dir = os.path.join(DATA_DIR, "predictions")
     if os.path.exists(preds_dir):
         for fname in sorted(os.listdir(preds_dir)):
             if fname.endswith(".json") and not fname.startswith("_"):
@@ -1175,6 +1240,85 @@ def _check_disruption_trigger(fund_id):
 
 
 
+def _weighted_proxy_estimate(fund_id: str, stocks: dict):
+    """代理股票真实权重加权。返回 (estimate, source) 或 (None, None)。
+    从 config.HOLDING_WEIGHTS 查权重，加权 stocks 的日涨跌。
+    """
+    try:
+        from config import BOARD_FUND_MAP, HOLDING_WEIGHTS
+    except ImportError:
+        return None, None
+
+    fund_code = BOARD_FUND_MAP.get(fund_id)
+    if not fund_code:
+        return None, None
+    weights = HOLDING_WEIGHTS.get(fund_code)
+    if not weights:
+        return None, None
+
+    # 加权：Σ(weight × chg) / Σ(weight)，只对有权重且数据可用的股票
+    total_w = 0.0
+    weighted_chg = 0.0
+    for ticker, w in weights.items():
+        s = stocks.get(ticker)
+        if s and not s.get('error') and s.get('day_change_pct') is not None:
+            weighted_chg += w * s['day_change_pct']
+            total_w += w
+
+    if total_w == 0:
+        # 权重数据全都没匹配上，fallback 等权
+        proxy_chgs = [s.get('day_change_pct') for s in stocks.values()
+                      if s.get('day_change_pct') is not None and not s.get('error')]
+        if proxy_chgs:
+            return round(sum(proxy_chgs) / len(proxy_chgs), 2), 'proxy'
+        return None, None
+
+    return round(weighted_chg / total_w, 2), 'proxy'
+
+
+def _check_volume_signal(stocks: dict) -> str:
+    """检查成分股整体量能信号。
+    返回: "heavy_up"(放量上涨) / "light_up"(缩量上涨) / "heavy_down"(放量下跌) / "light_down"(缩量下跌) / ""(无明显信号)
+    """
+    up_heavy = up_light = down_heavy = down_light = 0
+    total = 0
+    for tk, s in stocks.items():
+        vi = s.get("volume_info", {})
+        vol_ratio = vi.get("volume_ratio")
+        chg = s.get("day_change_pct", 0)
+        if vol_ratio is None:
+            continue
+        total += 1
+        if chg is not None and chg > 0:
+            if vol_ratio >= 1.5:
+                up_heavy += 1
+            elif vol_ratio <= 0.6:
+                up_light += 1
+        elif chg is not None and chg < 0:
+            if vol_ratio >= 1.5:
+                down_heavy += 1
+            elif vol_ratio <= 0.6:
+                down_light += 1
+
+    if total < 3:
+        return ""
+
+    ratio_up_heavy = up_heavy / total
+    ratio_up_light = up_light / total
+    ratio_down_heavy = down_heavy / total
+    ratio_down_light = down_light / total
+
+    if ratio_up_heavy >= 0.4:
+        return "heavy_up"
+    if ratio_down_heavy >= 0.4:
+        return "heavy_down"
+    if ratio_up_light >= 0.4:
+        return "light_up"
+    if ratio_down_light >= 0.4:
+        return "light_down"
+    return ""
+
+
 def compute_assessment(fund, stocks, indices, specials, fund_id=None):
     """三层架构 + 决策树判定
 
@@ -1281,6 +1425,8 @@ def compute_assessment(fund, stocks, indices, specials, fund_id=None):
     # 决策树判定
     # ══════════════════════════════════════════════════
 
+    conclusion = None  # 初始化，防止量能分支引用未赋值的变量
+
     # 分支1: 瓶颈破坏(利空) → 最强信号，直接红色
     if disruption_downgrade:
         conclusion = "考虑跑路"
@@ -1300,6 +1446,42 @@ def compute_assessment(fund, stocks, indices, specials, fund_id=None):
         conclusion = "超卖观望"
         emoji = "🟡"
         desc = f"暴跌发生在周期早期+基本面完好 → 不宜追卖，等企稳。超卖解读: {w['oversold_read']}"
+
+    # ── 量能分支: 检查放量/缩量信号 ──
+    volume_signal = _check_volume_signal(stocks)
+
+    # 分支3.5: 放量反弹+技术面好转 → 反转升格
+    if volume_signal == "heavy_up" and not disruption_downgrade and leading_bullish:
+        macd_golden = sum(1 for s in stocks.values()
+                         if s.get("indicators", {}).get("macd", {}).get("signal") == "golden_cross")
+        if macd_golden >= 1 or ma_ratio >= 0.5:
+            conclusion = "关注反弹"
+            emoji = "🟢"
+            desc = "放量反弹+技术面同步好转 → 量价配合，反转概率升高。可考虑试探性建仓"
+            details.append("📊 量能: 放量反弹，量价配合良好")
+    elif volume_signal == "light_up" and has_crash:
+        # 暴跌后缩量反弹 → 死猫跳警告
+        if not conclusion:
+            conclusion = "忍着不动"
+            emoji = "🟡"
+            desc = "暴跌后缩量反弹 → 疑似死猫跳，等放量确认"
+        elif conclusion in ("忍着不动", "超卖观望"):
+            desc += "。⚠但反弹缩量，需放量确认方可升格"
+        details.append("📊 量能: 反弹缩量，等放量确认")
+    elif volume_signal == "heavy_down":
+        if not conclusion:
+            conclusion = "忍着不动"
+            emoji = "🟡"
+            desc = "放量下跌中，恐慌盘在出清——关注企稳信号"
+        details.append("📊 量能: 放量下跌，恐慌盘在出清——关注企稳信号")
+    elif volume_signal == "light_down":
+        if not conclusion:
+            conclusion = "忍着不动"
+            emoji = "🟡"
+            desc = "缩量阴跌，市场冷清无人接盘"
+        elif conclusion == "忍着不动":
+            desc += "。⚠缩量阴跌，无人接盘"
+        details.append("📊 量能: 缩量下跌，市场冷清")
 
     # 分支4: 深度超卖 + 基本面完好 → 逆向机会
     elif deep_oversold and leading_bullish and not disruption_downgrade:
@@ -1496,6 +1678,19 @@ def _generate_prediction(fund_id, assessment, leading, cycle):
 # 交易操作 API
 # ══════════════════════════════════════════════════════════
 
+@app.route("/api/intraday")
+def api_intraday():
+    """盘中实时数据：pending_plans 触发状态 + 异常告警 + 估值"""
+    pf = _load_portfolio()
+    if not pf:
+        return jsonify({"error": "portfolio not found"}), 404
+    try:
+        from intraday_check import run
+        result = run(pf)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/api/action")
 def api_action():
     """返回今日操作建议（叠层信号交易系统）"""
@@ -1519,7 +1714,7 @@ def api_action():
 # 持仓总览
 # ══════════════════════════════════════════════════════════
 
-PORTFOLIO_PATH = os.path.join(PROJECT_DIR, "portfolio.json")
+PORTFOLIO_PATH = os.path.join(DATA_DIR, "portfolio.json")
 
 
 def _load_portfolio():
@@ -1589,7 +1784,13 @@ def api_portfolio():
                 a = entry["data"]["assessment"]
                 h["live_conclusion"] = a["conclusion"]
                 h["live_emoji"] = a["emoji"]
-                h["live_return_pct"] = entry["data"].get("fund_return_pct")
+                # 优先用盘中估算，次用最新净值涨跌
+                est = entry["data"].get("fund_return_est")
+                nav_ret = entry["data"].get("fund_return_pct")
+                nav_date = entry["data"].get("fund_nav_date", "")
+                src = entry["data"].get("est_source", "")
+                h["live_return_pct"] = est if est is not None else nav_ret
+                h["live_return_date"] = nav_date if est is None else ("真实估值" if src == "apizero" else "代理估算" if src == "proxy" else "基准估算")
                 h["live_prediction"] = entry["data"].get("prediction", {}).get("label", "")
 
     return jsonify(pf)

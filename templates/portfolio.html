@@ -154,14 +154,18 @@
 
 <script>
 const SECTOR_COLORS = {
-  'AI硬件':    '#58a6ff',
-  '半导体设备': '#3fb950',
-  '芯片指数':  '#a371f7',
-  '航天卫星':  '#f85149',
-  'CPO':       '#d2991d',
-  'PCB':       '#f0883e',
-  '电网设备':  '#7ee787',
-  '机器人':    '#f778ba',
+  '海外半导体':   '#58a6ff',
+  '半导体设备':   '#3fb950',
+  '芯片指数':     '#a371f7',
+  '军工电子':     '#f85149',
+  'CPO':          '#d2991d',
+  '电子材料':     '#f0883e',
+  '电网设备':     '#7ee787',
+  '机器人':       '#f778ba',
+  '存储芯片(A股)': '#e040fb',
+  '存储芯片(海外)': '#40c4ff',
+  '半导体(全链)':  '#ffab40',
+  '其他':         '#666',
 };
 
 const CONCLUSION_COLORS = {
@@ -222,16 +226,16 @@ function render(data) {
     const concColor = CONCLUSION_COLORS[liveConc] || 'var(--text2)';
     const isWarn = info.pct > 20 || liveConc === '考虑跑路' || liveConc === '高位警惕';
     sectorCardsHTML += `<div class="sector-card${isWarn ? ' warn' : ''}">
-      <span class="sector-emoji">${liveEmoji}</span>
+      <span class="sector-emoji" title="🟢=安全 🟡=观望 🔴=危险">${liveEmoji}</span>
       <div class="sector-info">
         <div class="sector-name">${name}</div>
         <div class="sector-status">
-          <span style="color:${concColor}">${liveConc}</span>
+          <span style="color:${concColor}" title="Dashboard决策树实时判定">${liveConc}</span>
           <span>${info.funds.length}只基金</span>
         </div>
       </div>
       <div class="sector-amount">
-        <div class="sector-pct">${info.pct}%</div>
+        <div class="sector-pct" title="仓位占比，超20%为警告">${info.pct}%</div>
         <div class="sector-amount-val">${fmt(info.total_amount)}</div>
       </div>
     </div>`;
@@ -239,8 +243,9 @@ function render(data) {
 
   // ── 持仓明细表 ──
   let tableHTML = '';
-  const holdings = data.holdings || [];
-  // 按金额降序
+  const holdings = (data.holdings || []).filter(h =>
+    h.status !== 'sold' && h.status !== 'sell_pending'
+  );
   const sorted = [...holdings].sort((a,b) => b.amount - a.amount);
   for (const h of sorted) {
     const liveEmoji = h.live_emoji || '';
@@ -249,14 +254,22 @@ function render(data) {
     const liveRet = h.live_return_pct;
     const isWarn = h.holding_return_pct < -25;
     const isOverlap = h.notes && h.notes.includes('重叠');
-    tableHTML += `<tr class="${isWarn ? 'row-warn' : ''}">
+    const isSold = h.status === 'sold';
+    const isPending = h.status === 'sell_pending';
+    const rowStyle = isSold ? 'opacity:0.5' : isPending ? 'opacity:0.85' : '';
+    const badge = isSold ? '<span style="display:inline-block;background:var(--text2);color:#000;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:4px">已卖出</span>'
+                : isPending ? '<span style="display:inline-block;background:rgba(210,153,29,0.3);color:var(--yellow);font-size:10px;padding:1px 5px;border-radius:3px;margin-left:4px">待交割</span>'
+                : '';
+    const dailyRet = h.daily_return;
+    tableHTML += `<tr class="${isWarn && !isSold ? 'row-warn' : ''}" style="${rowStyle}">
       <td>
-        <div class="fund-name">${liveEmoji} ${h.fund_name}</div>
-        <div class="fund-code">${h.fund_code} · ${h.sector}${isOverlap ? '<span class="tag-overlap">重复</span>' : ''}</div>
+        <div class="fund-name">${liveEmoji} ${h.fund_name}${badge}</div>
+        <div class="fund-code">${h.fund_code} · ${h.sector || '其他'}${isOverlap ? '<span class="tag-overlap">重复</span>' : ''}</div>
       </td>
       <td>${fmt(h.amount)}</td>
       <td class="${clr(h.holding_return_pct)}">${fmtPct(h.holding_return_pct)}</td>
       <td class="${clr(h.holding_return)}">${fmt(h.holding_return)}</td>
+      <td class="${clr(dailyRet)}">${dailyRet != null ? fmt(dailyRet) : '--'}</td>
       <td class="${clr(liveRet)}">${liveRet != null ? fmtPct(liveRet) : '--'}</td>
       <td>${liveConc || '--'} ${livePred ? '· '+livePred : ''}</td>
       <td class="note" title="${h.notes||''}">${h.notes||'--'}</td>
@@ -279,27 +292,27 @@ function render(data) {
 
     <!-- 总览卡片 -->
     <div class="summary-row">
-      <div class="stat-card">
+      <div class="stat-card" title="持仓市值 + 可用现金的总和">
         <div class="label">总资产</div>
         <div class="value">${fmt(totalAmount)}</div>
         <div class="sub">更新于 ${data.updated}</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" title="所有持仓自买入以来的累计盈亏（金额 = 当前市值 - 成本）">
         <div class="label">持有收益</div>
         <div class="value ${clr(totalHoldingReturn)}">${fmt(totalHoldingReturn)}</div>
         <div class="sub ${clr(totalReturnPct)}">${fmtPct(totalReturnPct)} 整体</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" title="账户中未投资的可用资金">
         <div class="label">账户余额（可用资金）</div>
         <div class="value" style="font-size:22px">${fmt(data.cash || 0)}</div>
         <div class="sub">占比 ${totalAmount > 0 ? (data.cash / totalAmount * 100).toFixed(1) : '--'}%</div>
       </div>
-      <div class="stat-card highlight">
+      <div class="stat-card highlight" title="当前持有的基金数量（不含已卖出和待交割）">
         <div class="label">持仓基金数</div>
         <div class="value">${holdings.length} <span style="font-size:14px;color:var(--text2)">只</span></div>
-        <div class="sub">${holdings.filter(h => h.amount < 2000).length} 只 &lt; ¥2,000 微量仓位</div>
+        <div class="sub">${holdings.filter(h => h.amount > 0 && h.amount < 2000).length} 只微量仓位</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" title="上一个交易日所有持仓的日收益总和。盘中显示为实时估算值">
         <div class="label">昨日收益</div>
         <div class="value ${clr(data.daily_return)}">${fmt(data.daily_return)}</div>
         <div class="sub">${data.daily_return != null && totalAmount > 0 ? fmtPct(data.daily_return/(totalAmount - data.daily_return)*100) : '--'} 日涨跌</div>
@@ -324,18 +337,23 @@ function render(data) {
     <table class="holdings-table">
       <thead>
         <tr>
-          <th>基金名称</th>
-          <th>持有金额</th>
-          <th>持有收益率</th>
-          <th>持有收益</th>
-          <th>今日涨跌</th>
-          <th>实时判定</th>
-          <th>备注</th>
+          <th title="基金名称和代码">基金名称</th>
+          <th title="当前持有市值（份额 × 最新净值）">持有金额</th>
+          <th title="自买入以来的累计收益率">持有收益率</th>
+          <th title="自买入以来的累计盈亏金额">持有收益</th>
+          <th title="上一个交易日的收益金额（盘后更新）">昨日收益</th>
+          <th title="今日盘中实时估算涨跌（收盘前为估算值）">今日涨跌</th>
+          <th title="Dashboard 决策树对所属板块的实时判定">实时判定</th>
+          <th title="备注信息">备注</th>
         </tr>
       </thead>
       <tbody>${tableHTML}</tbody>
     </table>
     </div>
+
+    <!-- 待执行计划 -->
+    <div class="section-title">📋 待执行计划</div>
+    <div id="plans-panel" style="margin-bottom:16px;font-size:13px;color:var(--text2)">⏳ 加载中...</div>
 
     <!-- 操作日志 -->
     <div class="section-title">📝 操作日志</div>
@@ -351,6 +369,39 @@ function render(data) {
 
 load();
 loadActions();
+loadIntraday();
+
+async function loadIntraday() {
+  try {
+    const r = await fetch('/api/intraday');
+    const data = await r.json();
+    renderPlans(data.plans || []);
+    renderAlerts(data.alerts || []);
+  } catch(e) {
+    document.getElementById('plans-panel').innerHTML = '⚠ 盘中数据暂不可用';
+  }
+}
+
+function renderPlans(plans) {
+  const panel = document.getElementById('plans-panel');
+  if (!plans.length) { panel.innerHTML = '✅ 无待执行计划'; return; }
+  panel.innerHTML = plans.map(p => {
+    const icon = p.status.includes('触发') ? '✅' : p.status.includes('等') ? '👀' : '❌';
+    const bg = p.status.includes('触发') ? 'rgba(63,185,80,0.08)' : 'transparent';
+    return `<div style="background:${bg};padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
+      <span>${icon} <b>${p.module}</b></span>
+      <span style="font-size:12px">${p.status}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderAlerts(alerts) {
+  if (!alerts.length) return;
+  const panel = document.getElementById('plans-panel');
+  panel.innerHTML += '<div style="margin-top:8px">' +
+    alerts.map(a => `<div style="color:var(--red);font-size:12px;padding:2px 0">${a}</div>`).join('') +
+    '</div>';
+}
 
 async function loadActions() {
   try {

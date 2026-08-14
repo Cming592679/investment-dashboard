@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  Serenity Bottleneck Hunter — HTML 报告模板
+  ----------------------------------------------------------------------------
+  用法:复制本文件 → 填充所有 {{PLACEHOLDER}} 与 <!-- FILL: ... --> 注释处 →
+        另存为 reports/<主题>_分析报告.html。
+  规则(见 SKILL.md「输出模板(HTML)」;2026-06-13 升级:水位标尺/头条位/判定史/trigger分层/枢纽瓶颈):
+   • 单文件、样式内联,仅 Google Fonts CDN 可外链。
+   • 头条位(.top-picks)必填:最多 2 张"本次行动点"卡,无视 stage 排序置顶。
+   • 候选 leaderboard 按 stage 排序:early-uptrend 在前、extended 在后;下游对照合并为一行。
+   • 动量单元 = 水位标尺:.dot 的 left = range_pos_6mo_pct;.word 人话水位
+     (贴顶≥90 / 高位70-89 / 中位30-69 / 低位10-29 / 贴底<10);附注 距高点 off% + 近1月/近3月。
+     stage class:s-early(绿) / s-range(琥珀) / s-ext(红)。
+   • 判定 badge:  b-green(🟢候选) / b-amber(🟡观望) / b-red(🔴排除) / b-gray(剔除/不可投)
+   • 🟡 必配 trigger,且分层:.trig.auto(纯价格,Cockpit 自动核对)/ .trig.manual(需人工)。
+   • 行内 .gates-mini 三道闸标的级打分;forward_picks 有旧判定的标的必带 .hist 判定史
+     (旧 entry → 今价 ±%,用真实数字算,勿凭印象)。
+   • 密度纪律:行内只留 判定/trigger/stage + 一句话;原型/基本面要点/情景/风险收进 details.more。
+   • 链路图瓶颈双规则:漏斗(入度≥2 出度≤1,金边)+ 枢纽(入度≥2 出度≥2,酒红边),JS 自动判。
+   • 情景基准率引用 Cockpit 计分卡实测分布(见 数据备注 区),不再拍脑袋。
+   • 价格/动量必须来自 price.py 实测,不得臆测。配色语义:green=早期/候选, amber=观望, red=抛物线/排除。
+  ============================================================================
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{主题}} · 供应链瓶颈分析 | Serenity 框架</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..600&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4efe5; --surface:#fffdf8; --surface-2:#faf6ec;
+    --ink:#1a1c21; --ink-soft:#3a3d44; --muted:#6c7077; --faint:#9aa0a6;
+    --line:#e0d8c8; --line-strong:#cdc3ad;
+    --burg:#7a2e3a; --burg-soft:#a8505c;
+    --green:#1a7a4c; --green-bg:#e7f3ec;
+    --amber:#b97608; --amber-bg:#f8efdc;
+    --red:#b3261e; --red-bg:#f7e6e3;
+    --gray:#8a8f96; --gray-bg:#ece9e1;
+    --gold:#b8902e;
+    --display:'Fraunces','Noto Serif SC',Georgia,serif;
+    --body:'Hanken Grotesk','Noto Sans SC',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--paper); color:var(--ink); font-family:var(--body); font-size:16.5px; line-height:1.68; -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(circle at 1px 1px, rgba(122,46,58,.045) 1px, transparent 0); background-size:22px 22px;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px}
+  .hero{background:var(--ink); color:#f4efe5; padding:64px 0 52px; position:relative; overflow:hidden; border-bottom:3px solid var(--burg)}
+  .hero::before{content:""; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 85% 0%, rgba(184,144,46,.18), transparent 60%),radial-gradient(ellipse 50% 60% at 10% 100%, rgba(122,46,58,.30), transparent 60%); pointer-events:none}
+  .hero .wrap{position:relative}
+  .kicker{font-family:var(--mono); font-size:12px; letter-spacing:.32em; text-transform:uppercase; color:var(--gold); margin-bottom:20px}
+  .hero h1{font-family:var(--display); font-weight:900; font-size:clamp(38px,6vw,68px); line-height:1.02; letter-spacing:-.015em}
+  .hero h1 em{font-style:italic; color:var(--burg-soft); font-weight:600}
+  .hero .sub{font-size:18px; color:#cfc8b9; margin-top:18px; max-width:680px; line-height:1.6}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:30px; font-family:var(--mono); font-size:12.5px; color:#b6afa0}
+  .meta-row b{color:#f4efe5; font-weight:500}
+  .verdict{margin:-30px auto 0; position:relative; z-index:5; background:var(--surface); border:1px solid var(--line-strong); border-left:5px solid var(--burg); border-radius:4px; padding:26px 30px; box-shadow:0 22px 50px -28px rgba(26,28,33,.5)}
+  .verdict .tag{font-family:var(--mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--burg); font-weight:700}
+  .verdict p{margin-top:10px; font-size:18px; line-height:1.6}
+  .verdict strong{color:var(--burg)}
+  section{padding:52px 0 8px}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.24em; text-transform:uppercase; color:var(--burg); margin-bottom:8px}
+  h2{font-family:var(--display); font-weight:700; font-size:clamp(26px,3.6vw,38px); line-height:1.1; letter-spacing:-.01em; margin-bottom:6px}
+  h2 .num{color:var(--faint); font-family:var(--mono); font-size:.5em; vertical-align:super; margin-right:10px; font-weight:400}
+  .lead{color:var(--ink-soft); font-size:17px; max-width:760px; margin-bottom:26px}
+  h3{font-family:var(--display); font-weight:600; font-size:21px; margin:30px 0 12px}
+  p{margin-bottom:14px} p:last-child{margin-bottom:0}
+  a{color:var(--burg); text-underline-offset:3px}
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden}
+  .stat{background:var(--surface); padding:24px 22px}
+  .stat .big{font-family:var(--display); font-weight:900; font-size:40px; line-height:1; color:var(--burg); letter-spacing:-.02em}
+  .stat .big span{font-size:20px; color:var(--gold)}
+  .stat .lab{font-size:13.5px; color:var(--muted); margin-top:10px; line-height:1.45}
+  .callout{background:var(--burg); color:#f7efe2; border-radius:6px; padding:28px 30px; margin:26px 0}
+  .callout h3{font-family:var(--display); color:#fff; margin:0 0 10px; font-size:22px}
+  .callout p{color:#e9dfd0; margin-bottom:10px}
+  .callout strong{color:var(--gold)}
+  .callout .pill{display:inline-block; font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; background:rgba(255,255,255,.12); padding:4px 11px; border-radius:99px; margin-bottom:14px}
+  .chain{display:flex; flex-direction:column; gap:8px; margin:8px 0}
+  .layer{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 20px; display:flex; align-items:center; gap:18px; position:relative}
+  .layer.up{border-left:4px solid var(--green)} .layer.mid{border-left:4px solid var(--amber)} .layer.down{border-left:4px solid var(--gray); opacity:.78}
+  .layer .lv{font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); min-width:118px; font-weight:600}
+  .layer .nm{font-weight:700; font-size:15.5px} .layer .ds{color:var(--muted); font-size:14px} .layer.up .nm{color:var(--green)}
+  .chain .arrow{text-align:center; color:var(--faint); font-family:var(--mono); font-size:13px; line-height:1}
+  .board{border:1px solid var(--line-strong); border-radius:8px; overflow:hidden; margin:8px 0; background:var(--surface)}
+  .row{display:grid; grid-template-columns:128px 1fr 168px 116px; gap:18px; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row.head{background:var(--ink); color:#e9e2d4; font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; padding:13px 20px}
+  .row.head span{color:#bdb5a4}
+  .tk{font-family:var(--mono); font-weight:700; font-size:18px}
+  .tk .px{display:block; font-size:12.5px; color:var(--muted); font-weight:400; margin-top:2px}
+  .nmcell .t{font-weight:700; font-size:15.5px; line-height:1.25} .nmcell .d{color:var(--muted); font-size:13.5px; margin-top:3px}
+  .badge{display:inline-block; font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; padding:3px 8px; border-radius:5px; margin-top:7px; text-transform:uppercase}
+  .b-green{background:var(--green-bg); color:var(--green)} .b-amber{background:var(--amber-bg); color:var(--amber)} .b-red{background:var(--red-bg); color:var(--red)} .b-gray{background:var(--gray-bg); color:var(--gray)}
+  /* ⭐ 跨主题节点徽章 — 见 tracking/cross_theme_scan.py */
+  .star{display:inline-block; font-size:13px; margin-left:6px; vertical-align:middle; color:var(--gold); cursor:help; letter-spacing:-1px}
+  .star[title]{border-bottom:1px dotted var(--gold)}
+  .cross-theme-section{background:var(--surface-2); border:1px solid var(--line-strong); border-left:5px solid var(--gold); border-radius:6px; padding:24px 28px; margin:30px 0}
+  .cross-theme-section h3{font-family:var(--display); font-weight:700; color:var(--burg); margin:0 0 14px; font-size:22px}
+  .cross-theme-section .lead{margin-bottom:18px; color:var(--ink-soft); font-size:15px}
+  .cross-row{display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center; padding:12px 0; border-bottom:1px dashed var(--line); font-size:14.5px}
+  .cross-row:last-child{border-bottom:0}
+  .cross-row .sym{font-family:var(--mono); font-weight:700; color:var(--burg); font-size:15px}
+  .cross-row .themes{color:var(--ink-soft)}
+  .cross-row .themes em{font-style:normal; color:var(--burg); font-weight:600}
+  .cross-row .stars-cell{font-size:18px; color:var(--gold); letter-spacing:-2px}
+  /* === 术语 abbr tooltip(2026-06-01 加,Level 1 可读性升级)=== */
+  abbr[title]{border-bottom:1px dotted var(--burg); cursor:help; text-decoration:none; font-style:normal}
+  abbr[title]:hover{border-bottom-color:var(--gold); background:rgba(184,144,46,.06)}
+  /* === 30 秒看懂主题(Level 2)=== */
+  .thirty-sec{background:linear-gradient(135deg, #fbf6e8 0%, var(--surface-2) 100%); border:1px solid var(--gold); border-radius:8px; padding:24px 28px; margin:24px 0; position:relative}
+  .thirty-sec::before{content:"⏱"; position:absolute; top:-14px; left:24px; background:var(--gold); color:#fff; padding:5px 12px; border-radius:99px; font-size:14px; font-weight:700}
+  .thirty-sec .label{font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); font-weight:700; margin-bottom:8px; margin-top:6px}
+  .thirty-sec h3{font-family:var(--display); color:var(--burg); margin:0 0 10px; font-size:22px}
+  .thirty-sec p{font-size:15.5px; color:var(--ink-soft); line-height:1.7; margin-bottom:0}
+  /* === 候选行 "为什么重要" 人话解释(Level 2)=== */
+  .nmcell .why{font-size:13px; color:var(--ink-soft); margin-top:6px; padding:6px 10px; background:rgba(122,46,58,.04); border-left:2px solid var(--burg-soft); border-radius:0 4px 4px 0; line-height:1.5; font-style:italic}
+  .nmcell .why::before{content:"💡 "; font-style:normal; margin-right:2px}
+  /* === 报告底部 Glossary 速查表(Level 1)=== */
+  .glossary-section{background:var(--surface-2); border:1px solid var(--line); padding:18px 24px; margin:36px 0 8px; border-radius:8px}
+  .glossary-section summary{font-family:var(--display); font-weight:700; color:var(--burg); font-size:18px; cursor:pointer; list-style:none; padding:6px 0; user-select:none}
+  .glossary-section summary::-webkit-details-marker{display:none}
+  .glossary-section summary::before{content:"▸ "; display:inline-block; transition:transform .15s; margin-right:6px; font-family:var(--mono)}
+  .glossary-section[open] summary::before{transform:rotate(90deg)}
+  .glossary-section[open] summary{margin-bottom:18px; padding-bottom:14px; border-bottom:1px dashed var(--line)}
+  .glossary-section .gloss-note{font-size:13px; color:var(--muted); margin-top:6px; margin-bottom:14px; font-family:var(--mono)}
+  .glossary-list{display:grid; grid-template-columns:1fr; gap:0; max-height:480px; overflow-y:auto; padding-right:8px}
+  .glossary-row{display:grid; grid-template-columns:140px 1fr; gap:14px; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13.5px; line-height:1.45}
+  .glossary-row:last-child{border-bottom:0}
+  .glossary-row .term{font-family:var(--mono); color:var(--burg); font-weight:700; word-break:break-all}
+  .glossary-row .def{color:var(--ink-soft)}
+  @media(max-width:760px){.glossary-row{grid-template-columns:1fr; gap:2px}}
+  /* === Step 2 · 产业链网状视图(.chain-viz) === */
+  .chain-viz{position:relative; padding:30px 0 26px; margin:14px 0 18px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px}
+  .chain-viz .chain-edges{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; overflow:visible}
+  .chain-layer{display:grid; grid-template-columns:180px 1fr; align-items:center; gap:18px; padding:14px 28px; position:relative; z-index:2}
+  .chain-layer + .chain-layer{margin-top:42px}
+  .chain-layer-down{opacity:.58}
+  .layer-label{font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; color:var(--burg); font-weight:700; text-transform:uppercase; border-right:2px solid var(--line-strong); padding-right:16px; line-height:1.4}
+  .layer-label small{display:block; font-family:var(--body); font-weight:400; color:var(--muted); font-size:10.5px; margin-top:3px; letter-spacing:.02em; text-transform:none}
+  .layer-nodes{display:flex; flex-wrap:wrap; gap:14px}
+  .cnode{background:var(--surface); border:1px solid var(--line-strong); border-radius:7px; padding:9px 14px; min-width:96px; position:relative; font-family:var(--mono); z-index:3; transition:transform .15s, box-shadow .15s; cursor:help}
+  .cnode b{font-size:14px; font-weight:700; color:var(--ink); display:block; letter-spacing:.01em}
+  .cnode small{display:block; font-family:var(--body); font-weight:400; font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.32; max-width:200px}
+  .cnode.s-early{border-left:3px solid var(--green)}
+  .cnode.s-ext{border-left:3px solid var(--red)}
+  .cnode.s-range{border-left:3px solid var(--amber)}
+  .cnode.s-seed{border-left:3px solid var(--gray); opacity:.78}
+  .cnode.is-bottleneck{box-shadow:0 0 0 2px var(--gold), 0 8px 18px -10px rgba(184,144,46,.5); background:linear-gradient(180deg, var(--surface) 0%, #fcf6e8 100%)}
+  /* 枢纽瓶颈(2026-06-13 加,KRMN 教训):入度≥2 且 出度≥2 的多对多枢纽——
+     上游多家供它、下游多线靠它,采购方最难绕开,但旧"漏斗"规则(出度≤1)抓不住 */
+  .cnode.is-hub{box-shadow:0 0 0 2px var(--burg), 0 8px 18px -10px rgba(122,46,58,.5); background:linear-gradient(180deg, var(--surface) 0%, #f9eef0 100%)}
+  .cnode .star-inline{position:absolute; top:-9px; right:-7px; font-size:13px; color:var(--gold); filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); letter-spacing:-2px}
+  .cnode:hover{transform:translateY(-1px); box-shadow:0 4px 10px -4px rgba(0,0,0,.15); z-index:10}
+  .cnode.is-bottleneck:hover{box-shadow:0 0 0 2px var(--gold), 0 8px 18px -8px rgba(184,144,46,.6)}
+  /* Custom hover tooltip — business 业务(static)+ status 当前快照(dynamic,带日期)2026-06-02 用户拆分重构 */
+  .cnode[data-desc]{position:relative}
+  .cnode[data-desc] .tip-box{
+    position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%) translateY(4px);
+    background:var(--ink); color:#f4efe5; padding:0; border-radius:6px;
+    min-width:280px; max-width:360px;
+    box-shadow:0 10px 30px -8px rgba(0,0,0,.5); border:1px solid var(--gold);
+    opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:1000;
+    font-family:var(--body); font-weight:400; font-size:13px; line-height:1.5; text-align:left;
+  }
+  .cnode[data-desc]::before{
+    content:""; position:absolute; bottom:calc(100% + 4px); left:50%; transform:translateX(-50%);
+    border:6px solid transparent; border-top-color:var(--gold); opacity:0; transition:opacity .2s; z-index:1000;
+  }
+  .cnode[data-desc]:hover .tip-box{opacity:1; transform:translateX(-50%) translateY(0)}
+  .cnode[data-desc]:hover::before{opacity:1}
+  .tip-box .tip-biz{padding:11px 14px 8px; border-bottom:1px dashed rgba(184,144,46,.3)}
+  .tip-box .tip-biz::before{content:"业务 · "; color:var(--gold); font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase}
+  .tip-box .tip-stat{padding:8px 14px 11px; background:rgba(122,46,58,.18)}
+  .tip-box .tip-stat::before{content:"当前 · "; color:var(--burg-soft); font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase}
+  .tip-box .tip-date{font-family:var(--mono); font-size:10.5px; color:var(--gold); margin-left:6px}
+  .chain-legend{display:flex; flex-wrap:wrap; gap:18px 24px; padding:14px 28px 4px; font-size:12px; color:var(--muted); font-family:var(--mono); border-top:1px dashed var(--line)}
+  .chain-legend .item{display:flex; align-items:center; gap:7px}
+  .chain-legend .swatch{width:24px; height:3px; border-radius:2px}
+  .chain-legend .sw-thick{background:var(--burg); height:5px}
+  .chain-legend .sw-mid{background:var(--amber); height:3.5px}
+  .chain-legend .sw-thin{background:var(--gray); height:2px}
+  .chain-legend .sw-bn{width:14px; height:14px; border-radius:3px; box-shadow:0 0 0 2px var(--gold); background:var(--surface)}
+  .chain-legend .sw-star{font-size:14px; color:var(--gold); width:auto}
+  /* === 动量单元(2026-06-13 重设计:水位标尺+人话,代替旧填充条)===
+     旧版填充条语义歧义(满=贴顶=危险,但视觉直觉"满=好");新版:
+     · 标尺两端 = 6月低/6月高(2026-06-17 加:标注真实价格 $低/$高),游标点 = 现价位置(.dot left:NN%)+ 游标上方 .cur 牌标现价($现价,left 钳到 10~90% 防出界)
+     · .word 人话水位:贴顶(rng≥90)/高位(70-89)/中位(30-69)/低位(10-29)/贴底(<10)
+     · 数字降级为附注:距高点 off% · 近1月/近3月 */
+  .mo{font-family:var(--mono)}
+  .mo .ends{display:flex; justify-content:space-between; font-size:10px; color:var(--faint); margin-bottom:1px}
+  .mo .ends b{color:var(--muted); font-weight:700; font-family:var(--mono)}  /* 6月低/高 实际价格 */
+  .mo .gauge{position:relative; height:13px; margin:18px 0 5px}  /* 上留白给现价游标牌 */
+  .mo .gauge .track{position:absolute; left:0; right:0; top:5px; height:3px; background:var(--line-strong); border-radius:2px}
+  .mo .gauge .dot{position:absolute; top:0; width:13px; height:13px; border-radius:50%; transform:translateX(-50%); border:2.5px solid var(--surface); box-shadow:0 0 0 1px var(--line-strong),0 1px 3px rgba(0,0,0,.25)}
+  .mo .gauge .cur{position:absolute; top:-15px; transform:translateX(-50%); font-size:10px; font-weight:700; color:var(--ink); background:var(--surface); border:1px solid var(--line-strong); border-radius:3px; padding:0 4px; white-space:nowrap; font-family:var(--mono)}  /* 游标上方:现价牌 */
+  .mo.s-early .dot{background:var(--green)} .mo.s-ext .dot{background:var(--red)} .mo.s-range .dot{background:var(--amber)}
+  .mo .word{font-size:12.5px; font-weight:700}
+  .mo.s-early .word{color:var(--green)} .mo.s-ext .word{color:var(--red)} .mo.s-range .word{color:var(--amber)}
+  .mo .lbl{font-size:11px; color:var(--muted); line-height:1.5} .mo .lbl b{color:var(--ink)}
+  .stage-t{font-family:var(--mono); font-size:11.5px; font-weight:700; text-align:right}
+  .stage-t.early{color:var(--green)} .stage-t.ext{color:var(--red)} .stage-t.range{color:var(--amber)}
+  .stage-t small{display:block; color:var(--muted); font-weight:400; font-size:10.5px; margin-top:3px}
+  /* === 头条位(2026-06-13 加):1-2 个"本次行动点"无视 stage 排序置顶 === */
+  .top-picks{margin:0 0 24px}
+  .tp-label{font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--burg); font-weight:700; margin-bottom:10px}
+  .tp-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px}
+  .tp-card{background:var(--surface); border:1px solid var(--gold); border-left:5px solid var(--gold); border-radius:8px; padding:18px 20px; box-shadow:0 14px 30px -22px rgba(184,144,46,.55)}
+  .tp-card .tp-k{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; color:var(--gold); font-weight:700; text-transform:uppercase}
+  .tp-card .tp-t{font-family:var(--display); font-weight:700; font-size:19px; margin:6px 0 4px}
+  .tp-card .tp-d{font-size:13.5px; color:var(--ink-soft); line-height:1.55}
+  .tp-card .tp-act{font-family:var(--mono); font-size:12px; font-weight:700; margin-top:10px; color:var(--burg)}
+  /* === 行内三道闸门小标(标的级打分,2026-06-13 加)=== */
+  .gates-mini{display:flex; gap:6px; margin-top:7px; font-size:10.5px; font-family:var(--mono); flex-wrap:wrap}
+  .gates-mini span{padding:2px 7px; border-radius:4px}
+  .gates-mini .ok{color:var(--green); background:var(--green-bg)}
+  .gates-mini .mid{color:var(--amber); background:var(--amber-bg)}
+  .gates-mini .no{color:var(--gray); background:var(--gray-bg)}
+  /* === trigger 分层标注:⚙=Cockpit 每日自动核对 / 👁=需人工判断(2026-06-13 加)=== */
+  .trig{display:inline-block; font-family:var(--mono); font-size:11px; margin-left:6px; margin-top:7px; padding:3px 8px; border-radius:5px; background:var(--surface-2); border:1px dashed var(--line-strong); color:var(--amber)}
+  .trig.auto::before{content:"⚙ "; color:var(--muted)}
+  .trig.manual::before{content:"👁 "; color:var(--muted)}
+  /* === 判定史(同标的历史判定自动带出,2026-06-13 加)=== */
+  .hist{font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-top:8px; padding-top:7px; border-top:1px dashed var(--line)}
+  .hist b{color:var(--ink)}
+  .hist .v-ok{color:var(--green); font-weight:700}
+  .hist .v-bad{color:var(--red); font-weight:700}
+  /* === 折叠详情(密度纪律:行内只留决策三要素,其余收进 details)=== */
+  details.more{margin-top:8px; font-size:13px; color:var(--ink-soft)}
+  details.more summary{cursor:pointer; font-family:var(--mono); font-size:11.5px; color:var(--burg); user-select:none; list-style:none}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary::before{content:"▸ "}
+  details.more[open] summary::before{content:"▾ "}
+  details.more p{margin:8px 0 0; line-height:1.55}
+  /* === Cockpit 实时联动链接(本地面板在跑时可点)=== */
+  .tk a.ck{font-size:12px; text-decoration:none; margin-left:5px; opacity:.55}
+  .tk a.ck:hover{opacity:1}
+  .gates{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:8px 0}
+  .gate{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:22px 20px; border-top:4px solid}
+  .gate.g-ok{border-top-color:var(--green)} .gate.g-mid{border-top-color:var(--amber)} .gate.g-no{border-top-color:var(--red)}
+  .gate .ic{font-size:26px} .gate .h{font-family:var(--display); font-weight:600; font-size:19px; margin:8px 0 4px}
+  .gate .score{font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px}
+  .gate.g-ok .score{color:var(--green)} .gate.g-mid .score{color:var(--amber)} .gate.g-no .score{color:var(--red)}
+  .gate p{font-size:13.5px; color:var(--ink-soft); margin:0}
+  .takeaways{counter-reset:tk; margin:8px 0}
+  .ta{display:flex; gap:18px; padding:18px 0; border-bottom:1px solid var(--line)} .ta:last-child{border-bottom:0}
+  .ta::before{counter-increment:tk; content:counter(tk,decimal-leading-zero); font-family:var(--mono); font-weight:700; color:var(--burg); font-size:14px; min-width:34px; padding-top:2px}
+  .ta .x{font-size:15.5px} .ta .x b{color:var(--ink)} .ta .x span{color:var(--muted)}
+  .note{background:var(--surface-2); border:1px dashed var(--line-strong); border-radius:8px; padding:20px 24px; margin:8px 0; font-size:14.5px; color:var(--ink-soft)}
+  .note b{color:var(--ink)} .note code{font-family:var(--mono); font-size:13px; background:var(--surface); padding:2px 6px; border-radius:4px; border:1px solid var(--line)}
+  footer{margin-top:56px; background:var(--ink); color:#b6afa0; padding:40px 0} footer .wrap{font-size:13.5px; line-height:1.7}
+  footer .disc{border-left:3px solid var(--burg); padding-left:18px; color:#cfc8b9} footer a{color:var(--gold)}
+  .srcs{display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:16px; font-family:var(--mono); font-size:12px}
+  @media(max-width:760px){.row{grid-template-columns:1fr 1fr; gap:10px} .row.head{display:none} .row .mo,.row .stage-t{grid-column:1/-1} .gates{grid-template-columns:1fr} .layer{flex-wrap:wrap; gap:8px} .layer .lv{min-width:auto}}
+  .rv{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease} .rv.in{opacity:1; transform:none}
+</style>
+</head>
+<body>
+
+<!-- ============ 页眉 + 一句话结论 (Step 1 头) ============ -->
+<header class="hero"><div class="wrap">
+  <div class="kicker">Serenity 供应链瓶颈逆向映射</div>
+  <h1>{{主题大标题}}<br><em>{{副标题/钩子}}</em></h1>
+  <p class="sub">{{一句话定位:这份报告扫什么、结论方向}}</p>
+  <div class="meta-row">
+    <span><b>数据截止</b> {{YYYY-MM-DD}} 收盘</span>
+    <span><b>报告日</b> {{YYYY-MM-DD}}</span>
+    <span><b>价格源</b> {{EODHD / yfinance}}</span>
+    <span><b>类别</b> {{Bottleneck/Disruption/Evolution}}</span>
+    <span><b>免责</b> 仅研究教育 · 非投资建议</span>
+  </div>
+</div></header>
+<div class="wrap"><div class="verdict rv">
+  <div class="tag">◆ 一句话结论</div>
+  <p>{{最重要的判断,带 <strong>关键词高亮</strong>:瓶颈在哪、有没有干净纯 play、谁是 🟢 唯一可入场}}</p>
+</div></div>
+
+<!-- ============ Step 1 · 资本开支确定性 ============ -->
+<section><div class="wrap rv">
+  <div class="eyebrow">Step 1 · 资本开支确定性</div>
+  <h2><span class="num">01</span>{{钱一定会花吗?}}</h2>
+  <p class="lead">{{需求确定性 + 需求来源(政府/商业)+ 节奏含义}}</p>
+  <div class="stats">
+    <!-- FILL: 3-4 个关键数字。big=数字, span=单位/符号, lab=说明 -->
+    <div class="stat"><div class="big">{{数字}}<span>{{单位}}</span></div><div class="lab">{{说明}}</div></div>
+    <div class="stat"><div class="big">{{数字}}<span>{{单位}}</span></div><div class="lab">{{说明}}</div></div>
+    <div class="stat"><div class="big">{{数字}}<span>{{单位}}</span></div><div class="lab">{{说明}}</div></div>
+  </div>
+</div></section>
+
+<!-- ============ 核心发现 callout ============ -->
+<section><div class="wrap rv"><div class="callout">
+  <span class="pill">⚠ 核心发现</span>
+  <h3>{{最该被先看到的那句话}}</h3>
+  <p>{{瓶颈落在哪层、有无干净纯 play、暴露路径}}</p>
+</div></div></section>
+
+<!-- ============ 30 秒看懂这个主题(Level 2,术语友好度纪律)============ -->
+<!--
+  FILL · 150-220 字大白话,对完全不熟主题的读者解释:
+    1. 这个主题在解决什么问题
+    2. 关键瓶颈在哪一层
+    3. 为什么"突然"成为主题(催化剂)
+  风格示例(800VDC):
+    "AI 服务器机柜的功率从 30kW 升到 1MW,传统 48V 直流配电会让铜缆粗到没法装。
+     NVIDIA 提出 800V 高压直流方案,但 SiC 功率半导体(替代传统硅 IGBT)是关键瓶颈。
+     美国独家高产能 SiC 代工只有 XFAB 一家,叠加 EU/US 政策背书,这是 2026 H1 最确定的硬瓶颈主题。"
+-->
+<section style="padding-top:30px"><div class="wrap rv">
+  <div class="thirty-sec">
+    <div class="label">30 秒看懂这个主题</div>
+    <h3>{{一句话主题定义}}</h3>
+    <p>{{大白话解释 — 这个主题解决什么问题、关键瓶颈在哪、为什么此刻成为主题。150-220 字。}}</p>
+  </div>
+</div></section>
+
+<!-- ============ Step 2 · 逆向拆链(5 层 · 网状视图)============ -->
+<!--
+  填法(每只标的一个 .cnode,每条供货关系一个 <span data-from data-to data-weight>):
+
+  1) 节点 (.cnode):
+     - data-id = forward_picks 里的 eodhd_symbol(美股带 .US,例 AEHR.US)
+     - <b>{{代码}}</b> + <small>{{瓶颈一句话}}</small>
+     - stage class: s-early / s-ext / s-range / s-seed(对应 price.py 的 stage)
+     - 跨主题节点加 <span class="star-inline">⭐</span> 或 ⭐⭐
+     - is-bottleneck 由 JS 根据入度/出度自动加,**不要手动写**
+
+  2) 供货关系 (.edge-list 里的 span):
+     - data-from = 供货方(上游)的 id;data-to = 客户方(下游)的 id
+     - data-weight:0.6=粗/主依赖(>50%) / 0.3=中(20-50%) / 0.1=细(<20%)
+
+  3) 5 层固定顺序:上游材料/代工 → 上游设备 → 中游器件 → 中游系统 → 下游(灰、跳过)
+     某层无标的时,留空 <div class="layer-nodes"></div>
+
+  ※ 边方向 = 物流方向(上游 → 下游)。
+  ※ 入度高+出度低=自动判定瓶颈点,金色描边。
+-->
+<section><div class="wrap rv">
+  <div class="eyebrow">Step 2 · 逆向拆链</div>
+  <h2><span class="num">02</span>产业链 5 层 — 网状视图</h2>
+  <p class="lead">节点颜色 = stage(绿=早期上行 / 红=已抛物线 / 琥珀=横盘 / 灰=种子或下游);<b style="color:#b8902e">金色描边</b> = 漏斗瓶颈(多家依赖它、它只供少数客户);<b style="color:#7a2e3a">酒红描边</b> = 枢纽瓶颈(多对多,上游多家供它、下游多线靠它,最难绕开);<b style="color:#b8902e">⭐</b> = 跨主题节点(见报告底部)。边粗细 = 依赖度(粗 &gt;50% / 中 20-50% / 细 &lt;20%)。</p>
+  <div class="chain-viz">
+    <svg class="chain-edges" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div class="chain-layer" data-layer="upstream-material">
+      <div class="layer-label">上游材料 / 代工<small>原型 ①②</small></div>
+      <div class="layer-nodes">
+        <!-- FILL · 示例(替换/补齐):
+        <div class="cnode s-early" data-id="STM.US"><b>STM</b><small>SiC 综合 #1</small></div>
+        <div class="cnode s-ext" data-id="XFAB.PA"><b>XFAB</b><small>美国独家高产能 SiC 代工</small></div>
+        -->
+      </div>
+    </div>
+
+    <div class="chain-layer" data-layer="upstream-equipment">
+      <div class="layer-label">上游设备<small>原型 ⑥</small></div>
+      <div class="layer-nodes">
+        <!-- FILL · 示例:
+        <div class="cnode s-ext" data-id="AEHR.US"><b>AEHR</b><small>SiC burn-in 测试</small><span class="star-inline">⭐</span></div>
+        -->
+      </div>
+    </div>
+
+    <div class="chain-layer" data-layer="midstream-device">
+      <div class="layer-label">中游器件<small>原型 ④⑧</small></div>
+      <div class="layer-nodes">
+        <!-- FILL -->
+      </div>
+    </div>
+
+    <div class="chain-layer" data-layer="midstream-system">
+      <div class="layer-label">中游系统<small>原型 ④</small></div>
+      <div class="layer-nodes">
+        <!-- FILL -->
+      </div>
+    </div>
+
+    <div class="chain-layer chain-layer-down" data-layer="downstream">
+      <div class="layer-label">下游 · 跳过<small>不是猎物</small></div>
+      <div class="layer-nodes">
+        <!-- FILL -->
+      </div>
+    </div>
+
+    <!-- 边列表(JS 读取并在 .chain-edges SVG 上自动绘制) -->
+    <div class="edge-list" hidden>
+      <!-- FILL · 每条 (上游 → 下游) 供货关系一行,data-weight 三档:
+      <span data-from="XFAB.PA" data-to="POWI.US" data-weight="0.6"></span>  主依赖
+      <span data-from="STM.US"  data-to="POWI.US" data-weight="0.3"></span>  中依赖
+      <span data-from="ON.US"   data-to="POWI.US" data-weight="0.1"></span>  弱依赖
+      -->
+    </div>
+
+    <div class="chain-legend">
+      <div class="item"><span class="swatch sw-thick"></span> 主依赖 &gt;50%</div>
+      <div class="item"><span class="swatch sw-mid"></span> 中等 20-50%</div>
+      <div class="item"><span class="swatch sw-thin"></span> 弱 &lt;20%</div>
+      <div class="item"><span class="sw-bn swatch"></span> 漏斗瓶颈(入度≥2 出度≤1)</div>
+      <div class="item"><span class="swatch sw-bn" style="box-shadow:0 0 0 2px var(--burg)"></span> 枢纽瓶颈(入度≥2 出度≥2)</div>
+      <div class="item"><span class="swatch sw-star">⭐</span> 跨主题节点</div>
+    </div>
+  </div>
+
+  <p class="note" style="margin-top:14px"><b>怎么读这张图:</b>沿物流方向"从上往下"读 — 上游供货给中游、中游卖给下游。<b style="color:#b8902e">金色描边节点</b>就是 Step 5"真瓶颈"闸门的物理实体(多家依赖它,它只供少数客户 = 卡脖子);<b>⭐</b> 节点跨多个 capex cycle,产能压力非线性叠加。</p>
+</div></section>
+
+<!-- ============ Step 4-6 · 候选 leaderboard(核心区) ============ -->
+<section><div class="wrap rv">
+  <div class="eyebrow">Step 4–6 · 候选 + 价格实测 + 模式 A 择时</div>
+  <h2><span class="num">03</span>候选名单 — 按"还能不能进"排序</h2>
+
+  <!-- ============ 头条位(2026-06-13 加):本次行动点,无视 stage 排序置顶 ============
+       规则:最多 2 张卡。"行动点"= 读者本次唯一需要立即做的事(设警报/可入场/必须避开),
+       不是"最好的公司"。其余标的照旧按 stage 排序进 leaderboard。 -->
+  <div class="top-picks">
+    <div class="tp-label">⚑ 本次行动点 — 先看这 {{1-2}} 个</div>
+    <div class="tp-grid">
+      <div class="tp-card">
+        <div class="tp-k">{{ACTION 类型,如 Mode B 背离警报 / 唯一可入场}}</div>
+        <div class="tp-t">{{代码 · 名称}}</div>
+        <div class="tp-d">{{为什么是本次头条,1-2 句}}</div>
+        <div class="tp-act">→ {{具体动作:设什么警报 / 什么条件做什么}}</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="lead">标尺 = 现价在 <b>6 个月最低↔最高</b> 之间的水位(游标点位置)—— 标尺两端标 6 个月最低/最高价、游标上方标现价;颜色 = stage(绿=早期上行可入场 / 红=已抛物线别追 / 琥珀=横盘或深跌)。水位词:贴顶(≥90%)/ 高位 / 中位 / 低位 / 贴底(<10%)。价格为 <code style="font-family:var(--mono);font-size:13px">price.py</code> 实测。</p>
+  <div class="board">
+    <div class="row head"><span>代码 / 现价</span><span>是什么 · 判定 · trigger</span><span>6月水位 · 动量</span><span style="text-align:right">stage</span></div>
+
+    <!-- ===== 候选行示例:复制此块,按 stage 从 early→extended 排序(头条卡里的标的也照常出现在这里) =====
+      密度纪律(2026-06-13):行内只留决策三要素(判定 badge / trigger / stage)+ 一句话是什么;
+        原型#、基本面要点、目标价情景、💡人话、风险 → 全部收进 <details class="more">。
+      trigger 分层:class="trig auto"(纯价格条件,Cockpit 每日 16:30 自动核对)/ class="trig manual"(基本面/事件条件,需人工)。
+      行内闸门小标:gates-mini 三档 ok/mid/no,对应 Step5 三道闸在【这只标的】上的打分(主题级总评仍在 Step5 区)。
+      判定史(若 forward_picks.csv 有同 symbol 旧判定,必带):.hist 一行
+        「判定史:MM-DD 🟡观察 @$XX → 今 $YY(±Z%)· 判定验证 ✓/✗」;价格变动按 (今价/旧entry-1) 计算,勿凭印象。
+      Cockpit 联动:代码后加 <a class="ck" href="http://localhost:5173/chart/{{SYM.US}}" title="在 Cockpit 看实时 K线+判定史">📈</a>(本地面板没开时点了也无害)。
+      字段更名(2026-06-13):旧"估值/增长"→"基本面要点"(EODHD 无 fundamentals,网页研究只填查得到的:backlog/增速/盈利状态,不硬凑 P/E)。 -->
+    <div class="row">
+      <div class="tk">{{代码}}<a class="ck" href="http://localhost:5173/chart/{{SYM.US}}" title="在 Cockpit 看实时 K线+判定史">📈</a><span class="px">{{$现价}}</span></div>
+      <div class="nmcell">
+        <div class="t">{{名称 · 档位}}<span class="star" title="跨 2 主题:光子学 + 800VDC(示范)">⭐</span></div>
+        <div class="d">{{一句话:它卡住链条的哪个环节}}</div>
+        <span class="badge b-green">🟢 {{判定标签}}</span><span class="trig auto">trigger:{{可量化条件}}</span>
+        <div class="gates-mini"><span class="ok">🔒 真瓶颈 过</span><span class="mid">👁 前机构 半过</span><span class="no">💰 便宜 不过</span></div>
+        <details class="more"><summary>详情:原型 / 基本面要点 / 情景 / 风险</summary>
+          <p>💡 {{人话:为什么这家公司重要,给完全不懂的人}}</p>
+          <p><b>原型</b> {{①②…}} · <b>基本面要点</b> {{backlog/营收增速/盈利状态等查得到的}} · <b>情景</b> {{时间框 ±X%(非承诺)}} · <b>风险</b> {{1-2 条}}</p>
+        </details>
+        <div class="hist">判定史:{{MM-DD}} {{🟡观察}} @{{$旧价}} → 今 {{$现价}}(<span class="v-ok">{{±Z%}}</span>)· {{判定到目前为止 对/错 一句话}}</div>
+      </div>
+      <div class="mo s-early">
+        <div class="ends"><span>6月低 <b>{{$低}}</b></span><span><b>{{$高}}</b> 6月高</span></div>
+        <div class="gauge"><div class="track"></div><div class="dot" style="left:{{range_pos}}%"></div><span class="cur" style="left:{{range_pos_钳10_90}}%">{{$现价}}</span></div>
+        <div class="lbl"><span class="word">{{贴顶/高位/中位/低位/贴底}}</span> · 距高点 <b>{{off%}}</b><br>近1月 <b>{{+x%}}</b> · 近3月 <b>{{+x%}}</b></div>
+      </div>
+      <div class="stage-t early">EARLY-UPTREND<small>{{备注}}</small></div>
+    </div>
+    <!-- stage=extended/parabolic → mo.s-ext + stage-t.ext + badge b-amber/b-red;🟡 必须配 trigger -->
+    <!-- stage=range/basing → mo.s-range + stage-t.range -->
+    <!-- 下游对照组:不占独立行,合并为一行说明(代码列写"下游对照",nmcell 列出全部跳过标的+理由) -->
+
+  </div>
+  <p class="note" style="margin-top:18px"><b>怎么读这张表:</b>{{模式 A 提示:绿色=还能埋伏,红/琥珀=已抛物线应等回调标 🟡}};<b>⭐ = 跨主题节点</b>(被多个 capex cycle 同时驱动,前机构闸门自动加分);<b>⚙ trigger</b> 会被 Cockpit 每日 16:30 自动核对,<b>👁 trigger</b> 需人工跟踪。</p>
+
+  <!-- ============ 跨主题信号区块(Serenity ⑤跨 capex cycle 原型)============ -->
+  <!-- 数据来自 tracking/cross_theme_index_snapshot.csv,LLM 把当前报告主题相关的 ⭐ 节点列在这里 -->
+  <div class="cross-theme-section">
+    <h3>⭐ 跨主题信号 — 同时服务多个 capex cycle</h3>
+    <p class="lead">这些标的 <b>同时出现在本主题与其他已分析主题</b>,产能压力是叠加的、定价权非线性。详见 <code style="font-family:var(--mono);font-size:13px">tracking/cross_theme_index_snapshot.csv</code>。</p>
+    <!-- 每个跨主题节点一行;LLM 从 snapshot.csv 取该主题相关的 ⭐ 行填入 -->
+    <div class="cross-row">
+      <span class="sym">{{symbol}}</span>
+      <span class="themes">同时是 <em>{{theme_A}}</em> 的{{档位说明 A}}、也是 <em>{{theme_B}}</em> 的{{档位说明 B}}。{{两个主题的状态 — 🔥active / 🌡️mature / ❄️cooled}}</span>
+      <span class="stars-cell">{{⭐ 或 ⭐⭐}}</span>
+    </div>
+    <!-- 若本主题无跨主题节点,显示:"本主题候选当前无跨主题节点(forward_picks 覆盖范围内)。" -->
+  </div>
+</div></section>
+
+<!-- ============ Step 5 · 三道闸门 ============ -->
+<section><div class="wrap rv">
+  <div class="eyebrow">Step 5 · 三道闸门</div>
+  <h2><span class="num">04</span>过关吗?(诚实打分)</h2>
+  <!-- gate class: g-ok(过) / g-mid(半过) / g-no(不过);score 文案对应 -->
+  <div class="gates">
+    <div class="gate g-ok"><div class="ic">🔒</div><div class="h">真瓶颈</div><div class="score">{{过/半过/不过}}</div><p>{{说明}}</p></div>
+    <div class="gate g-mid"><div class="ic">👁️</div><div class="h">前机构</div><div class="score">{{过/半过/不过}}</div><p>{{说明}}</p></div>
+    <div class="gate g-no"><div class="ic">💰</div><div class="h">便宜+已去风险</div><div class="score">{{过/半过/不过}}</div><p>{{说明}}</p></div>
+  </div>
+  <p style="margin-top:20px"><b>综合:</b>{{三关总结 → 是否本框架理想猎场}}</p>
+</div></section>
+
+<!-- ============ Step 7 · 落地结论 ============ -->
+<section><div class="wrap rv">
+  <div class="eyebrow">Step 7 · 落地结论</div>
+  <h2><span class="num">05</span>给投资者的几条</h2>
+  <div class="takeaways">
+    <div class="ta"><div class="x"><b>{{结论标题}}</b> <span>{{展开}}</span></div></div>
+    <!-- FILL: 3-5 条 -->
+  </div>
+</div></section>
+
+<!-- ============ 数据备注 ============ -->
+<section><div class="wrap rv"><div class="note">
+  <b>数据可用性 & 方法备注:</b> 价格/动量为 <code>price.py</code> 实测;基本面/市占率为网页研究近似值,<b>需以财报/IR 复核</b>。EODHD 本套餐不含 fundamentals/财报日历,亦不含东京交易所(日股走 yfinance <code>.T</code> 回退)。stage 由启发式给出,仅供模式 A 择时参考,非买卖信号。
+  <br><b>情景基准率(2026-06-13 起强制):</b>目标价情景必须引用 Cockpit 计分卡的<b>实测向前分布</b>(跑 <code>/api/scorecard</code> 或看计分卡页),格式:「本框架全体 🟢 实测:均α {{+X%}} / 中位α {{X%}} / 胜率 {{X%}}(n={{N}},截至 {{日期}})」——均值常被个别大赢家拉高,<b>中位数才是诚实预期</b>;新主题无同类历史时显式说明"无基准,情景为推断"。
+</div></div></section>
+
+<!-- ============ 术语速查表(默认折叠,JS 自动从所有 <abbr> 抽取)============ -->
+<section style="padding-top:0"><div class="wrap rv">
+  <details class="glossary-section">
+    <summary>📚 本报告术语速查表(点击展开)</summary>
+    <p class="gloss-note">来源 <code style="font-family:var(--mono);font-size:12.5px">reference/glossary.md</code> · 由 JS 自动从本报告所有 <code>&lt;abbr title&gt;</code> 抽取,无需手动维护。</p>
+    <div class="glossary-list"></div>
+  </details>
+</div></section>
+
+<!-- ============ 免责页脚(必带) ============ -->
+<footer><div class="wrap">
+  <p class="disc"><b style="color:#f4efe5">⚠ 免责声明</b> &nbsp;本报告由 serenity-bottleneck-hunter 框架生成,<b>仅供研究与教育用途,非投资建议(Not Financial Advice)</b>。估值/市占率为网页研究近似值,务必复核;微盘/海外/ADR 标的有流动性、汇率与政策风险;本框架"业绩"含选股循环论证与幸存者偏差,不可外推为收益预期。投资有风险,决策需自负。</p>
+  <div class="srcs"><span>来源 ↓</span>
+    <a href="{{url}}">{{来源名}}</a>
+    <!-- FILL: 列出本次研究引用的链接 -->
+  </div>
+</div></footer>
+
+<script>
+  /* 滚入动画 */
+  const obs=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target)}})},{threshold:.12});
+  document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+
+  /* === Glossary 速查表:从所有 <abbr title> 抽取并按字母排序 === */
+  (function(){
+    function buildGloss(){
+      var container = document.querySelector('.glossary-section .glossary-list');
+      if (!container) return;
+      container.innerHTML = '';
+      var seen = {};
+      document.querySelectorAll('abbr[title]').forEach(function(a){
+        var k = (a.textContent || '').trim();
+        var v = a.getAttribute('title') || '';
+        if (k && v && !seen[k]) seen[k] = v;
+      });
+      var keys = Object.keys(seen).sort(function(a, b){
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+      });
+      if (keys.length === 0){
+        container.innerHTML = '<div class="gloss-note" style="text-align:center; padding:14px">本报告未使用 abbr 注释,无术语条目。</div>';
+        return;
+      }
+      keys.forEach(function(k){
+        var row = document.createElement('div');
+        row.className = 'glossary-row';
+        var t = document.createElement('span'); t.className = 'term'; t.textContent = k;
+        var d = document.createElement('span'); d.className = 'def'; d.textContent = seen[k];
+        row.appendChild(t); row.appendChild(d);
+        container.appendChild(row);
+      });
+      var note = document.querySelector('.glossary-section .gloss-note');
+      if (note){ note.textContent = '共 ' + keys.length + ' 个术语 · 来源 reference/glossary.md · JS 自动从本页 <abbr> 抽取'; }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', buildGloss);
+    else buildGloss();
+  })();
+
+  /* === Step 2 网状产业链:SVG 边自动布局 + 瓶颈点自动判定 === */
+  (function(){
+    function layoutChain(){
+      document.querySelectorAll('.chain-viz').forEach(function(viz){
+        var svg = viz.querySelector('.chain-edges');
+        if(!svg) return;
+        var vizRect = viz.getBoundingClientRect();
+        svg.setAttribute('width', vizRect.width);
+        svg.setAttribute('height', vizRect.height);
+        svg.setAttribute('viewBox', '0 0 ' + vizRect.width + ' ' + vizRect.height);
+        svg.innerHTML = '';
+
+        /* 统计入度/出度 */
+        var edges = Array.prototype.slice.call(viz.querySelectorAll('.edge-list [data-from]'));
+        var indeg = {}, outdeg = {};
+        edges.forEach(function(e){
+          var f = e.dataset.from, t = e.dataset.to;
+          if(!f || !t) return;
+          outdeg[f] = (outdeg[f] || 0) + 1;
+          indeg[t]  = (indeg[t]  || 0) + 1;
+        });
+
+        /* 瓶颈点自动判定(入度≥2 且 出度≤1)+ tooltip 标 in/out */
+        viz.querySelectorAll('.cnode').forEach(function(n){
+          var id = n.dataset.id; if(!id) return;
+          n.classList.remove('is-bottleneck');
+          var inD = indeg[id] || 0, outD = outdeg[id] || 0;
+          /* 瓶颈判定(2026-06-13 升级为双规则,KRMN 教训):
+             漏斗型 = 入度≥2 且 出度≤1(多家依赖、供少数客户)
+             枢纽型 = 入度≥2 且 出度≥2(多对多,采购方最难绕开,旧规则会漏)
+             均排除下游层(终端不是猎物) */
+          var inDown = n.closest('.chain-layer-down') !== null;
+          n.classList.remove('is-hub');
+          if(inD >= 2 && outD <= 1 && !inDown) n.classList.add('is-bottleneck');
+          else if(inD >= 2 && outD >= 2 && !inDown) n.classList.add('is-hub');
+          var tip = '入度:' + inD + ' · 出度:' + outD;
+          if(n.classList.contains('is-bottleneck')) tip += ' · 🔒 漏斗瓶颈(多家依赖它)';
+          else if(n.classList.contains('is-hub')) tip += ' · 🔗 枢纽瓶颈(多对多,最难绕开)';
+          else if(inDown && inD >= 2) tip += ' · 链路终端(下游层,跳过)';
+          if(n.querySelector('.star-inline')) tip += ' · ⭐ 跨主题节点';
+          n.title = tip;
+          /* Custom tooltip box(2026-06-02 用户拆分:business + status 两段)*/
+          var desc = n.dataset.desc;
+          if (desc && !n.querySelector('.tip-box')){
+            var status = n.dataset.status || '';
+            var box = document.createElement('div'); box.className = 'tip-box';
+            var biz = document.createElement('div'); biz.className = 'tip-biz'; biz.textContent = desc;
+            box.appendChild(biz);
+            if (status){
+              var stat = document.createElement('div'); stat.className = 'tip-stat';
+              var m = status.match(/^(.*?)\s*\[(\d{4}-\d{2}-\d{2})\]\s*$/);
+              if (m){
+                stat.textContent = m[1].trim() + ' ';
+                var dt = document.createElement('span'); dt.className = 'tip-date'; dt.textContent = '['+m[2]+']';
+                stat.appendChild(dt);
+              } else stat.textContent = status;
+              box.appendChild(stat);
+            }
+            n.appendChild(box);
+          }
+        });
+
+        /* 画边(三档粗细+颜色,bezier 曲线,无箭头标记保持简洁) */
+        edges.forEach(function(e){
+          var fromNode = viz.querySelector('.cnode[data-id="' + e.dataset.from + '"]');
+          var toNode   = viz.querySelector('.cnode[data-id="' + e.dataset.to   + '"]');
+          if(!fromNode || !toNode) return;
+          var fr = fromNode.getBoundingClientRect();
+          var tr = toNode.getBoundingClientRect();
+          /* 上游层在顶部 → 物流方向 from.bottom 到 to.top */
+          var x1 = fr.left + fr.width/2  - vizRect.left;
+          var y1 = fr.bottom              - vizRect.top;
+          var x2 = tr.left + tr.width/2  - vizRect.left;
+          var y2 = tr.top                 - vizRect.top;
+          var cy1 = y1 + (y2 - y1) * 0.55;
+          var cy2 = y2 - (y2 - y1) * 0.55;
+          var w = parseFloat(e.dataset.weight) || 0.3;
+          var stroke, sw;
+          if(w >= 0.5){      stroke = '#7a2e3a'; sw = Math.max(3.0, w * 6); }
+          else if(w >= 0.25){ stroke = '#b97608'; sw = 2.2; }
+          else {              stroke = '#9aa0a6'; sw = 1.4; }
+          var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          p.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + cy1 + ' ' + x2 + ',' + cy2 + ' ' + x2 + ',' + y2);
+          p.setAttribute('stroke', stroke);
+          p.setAttribute('stroke-width', sw);
+          p.setAttribute('fill', 'none');
+          p.setAttribute('stroke-linecap', 'round');
+          p.setAttribute('opacity', '0.72');
+          svg.appendChild(p);
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', layoutChain);
+    } else {
+      layoutChain();
+    }
+    var __chainT;
+    window.addEventListener('resize', function(){
+      clearTimeout(__chainT);
+      __chainT = setTimeout(layoutChain, 120);
+    });
+    /* 字体加载后再布局一次(节点高度可能因 webfont 改变) */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(layoutChain);
+    }
+  })();
+</script>
+</body>
+</html>

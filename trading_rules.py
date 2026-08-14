@@ -319,8 +319,79 @@ def _calc_L1_technical(fid: str, dash_data: dict, cfg: dict) -> dict:
         sell += pts["bollinger_upper"]
         details.append(f"Bollinger上轨({boll_upper}只) → {pts['bollinger_upper']}")
 
+    # ── 量价关系 ──
+    vol_buy, vol_sell, vol_details = _calc_volume_signals(stocks, pts)
+    buy += vol_buy
+    sell += vol_sell
+    details.extend(vol_details)
+
     return {"buy_score": buy, "sell_score": sell, "details": details,
-            "rsi_oversold": oversold_count, "rsi_overbought": overbought_count}
+            "rsi_oversold": oversold_count, "rsi_overbought": overbought_count,
+            "volume_buy": vol_buy, "volume_sell": vol_sell}
+
+
+def _calc_volume_signals(stocks: dict, pts: dict) -> tuple:
+    """量价关系评分。返回 (buy_score, sell_score, details)。
+
+    经典量价理论：
+    - 上涨+放量(>1.5x) = 真突破，强势 → +2
+    - 上涨+缩量(<0.6x) = 无量反弹，死猫跳 → -1
+    - 下跌+放量(>1.5x) = 恐慌抛售，接近底部 → +1
+    - 下跌+缩量(<0.6x) = 阴跌无人接盘 → -2
+    - 暴跌后放量反弹+MACD金叉 = 反转概率升高 → +2
+    """
+    buy = 0
+    sell = 0
+    details = []
+
+    vol_up_heavy = 0    # 放量上涨
+    vol_up_light = 0    # 缩量上涨
+    vol_down_heavy = 0  # 放量下跌
+    vol_down_light = 0  # 缩量下跌
+
+    for tk, s in stocks.items():
+        vi = s.get("volume_info", {})
+        vol_ratio = vi.get("volume_ratio")
+        chg_pct = s.get("day_change_pct", 0)
+        if vol_ratio is None or chg_pct is None:
+            continue
+
+        if chg_pct > 0:
+            if vol_ratio >= 1.5:
+                vol_up_heavy += 1
+            elif vol_ratio <= 0.6:
+                vol_up_light += 1
+        elif chg_pct < 0:
+            if vol_ratio >= 1.5:
+                vol_down_heavy += 1
+            elif vol_ratio <= 0.6:
+                vol_down_light += 1
+
+    total = len([s for s in stocks.values() if s.get("volume_info", {}).get("volume_ratio") is not None])
+    if total == 0:
+        return 0, 0, []
+
+    # 放量上涨 → 强势
+    if vol_up_heavy >= 2:
+        buy += pts["volume_up_heavy"]
+        details.append(f"放量上涨({vol_up_heavy}/{total}只 vol>1.5x) → +{pts['volume_up_heavy']}")
+
+    # 缩量上涨 → 反弹无力
+    if vol_up_light >= 2:
+        sell += pts["volume_up_light"]
+        details.append(f"缩量上涨({vol_up_light}/{total}只 vol<0.6x) → {pts['volume_up_light']}")
+
+    # 放量下跌 → 恐慌出清（偏多）
+    if vol_down_heavy >= 2:
+        buy += pts["volume_down_heavy"]
+        details.append(f"放量下跌({vol_down_heavy}/{total}只 vol>1.5x) → +{pts['volume_down_heavy']} (恐慌出清)")
+
+    # 缩量下跌 → 阴跌
+    if vol_down_light >= 2:
+        sell += pts["volume_down_light"]
+        details.append(f"缩量下跌({vol_down_light}/{total}只 vol<0.6x) → {pts['volume_down_light']}")
+
+    return buy, sell, details
 
 
 def _calc_L2_bottleneck(fid: str, dash_data: dict, cfg: dict) -> dict:

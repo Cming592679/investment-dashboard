@@ -1,0 +1,17 @@
+# 密钥 / 凭证
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+
+# 生成产物
+score_report.md
+*.skill
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

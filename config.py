@@ -1,5 +1,6 @@
 """Investment Dashboard — 全部基金/板块配置"""
 
+import os
 from datetime import date
 
 # ══════════════════════════════════════════════════════════
@@ -72,9 +73,9 @@ FUNDS = {
         "stocks": {
             "300308.SZ": "中际旭创",
             "300502.SZ": "新易盛",
-            "300394.SZ": "天孚通信",
-            "002281.SZ": "光迅科技",
-            "688313.SS": "仕佳光子",
+            "688498.SS": "源杰科技",
+            "688048.SS": "长光华芯",
+            "600105.SS": "永鼎股份",
         },
         "indices": {
             "159997.SZ": "电子ETF",
@@ -94,23 +95,23 @@ FUNDS = {
 
     "024239": {
         "name": "华夏全球科技先锋QDII C",
-        "short": "AI硬件",
-        "benchmark": "QQQ",
+        "short": "海外半导体",
+        "benchmark": "SMH",
         "market": "us",
         "stocks": {
-            "NVDA": "英伟达",
-            "AMD":  "超威",
-            "AVGO": "博通",
-            "ANET": "Arista",
-            "SMCI": "超微电脑",
+            "SNDK": "SanDisk(闪迪)",
+            "MU":   "美光科技",
+            "MRVL": "Marvell",
+            "TSM":  "台积电",
+            "LITE": "Lumentum(光芯片)",
         },
         "indices": {
-            "^NDX": "纳斯达克100",
             "SMH":  "VanEck半导体ETF",
+            "SOX":  "费城半导体指数",
             "QQQ":  "纳指100ETF",
         },
         "specials": {
-            "DELL": {"name": "戴尔", "note": "AI服务器出货量风向标"},
+            "WDC": {"name": "西部数据", "note": "NAND Flash原厂，与铠侠合并进行中"},
         },
         "exit_thresholds": {
             "rsi_overbought": 70, "rsi_oversold": 30,
@@ -123,15 +124,15 @@ FUNDS = {
 
     "021528": {
         "name": "财通成长优选C",
-        "short": "PCB",
+        "short": "电子材料",
         "benchmark": "159997.SZ",
         "market": "a",
         "stocks": {
-            "002916.SZ": "深南电路",
-            "002384.SZ": "东山精密",
-            "002463.SZ": "沪电股份",
-            "300476.SZ": "胜宏科技",
-            "603228.SS": "景旺电子",
+            "300502.SZ": "新易盛",
+            "688519.SS": "南亚新材",
+            "688498.SS": "源杰科技",
+            "300408.SZ": "三环集团",
+            "301511.SZ": "德福科技",
         },
         "indices": {
             "159997.SZ": "电子ETF",
@@ -151,15 +152,15 @@ FUNDS = {
 
     "015789": {
         "name": "永赢高端装备智选A",
-        "short": "航天卫星",
+        "short": "军工电子",
         "benchmark": "512660.SS",
         "market": "a",
         "stocks": {
-            "600118.SS": "中国卫星",
+            "300136.SZ": "信维通信",
             "600879.SS": "航天电子",
-            "688568.SS": "中科星图",
-            "600391.SS": "航发科技",
-            "603698.SS": "航天工程",
+            "688002.SS": "睿创微纳",
+            "688375.SS": "国博电子",
+            "301232.SZ": "飞沃科技",
         },
         "indices": {
             "512660.SS": "军工ETF",
@@ -246,6 +247,9 @@ FUNDS = {
             # A股存储产业链
             "603986.SS": "兆易创新",
             "300223.SZ": "北京君正",
+        },
+        "specials": {
+            "SNDK": {"name": "SanDisk(闪迪)", "note": "NAND Flash原厂，Q4被WDC收购中。100055真实重仓"},
         },
         "indices": {
             "SMH": "VanEck半导体ETF",
@@ -380,103 +384,96 @@ LEADING_INDICATORS = {
         },
     },
 
-    # ═══ AI硬件 · 美股（Bottleneck：GPU/CoWoS/HBM三重瓶颈） ═══
-    # 5层链：AI应用→NVDA GPU→TSMC CoWoS→ASML EUV→HBM
-    # 瓶颈原型：②NVDA单源 ②CoWoS单源 ②HBM三寡头 ⑥EUV设备垄断
+    # ═══ 海外半导体 · 存储+代工（真实持仓：SNDK/MU/MRVL/TSM/LITE） ═══
+    # 瓶颈原型：②存储寡头+②TSMC代工单源+①光芯片材料
     "024239": {
-        "NVDA 数据中心营收 QoQ【②单源卡脖子】": {
-            "value": "Q1 数据中心 $42B（+18% QoQ），Q2指引$48B",
+        "美光 DRAM/NAND 出货均价 QoQ【②存储定价】": {
+            "value": "Q3 FY2026(Nov)指引DRAM位元出货+15% QoQ，HBM3e爬坡中",
             "trend": "up",
-            "note": "【②NVDA垄断】数据中心营收增速=AI算力需求温度计。增速>15%QoQ=需求仍在加速；<10%=增速放缓→警惕",
-            "update_cycle": "季报后（8月底Q2）",
-        },
-        "TSMC CoWoS 产能扩张【②先进封装瓶颈】": {
-            "value": "Q2法说会确认：2026年底CoWoS月产能14万片，2027年底目标17万片",
-            "trend": "up",
-            "note": "【②CoWoS单源】TSMC CoWoS=所有NVDA GPU必经之路。产能仍在快速扩张但需求增长更快→2030年前仍难满足AI需求。魏哲家：乐见更多先进封装方案协助解决瓶颈",
-            "update_cycle": "TSMC季报/法说会",
-            "last_updated": "2026-07-21",
-        },
-        "HBM3e 供应紧张度【②存储瓶颈】": {
-            "value": "SK海力士HBM3e 2026产能全部售罄，2027已预订>60%",
-            "trend": "up",
-            "note": "【②HBM三寡头】每颗GPU必须配HBM。SK海力士(53%)+三星(35%)+美光(12%)垄断。HBM售罄=GPU出货被存储卡住=AI硬件瓶颈短期无解",
-            "update_cycle": "季度（盯SK海力士/三星/MU季报）",
-        },
-        "Hyperscaler CapEx 指引 QoQ": {
-            "value": "Q2四云厂全部交卷: GOOGL$44.9B + MSFT$41B + AMZN$53.5B + META$31.1B = 合计$170.5B（单季！）。全年Capex合计冲击$680B+",
-            "trend": "up",
-            "note": "⚠ Q2云厂季报全部超预期——四家全部上调Capex，无一例外。AMZN全年$220B(原$200B)最激进。AWS+Azure+Google Cloud营收全部加速，AI投入回报疑虑彻底打消。这是AI硬件全链最核心的利多信号",
-            "update_cycle": "季报后（7月底/1月底/4月底/10月底）",
-            "last_updated": "2026-08-02",
-        },
-        "ASML EUV 订单→GPU产能前置【⑥设备垄断】": {
-            "value": "Q2营收€93.27亿超预期。全年指引上修至€430-450亿。2027年EUV产能+30%至~85台",
-            "trend": "up",
-            "note": "【⑥设备垄断→②的根源】EUV交期18月+→TSMC扩产受限→CoWoS扩产受限→GPU出货受限。ASML Q2指引上修=AI硬件2-3年扩张周期确认。High-NA EUV已量产(Intel 18A)",
+            "note": "【②存储寡头定价】美光是全球第三大存储厂，其出货均价趋势=存储周期温度计。Q4 FY2026财报(9/25)是关键验证",
             "update_cycle": "季报后",
-            "last_updated": "2026-07-21",
+        },
+        "SanDisk/WDC NAND Flash 产能利用率【③产能售罄】": {
+            "value": "WDC H1产能利用率回升至85%，NAND Flash合约价Q2 +8% QoQ",
+            "trend": "up",
+            "note": "【③产能售罄】NAND Flash比DRAM周期更短(6-12月)。产能利用率85%→供给在追赶需求。若利用率突破90%→价格加速；若跌破70%→过剩信号",
+            "update_cycle": "季度（盯WDC+SanDisk季报）",
+        },
+        "台积电 先进制程产能利用率【⑧代工单源】": {
+            "value": "Q2法说会：3nm/5nm产能利用率100%，CoWoS年底月产能14万片→2027年17万片",
+            "trend": "up",
+            "note": "【⑧代工单源】TSMC先进制程满载=全球半导体需求强劲。产能利用率掉头→最可靠的反转信号。Capex上修至$600-640亿=扩产周期加速",
+            "update_cycle": "TSMC月度营收(每月10日)+季报/法说会",
+        },
+        "Lumentum 光芯片订单→数据中心光互联需求【①光芯片】": {
+            "value": "Q4 FY2026财报(8/11)待发布。Q3营收$517M(+12% YoY)，光芯片订单积压创历史新高",
+            "trend": "up",
+            "note": "【①光芯片材料】Lumentum是数据中心光芯片（EML/CW激光器）核心供应商。订单积压=下游光模块需求持续超预期。与CPO板块共享瓶颈",
+            "update_cycle": "季报后（8/11 Q4 FY2026）",
+        },
+        "Marvell 数据中心营收→ASIC+网络芯片需求": {
+            "value": "Q1 FY2027数据中心营收$1.4B(+67% YoY)，定制ASIC+交换机芯片双轮驱动",
+            "trend": "up",
+            "note": "Marvell数据中心营收=AI定制芯片+高速网络需求。AWS Trainium/Google TPU等定制ASIC绕开NVDA GPU→开辟第二赛道",
+            "update_cycle": "季报后（8/28 Q2 FY2027）",
         },
     },
 
-    # ═══ PCB · 服务器PCB（Evolution+Bottleneck：高层数产能） ═══
-    # 5层链：AI服务器→ODM→高层PCB→CCL覆铜板→铜箔/玻纤
-    # 瓶颈原型：③高层数产能售罄 ④BOM普适 ⑧巨头供应链
+    # ═══ 电子材料 · 电子上游+光通信（真实持仓：新易盛/南亚新材/源杰/三环/德福） ═══
+    # 瓶颈原型：③铜箔/CCL产能紧张 ①光芯片衬底 ⑧下游AI服务器→材料需求
     "021528": {
-        "AI服务器PCB层数升级【④BOM普适+⑧供应链】": {
-            "value": "传统服务器8-12层→AI服务器20-30层，单价3-5x",
+        "南亚新材 CCL出货量+价格【③CCL产能】": {
+            "value": "Q2 CCL出货量环比+8%，高端高频CCL占比提升至35%",
             "trend": "up",
-            "note": "【④BOM普适+⑧巨头依赖】NVDA DGX/华为昇腾服务器必须用高层PCB。层数↑=单价↑=进入壁垒↑。深南/沪电已进NVDA/华为供应链",
-            "update_cycle": "季度（盯服务器ODM出货数据）",
-        },
-        "深南电路高层PCB产能利用率【③产能售罄】": {
-            "value": "H1归母净利21-23亿(+54-69% YoY)，无锡AI算力PCB项目(投资45亿)预计2027H1量产",
-            "trend": "up",
-            "note": "【③产能售罄→扩产验证】H1业绩超预期，AI服务器+存储双驱动。南通三期满产+泰国/南通四期爬坡。无锡新项目专注AI服务器高层PCB(20-30层)，2027年投产=长期增长确认",
+            "note": "【③CCL产能瓶颈】南亚新材是国内高频高速CCL龙头，直接受益AI服务器PCB层数升级(8→20层→CCL用量3-5x)。高频CCL毛利率>40%远超普通FR-4",
             "update_cycle": "季报后",
-            "last_updated": "2026-07-21",
         },
-        "铜价 YoY【成本压力】": {
-            "value": "LME铜 $9,800/吨（+12% YoY），Q2小幅回落",
+        "德福科技 电子铜箔加工费【④上游材料】": {
+            "value": "Q2锂电铜箔加工费企稳18,000/吨，电子铜箔维持25,000/吨",
             "trend": "flat",
-            "note": "铜占PCB原材料成本30%+。铜价↑=毛利承压；铜价↓=毛利释放。当前高位震荡但未加速上涨→成本端压力可控",
-            "update_cycle": "日度自动（yfinance: HG=F）",
+            "note": "【④BOM普适+成本信号】铜箔加工费=PCB成本关键变量。电子铜箔(低轮廓)技术壁垒高→加工费更稳定。锂电铜箔过剩→可能转产电子铜箔→供给增加",
+            "update_cycle": "季报后",
         },
-        "CCL覆铜板价格【上游传导】": {
-            "value": "生益科技Q2 CCL报价环比持平，涨价预期减弱",
-            "trend": "flat",
-            "note": "CCL是PCB直接上游。CCL涨价=PCB成本压力；CCL降价=毛利扩张。当前走平=PCB毛利稳定",
-            "update_cycle": "月度/季报",
+        "源杰科技 CW激光器送样验证【①光芯片衬底】": {
+            "value": "100G CW激光器已送样中际旭创/新易盛，预计Q3完成验证",
+            "trend": "up",
+            "note": "【①光芯片国产替代】CW激光器是800G/1.6T光模块核心光芯片（InP衬底）。目前全球90%+由Lumentum/住友供应。源杰科技若通过验证→国产替代0→1突破",
+            "update_cycle": "季报后+送样进度跟踪",
+        },
+        "三环集团 MLCC/陶瓷封装基座出货【④BOM普适】": {
+            "value": "Q2 MLCC出货量+15% YoY，高容MLCC占比提升。陶瓷封装基座满产",
+            "trend": "up",
+            "note": "【④BOM普适+电子周期品】MLCC是电子行业'大米'——所有电路板都需要。出货量增速=电子行业景气度温度计。陶瓷封装基座→芯片封装需求",
+            "update_cycle": "季报后",
         },
     },
 
-    # ═══ 航天卫星 · 商业航天（Bottleneck：发射产能） ═══
-    # 5层链：卫星互联网→卫星制造→发射服务→火箭发动机→特种材料
-    # 瓶颈原型：②发射产能单源 ⑨政府预算二阶 ①特种材料
+    # ═══ 军工电子 · 国防+电子（真实持仓：信维/航天电子/睿创/国博/飞沃） ═══
+    # 瓶颈原型：②军用射频/红外芯片进口替代 ⑨国防预算驱动 ⑥特种元器件产线
     "015789": {
-        "SpaceX 发射频次【②发射产能单源】": {
-            "value": "2026 H1已完成89次发射（年化178次），全球占比>60%",
+        "睿创微纳 红外探测器出货【②军用红外芯片】": {
+            "value": "H1营收+35% YoY，非制冷红外探测器全球份额>15%。军用+民用双线增长",
             "trend": "up",
-            "note": "【②单源垄断】全球发射产能被SpaceX垄断→其他发射商（中国航天/Rocket Lab）产能不足→卫星排队等发射=星座部署延迟。SpaceX频次↑=行业加速",
-            "update_cycle": "月度（SpaceX官网+spaceflightnow）",
+            "note": "【②军用红外芯片国产替代】睿创微纳是国内非制冷红外探测器龙头，全球第三。国防信息化→红外制导/侦察需求↑。民用→车载红外/工业检测打开第二增长曲线",
+            "update_cycle": "季报后",
         },
-        "中国星网卫星发射进度【⑨政策驱动】": {
-            "value": "星网首批试验星已发12颗，2026年目标108颗",
+        "国博电子 射频芯片订单【②军用射频芯片】": {
+            "value": "有源相控阵T/R组件订单饱满，GaN射频芯片产线满产",
             "trend": "up",
-            "note": "【⑨政府CapEx】星网=中国版Starlink，计划发射1.3万颗卫星。发射进度=产业链订单释放节奏。108颗只是开始，加速期在2027-28",
-            "update_cycle": "季度（盯航天科技集团公告）",
+            "note": "【②军用射频芯片进口替代】国博电子是国内军用GaN/GaAs射频芯片核心供应商。有源相控阵雷达→每个阵元需要1颗T/R组件→战斗机/驱逐舰/预警机需求刚性",
+            "update_cycle": "季报后",
         },
-        "全球航天经济总量增速": {
-            "value": "2025年$570B→2030年预计$1T+（CAGR 12%）",
+        "信维通信 军工+消费电子双轮【④BOM普适】": {
+            "value": "Q2军工天线订单环比+20%，消费电子天线受益AI手机换机潮",
             "trend": "up",
-            "note": "SpaceX+星网+Kuiper三巨头驱动，航天从政府市场变成商业市场。增速>10%=赛道确定性强",
-            "update_cycle": "年度（Space Foundation报告）",
+            "note": "【④BOM普适+军工电子】信维通信是天线/射频连接器龙头。军工→相控阵天线/卫通天线；消费电子→AI手机天线升级(LCP/MPI)。双轮驱动降低单一周期风险",
+            "update_cycle": "季报后",
         },
-        "Rocket Lab 发射+订单【商业航天风向标】": {
-            "value": "Neutron火箭2026H2首飞，积压订单$1.2B",
+        "国防预算增速→军工电子订单前瞻【⑨政策驱动】": {
+            "value": "2026年国防预算¥1.87万亿(+7.2% YoY)，装备采购占比持续提升",
             "trend": "up",
-            "note": "Rocket Lab是全球唯二有规模发射能力的商业公司。Neutron首飞成功→打破SpaceX垄断→利好整个商业航天板块",
-            "update_cycle": "季度（盯RKLB季报+首飞日期）",
+            "note": "【⑨政府国防CapEx】国防预算增速7.2%→装备采购增速>10%(结构优化)。电子化/信息化是装备采购最大增量方向。和电网板块共享政府预算驱动的确定性",
+            "update_cycle": "年度(两会)+半年度(国防白皮书)",
         },
     },
 
@@ -609,6 +606,18 @@ KEY_DATES = {
          "result": "营收$60.8B(+28%)超预期但EPS$6.18不及预期。Capex$31.1B翻倍，FCF骤降91%至$0.78B。全年Capex上调至$130-145B。Q3指引偏弱→盘后-10%"},
         {"date": date(2026, 8, 1),  "event": "AMZN Q2 财报",     "importance": "high",
          "result": "营收$200.6B(+20% YoY)超预期。AWS $42.2B(+37%)创四年新高，运营利润率39.4%刷新纪录。全年Capex上调至$220B(原$200B)。盘后+10%→AI投入回报全面验证"},
+        {"date": date(2026, 8, 15), "event": "中芯国际 Q2 财报 ⚠", "importance": "critical"},
+        {"date": date(2026, 8, 15), "event": "中国集成电路 7月产量", "importance": "high"},
+        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(CapEx风向标)", "importance": "critical"},
+        {"date": date(2026, 8, 21), "event": "SEMI 7月 Billings", "importance": "critical"},
+        {"date": date(2026, 8, 25), "event": "中微公司 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 26), "event": "北方华创 Q2 财报(预计) ⚠", "importance": "critical"},
+        {"date": date(2026, 8, 28), "event": "拓荆科技 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 9, 10), "event": "中国集成电路 8月产量", "importance": "high"},
+        {"date": date(2026, 9, 20), "event": "SEMI 8月 Billings", "importance": "high"},
+        {"date": date(2026, 9, 25), "event": "美光 Q4 FY2026 财报(存储→设备)", "importance": "high"},
+        {"date": date(2026, 10, 15), "event": "台积电 Q3 法说会(预计) ⚠", "importance": "critical"},
+        {"date": date(2026, 10, 15), "event": "ASML Q3 财报(EUV订单)", "importance": "critical"},
     ],
     "014194": [
         {"date": date(2026, 7, 10),  "event": "台积电 6 月营收",        "importance": "high",
@@ -623,17 +632,34 @@ KEY_DATES = {
          "result": "未发布正式预告。Q1营收103.23亿(+25.8%)，归母净利16.35亿(+3.4%)。研发投入+37%压制利润。半年报预计8/26披露"},
         {"date": date(2026, 7, 27),  "event": "长鑫存储(CXMT)科创板上市 ⚠", "importance": "critical",
          "result": "IPO募资579亿，首日+466%收49元，市值3.28万亿成A股最大。DRAM月产能30万片→2026底35万片→2030年60万片。HBM3量产锁定2026"},
-        {"date": date(2026, 8, 15),  "event": "中芯国际 Q2 财报(预计)",    "importance": "critical"},
-        {"date": date(2026, 8, 26),  "event": "北方华创 Q2 财报(预计)",    "importance": "high"},
+        {"date": date(2026, 8, 15),  "event": "中芯国际 Q2 财报 ⚠",    "importance": "critical"},
+        {"date": date(2026, 8, 15),  "event": "中国集成电路 7月产量",    "importance": "high"},
+        {"date": date(2026, 8, 20),  "event": "NVDA Q2 财报(全球芯片风向标)", "importance": "critical"},
+        {"date": date(2026, 8, 21),  "event": "SEMI 7月 Billings",    "importance": "critical"},
+        {"date": date(2026, 8, 25),  "event": "韦尔股份 Q2 财报(预计)",   "importance": "high"},
+        {"date": date(2026, 8, 25),  "event": "兆易创新 Q2 财报(预计)",   "importance": "high"},
+        {"date": date(2026, 8, 25),  "event": "中微公司 Q2 财报(预计)",   "importance": "high"},
+        {"date": date(2026, 8, 26),  "event": "北方华创 Q2 财报(预计) ⚠", "importance": "critical"},
+        {"date": date(2026, 9, 10),  "event": "中国集成电路 8月产量",    "importance": "high"},
+        {"date": date(2026, 9, 20),  "event": "SEMI 8月 Billings",    "importance": "high"},
+        {"date": date(2026, 10, 15), "event": "台积电 Q3 法说会(预计) ⚠", "importance": "critical"},
+        {"date": date(2026, 10, 15), "event": "ASML Q3 财报(EUV订单)",  "importance": "critical"},
     ],
     "CPO": [
         {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical",
          "result": "Q2营收+36% YoY创新高，CoWoS年底14万片/月。AI算力需求持续爆炸→800G/1.6T光模块需求确定性极强"},
         {"date": date(2026, 7, 25), "event": "中际旭创 H1 业绩预告", "importance": "critical",
          "result": "未发布正式预告。公司7/13澄清：对H1经营和行业需求'非常有信心'，在手订单覆盖全年。半年报预计8/24披露"},
-        {"date": date(2026, 8, 11), "event": "Lumentum Q4 FY2026 财报(光芯片)", "importance": "high"},
+        {"date": date(2026, 8, 11), "event": "Lumentum Q4 FY2026 财报(光芯片)", "importance": "high",
+         "result": "今日盘后发布。市场预期营收$987M(+105% YoY)，EPS $2.97。关键看点：1.6T光模块CW激光器出货量、EML供需缺口(>30%)。前季EPS $2.37超预期$0.10"},
+
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报", "importance": "critical"},
-        {"date": date(2026, 8, 24), "event": "中际旭创 半年报(预计)", "importance": "critical"},
+        {"date": date(2026, 8, 24), "event": "中际旭创 半年报(预计) ⚠", "importance": "critical"},
+        {"date": date(2026, 8, 25), "event": "新易盛 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "天孚通信 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 28), "event": "Marvell Q2 FY2027 财报(DSP芯片)", "importance": "critical"},
+        {"date": date(2026, 9, 5),  "event": "Broadcom Q3 FY2026 财报(DSP+交换芯片)", "importance": "critical"},
+        {"date": date(2026, 10, 15), "event": "台积电 Q3 法说会(CoWoS进度)", "importance": "high"},
     ],
     "024239": [
         {"date": date(2026, 7, 16), "event": "台积电 Q2 法说会 ⚠", "importance": "critical",
@@ -650,27 +676,59 @@ KEY_DATES = {
          "result": "META Capex$31.1B翻倍, 全年上调至$130-145B。FCF骤降91%引发担忧但AI投入未减速。盘后-10%"},
         {"date": date(2026, 8, 1),  "event": "AMZN Q2(CapEx指引)", "importance": "high",
          "result": "AWS+37%加速→运营利润率39.4%创新高。全年Capex上调至$220B。四云厂Q2 Capex合计~$170B→年化$680B+。AI投资回报疑虑彻底打消"},
-        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报", "importance": "critical"},
+        {"date": date(2026, 8, 10), "event": "SMCI Q4 FY2026 财报(AI服务器)", "importance": "high",
+         "result": "今日盘后发布。Q4营收指引$11-12.5B近下限，但毛利率意外上调至15-17%(翻倍)。Q4新订单>$60B创纪录。Q3营收$10.2B(+123% YoY)"},
+
+        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报 ⚠", "importance": "critical"},
+        {"date": date(2026, 9, 5),  "event": "AVGO Q3 FY2026 财报(ASIC+网络)", "importance": "high"},
+        {"date": date(2026, 9, 10), "event": "台积电 8月营收", "importance": "high"},
+        {"date": date(2026, 9, 25), "event": "美光 Q4 FY2026 财报(HBM→GPU)", "importance": "high"},
+        {"date": date(2026, 10, 15), "event": "台积电 Q3 法说会(预计) ⚠", "importance": "critical"},
+        {"date": date(2026, 10, 15), "event": "ASML Q3 财报(EUV订单)", "importance": "critical"},
+        {"date": date(2026, 10, 15), "event": "SK海力士 Q3 财报(HBM)", "importance": "critical"},
+        {"date": date(2026, 10, 27), "event": "GOOGL Q3 财报(CapEx指引)", "importance": "high"},
+        {"date": date(2026, 10, 29), "event": "MSFT Q3 财报(CapEx指引)", "importance": "high"},
     ],
     "021528": [
         {"date": date(2026, 7, 20), "event": "深南电路 H1 业绩预告(预计)", "importance": "critical",
          "result": "归母净利21-23亿(+54-69% YoY)，扣非+64-80%。AI算力+存储双驱动。无锡AI算力PCB项目(投资45亿)预计2027H1量产"},
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(服务器需求)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "沪电股份 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "深南电路 半年报(预计)", "importance": "critical"},
+        {"date": date(2026, 8, 25), "event": "东山精密 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "胜宏科技 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "生益科技 Q2 财报(CCL上游)", "importance": "high"},
+        {"date": date(2026, 9, 10), "event": "台积电 8月营收(服务器需求)", "importance": "high"},
+        {"date": date(2026, 10, 15), "event": "台积电 Q3 法说会(AI服务器展望)", "importance": "high"},
     ],
     "015789": [
         {"date": date(2026, 7, 15), "event": "SpaceX H1 发射统计", "importance": "high",
          "result": "H1完成75次发射(59次Starlink)，部署1589颗卫星。年化150次+。全球发射占比>60%，垄断地位稳固"},
-        {"date": date(2026, 8, 10), "event": "Rocket Lab Q2 财报", "importance": "critical"},
+        {"date": date(2026, 8, 10), "event": "Rocket Lab Q2 财报", "importance": "high",
+         "result": "Q2营收$156M(+37% YoY)，Electron发射9次。Neutron首飞推迟至2026Q4。积压订单$1.3B。注意：当前015789已改为军工电子映射，RKLB财报对基金影响有限"},
+
+        {"date": date(2026, 8, 25), "event": "中国卫星 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "航天电子 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "中科星图 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 9, 1),  "event": "SpaceX 7-8月发射统计", "importance": "high"},
         {"date": date(2026, 10, 1), "event": "中国航天发射计划H2更新", "importance": "high"},
+        {"date": date(2026, 10, 15), "event": "中国星网 第二批卫星发射(预计)", "importance": "critical"},
     ],
     "025856": [
         {"date": date(2026, 7, 15), "event": "6月新能源装机数据", "importance": "high",
          "result": "6月新增3825个项目(风电32+光伏3787)。截至5月底全国装机突破40.1亿kW，非化石能源占62%"},
         {"date": date(2026, 7, 20), "event": "国网 H1 投资进度公告(预计)", "importance": "critical",
          "result": "Q1固投1290亿(+37% YoY)。H1物资招标>2500亿(+17%)。110kV+工程投产完成年度53%。7月特高压第三批招标108.7亿"},
+        {"date": date(2026, 8, 15), "event": "7月新能源装机数据", "importance": "high"},
+        {"date": date(2026, 8, 20), "event": "国网 7月物资招标数据(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "许继电气 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "中国西电 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "四方股份 Q2 财报(预计)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "特变电工 Q2 财报(预计)", "importance": "high"},
-        {"date": date(2026, 8, 30), "event": "国电南瑞 Q2 财报(预计)", "importance": "critical"},
+        {"date": date(2026, 8, 30), "event": "国电南瑞 Q2 财报(预计) ⚠", "importance": "critical"},
+        {"date": date(2026, 9, 15), "event": "8月新能源装机数据", "importance": "high"},
+        {"date": date(2026, 9, 15), "event": "国网 H2 投资计划修订(预计)", "importance": "critical"},
+        {"date": date(2026, 10, 15), "event": "9月新能源装机数据", "importance": "high"},
     ],
     "020608": [
         {"date": date(2026, 7, 15), "event": "6月工业机器人产量", "importance": "high",
@@ -679,13 +737,18 @@ KEY_DATES = {
          "result": "营收$28.24B(+26% YoY)超预期但EPS$0.33不及预期。Optimus按计划年内Fremont投产，先内部使用('Optimus Academy')。2026 Capex>$25B"},
         {"date": date(2026, 7, 25), "event": "绿的谐波 H1 业绩预告(预计)", "importance": "critical",
          "result": "H1营收同比+42%，谐波减速器出货创新高。墨西哥工厂进入设备调试阶段，2027年满产目标100万台/年"},
-        {"date": date(2026, 8, 5),  "event": "柯力传感 Q2 财报(六维力出货)", "importance": "critical"},
-        {"date": date(2026, 8, 15), "event": "世界机器人大会(北京)", "importance": "critical"},
+        {"date": date(2026, 8, 5),  "event": "柯力传感 Q2 财报(六维力出货) ⚠", "importance": "critical",
+         "result": "H1预告净利润同比+76~132%。六维力传感器出货近千套，部分客户已获批量订单(含特斯拉盐雾测试通过)。Q1归母净利-45.65%(研发投入加大)，Q2显著反转。处于商业化关键推进期"},
+
+        {"date": date(2026, 8, 15), "event": "7月工业机器人产量", "importance": "high"},
+        {"date": date(2026, 8, 15), "event": "世界机器人大会(北京) ⚠", "importance": "critical"},
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(机器人平台)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "恒立液压 Q2 财报(丝杠进度)", "importance": "high"},
-        {"date": date(2026, 8, 25), "event": "绿的谐波 Q2 财报", "importance": "critical"},
+        {"date": date(2026, 8, 25), "event": "绿的谐波 Q2 财报 ⚠", "importance": "critical"},
         {"date": date(2026, 8, 25), "event": "金力永磁 Q2 财报(磁材出货)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "日发精机 Q2 财报(磨床出货)", "importance": "high"},
         {"date": date(2026, 9, 1),  "event": "日发精机 丝杠装配线交付节点", "importance": "high"},
+        {"date": date(2026, 9, 15), "event": "8月工业机器人产量", "importance": "high"},
         {"date": date(2026, 9, 15), "event": "Tesla AI Day 2026(预计) ⚠", "importance": "critical"},
     ],
     "STORAGE": [
@@ -693,12 +756,17 @@ KEY_DATES = {
          "result": "HBM4 Q2量产，HBM4E 2027量产。营收$54.55B(+257% YoY)。与NVDA签$500B战略协议。盘后跌9%→V型反转"},
         {"date": date(2026, 7, 30), "event": "三星 Q2 财报(存储)", "importance": "critical",
          "result": "存储营收$38.2B(+89% YoY)。HBM4 2026Q4试产。DRAM位元增长率12%。盘后+3%"},
-        {"date": date(2026, 8, 10), "event": "TrendForce 7月DRAM合约价", "importance": "critical"},
+        {"date": date(2026, 8, 10), "event": "TrendForce 7月DRAM合约价 ⚠", "importance": "critical",
+         "result": "Q3服务器DRAM合约价+13~18% QoQ(较Q2的~50%显著放缓)。消费端需求疲软，买方抵触涨价。HBM产能挤压仍在持续→供给偏紧。关键信号：涨幅从加速→匀速，周期进入mid阶段"},
+
         {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(HBM需求)", "importance": "critical"},
+        {"date": date(2026, 8, 25), "event": "兆易创新 Q2 财报(预计)", "importance": "high"},
+        {"date": date(2026, 8, 25), "event": "北京君正 Q2 财报(预计)", "importance": "high"},
         {"date": date(2026, 9, 10), "event": "TrendForce 8月DRAM合约价", "importance": "high"},
-        {"date": date(2026, 9, 25), "event": "美光 Q4 FY2026 财报", "importance": "critical"},
+        {"date": date(2026, 9, 25), "event": "美光 Q4 FY2026 财报 ⚠", "importance": "critical"},
         {"date": date(2026, 10, 10), "event": "TrendForce 9月DRAM合约价", "importance": "high"},
-        {"date": date(2026, 10, 15), "event": "SK海力士 Q3 财报(HBM)", "importance": "critical"},
+        {"date": date(2026, 10, 15), "event": "SK海力士 Q3 财报(HBM) ⚠", "importance": "critical"},
+        {"date": date(2026, 10, 15), "event": "三星 Q3 财报(存储)", "importance": "critical"},
     ],
 }
 
@@ -725,20 +793,20 @@ CYCLE_ASSESSMENTS = {
     },
     "024239": {
         "stage": "mid-to-late",
-        "label": "AI算力扩张中后期（Bottleneck主题）",
-        "note": "【Bottleneck三重卡点】②NVDA GPU单源+②TSMC CoWoS单源+②HBM三寡头。三重瓶颈叠加=供给严重落后于需求=AI硬件公司利润丰厚但增速见顶风险在积累。Q2云厂CapEx已全部交卷(四家合计$170B/季→年化$680B+)，全面超预期上调→周期见顶风险暂时解除，但H2关键变量：①NVDA Blackwell ramp进度→8/20 Q2财报 ②TSMC CoWoS扩产是否如期 ③AMZN$220B CapEx能否持续。",
+        "label": "存储+代工周期中后期（Bottleneck主题）",
+        "note": "【Bottleneck存储+代工】基金真实持仓：SanDisk+美光+Marvell+TSMC+Lumentum。核心逻辑：①存储周期(HBM/DDR5涨价)②TSMC代工产能紧张③光芯片需求(Lumentum)。三重驱动力都是AI基础设施的'卖铲人'。H2关键变量：①美光Q4 FY2026(9/25)→存储价格拐点确认 ②TSMC Q3法说会(10/15)→3nm/5nm产能利用率 ③NVDA Rubin架构HBM需求(8/20 Q2)。",
         "risk": "yellow",
     },
     "021528": {
         "stage": "mid",
-        "label": "AI服务器PCB升级期（Evolution+Bottleneck）",
-        "note": "【Evolution+Bottleneck】AI服务器PCB从传统8-12层升级到20-30层→单价3-5x→龙头深度受益。核心瓶颈在③高层PCB产能（深南/沪电>95%利用率）。不同于半导体设备的强周期，PCB是BOM普适器件（④），需求更分散更稳定。关注：深南H1业绩、铜价趋势、AI服务器出货量。",
+        "label": "电子上游扩张期（Evolution+Bottleneck）",
+        "note": "【电子材料+光通信】基金真实持仓：新易盛+南亚新材(CCL)+源杰科技(光芯片)+三环集团(陶瓷)+德福科技(铜箔)。电子上游材料+光芯片双重逻辑：①CCL/铜箔→AI服务器PCB上游 ②光芯片→800G/1.6T光模块核心卡点。关注：南亚新材产能利用率、源杰科技CW激光器送样验证、铜箔加工费趋势。",
         "risk": "green",
     },
     "015789": {
-        "stage": "early",
-        "label": "商业航天萌芽期（Bottleneck主题）",
-        "note": "【Bottleneck】全球发射产能被SpaceX垄断（②单源），中国星网+Starlink+Kuiper三巨头驱动卫星互联网。当前处于早期基建阶段——卫星还没发完，应用还没落地。核心变量：①SpaceX发射频次是否持续攀升 ②星网2026年108颗目标完成度 ③Rocket Lab Neutron首飞(2026H2)能否打破垄断。政府/国防CapEx驱动，节奏慢但确定性强。",
+        "stage": "mid",
+        "label": "军工电子景气期（国防+电子双驱动）",
+        "note": "【国防电子】基金真实持仓：信维通信+航天电子+睿创微纳(红外)+国博电子(射频芯片)+飞沃科技。军工电子双逻辑：①国防预算增长→红外/射频芯片订单确定 ②商业航天发射→航天电子配套。不同于纯航天卫星（发射产能瓶颈），军工电子更侧重元器件国产化+国防信息化。关注：睿创微纳红外探测器出货、国博电子射频芯片订单。",
         "risk": "green",
     },
     "025856": {
@@ -938,7 +1006,7 @@ BOTTLENECK_DISRUPTION = {
              "positive_for": ["014194", "019633"]},
             {"desc": "新型存储 (CXL/存算一体) 替代 HBM", "status": "none", "note": "学术阶段，无商用时间表"},
         ],
-        "affected_funds": ["019633", "024239"],
+        "affected_funds": ["019633"],
     },
     "launch_capacity": {
         "label": "SpaceX 发射产能垄断",
@@ -1171,6 +1239,10 @@ TRADING_CONFIG = {
             "kdj_overbought": -1,       # KDJ>80
             "bollinger_lower": 1,       # 触及下轨
             "bollinger_upper": -1,      # 触及上轨
+            "volume_up_heavy": 2,       # 放量上涨(>1.5x均量)
+            "volume_up_light": -1,      # 缩量上涨(<0.6x均量)
+            "volume_down_heavy": 1,     # 放量下跌(恐慌出清)
+            "volume_down_light": -2,    # 缩量下跌(阴跌)
         },
         "L2": {
             "leading_up": 2,            # 领先指标 up（加权）
@@ -1193,3 +1265,77 @@ TRADING_CONFIG = {
         },
     },
 }
+
+
+# ══════════════════════════════════════════════════════════
+# 持仓权重（来自天天基金季报，用于代理加权）
+# ══════════════════════════════════════════════════════════
+
+# 板块ID → 真实基金代码（查权重用）
+BOARD_FUND_MAP = {
+  "CPO": "011370",
+  "021528": "021528",
+  "015789": "015789",
+  "STORAGE": "025209",
+  "019633": "019633",
+  "020608": "020608",
+  "025856": "025856"
+}
+
+# 各基金的前十大持仓权重（ticker → 占净值比例%）
+HOLDING_WEIGHTS = {
+  "011370": {
+    "300308.SZ": 7.13,
+    "300502.SZ": 6.64,
+    "688498.SS": 3.84,
+    "688048.SS": 3.35,
+    "600105.SS": 3.6
+  },
+  "015789": {
+    "300136.SZ": 6.43,
+    "600879.SS": 6.18,
+    "688002.SS": 5.54,
+    "688375.SS": 5.18,
+    "301232.SZ": 5.23
+  },
+  "021528": {
+    "300502.SZ": 9.47,
+    "688519.SS": 8.75,
+    "688498.SS": 8.63,
+    "300408.SZ": 7.93,
+    "301511.SZ": 7.92
+  },
+  "025209": {
+    "603986.SS": 7.92,
+    "300223.SZ": 7.56,
+    "001309.SZ": 7.16,
+    "301308.SZ": 7.06,
+    "688766.SS": 6.99
+  },
+  "019633": {
+    "002371.SZ": 6.67,
+    "688012.SS": 6.05,
+    "688072.SS": 2.77,
+    "300604.SZ": 2.59
+  },
+  "020608": {
+    "688017.SS": 4.58,
+    "601100.SS": 4.93
+  },
+  "025856": {
+    "000400.SZ": 1,
+    "600089.SS": 1,
+    "600406.SS": 1,
+    "601126.SS": 1,
+    "601179.SS": 1
+  }
+}
+
+
+# ══════════════════════════════════════════════════════════
+# 个人数据目录（与代码分离，不进入 git）
+# ══════════════════════════════════════════════════════════
+
+# 个人数据（portfolio.json / history / predictions / reviews 等）
+# 默认在项目目录，可通过环境变量 PERSONAL_DATA_DIR 指向外部目录。
+DATA_DIR = os.environ.get("PERSONAL_DATA_DIR", os.path.dirname(os.path.abspath(__file__)))

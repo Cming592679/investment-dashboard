@@ -215,6 +215,62 @@ def _calc_ma_system(closes: pd.Series, current_price: Optional[float]) -> dict:
 
 
 # ══════════════════════════════════════════════════════════
+# 成交量指标
+# ══════════════════════════════════════════════════════════
+
+def _calc_volume_indicators(hist: pd.DataFrame) -> dict:
+    """从历史数据计算量能指标。
+    hist 需包含 Volume 列（yfinance history() 已包含，可能是 MultiIndex）。
+    返回: {volume, avg_volume_20d, avg_volume_50d, volume_ratio, volume_trend, volume_climax}
+    """
+    try:
+        # 处理 MultiIndex 列（yfinance auto_adjust=True 时产生）
+        volumes = hist["Volume"]
+        if isinstance(volumes, pd.DataFrame):
+            volumes = volumes.squeeze()
+        if volumes.empty or volumes.isna().all():
+            return {}
+
+        cur_vol = _safe_float(volumes.iloc[-1])
+        if cur_vol is None or cur_vol == 0:
+            return {}
+
+        # 20日/50日均量
+        avg_20 = _safe_float(volumes.rolling(window=20).mean().iloc[-1]) if len(volumes) >= 20 else None
+        avg_50 = _safe_float(volumes.rolling(window=50).mean().iloc[-1]) if len(volumes) >= 50 else None
+
+        # 量比（当日量 / 50日均量）
+        vol_ratio = round(cur_vol / avg_50, 2) if avg_50 and avg_50 > 0 else None
+
+        # 5日量能趋势
+        if len(volumes) >= 10:
+            recent_5 = volumes.iloc[-5:].mean()
+            prior_5 = volumes.iloc[-10:-5].mean()
+            if recent_5 > prior_5 * 1.2:
+                vol_trend = "expanding"
+            elif recent_5 < prior_5 * 0.8:
+                vol_trend = "contracting"
+            else:
+                vol_trend = "flat"
+        else:
+            vol_trend = "unknown"
+
+        # 量能极致检测（天量：>2.5x均量）
+        vol_climax = vol_ratio is not None and vol_ratio >= 2.5
+
+        return {
+            "volume": int(cur_vol),
+            "avg_volume_20d": int(avg_20) if avg_20 else None,
+            "avg_volume_50d": int(avg_50) if avg_50 else None,
+            "volume_ratio": vol_ratio,
+            "volume_trend": vol_trend,
+            "volume_climax": vol_climax,
+        }
+    except Exception:
+        return {}
+
+
+# ══════════════════════════════════════════════════════════
 # 快照获取
 # ══════════════════════════════════════════════════════════
 
@@ -294,6 +350,9 @@ def get_stock_snapshot(ticker: str) -> dict:
         else:
             indicators["kdj"] = {}
 
+        # 成交量
+        volume_info = _calc_volume_indicators(hist)
+
         return {
             "ticker": ticker,
             "price": round(current_price, 2) if current_price is not None else None,
@@ -309,6 +368,7 @@ def get_stock_snapshot(ticker: str) -> dict:
             "above_ma60": above_ma60,
             "ma50_pct": round(ma50_pct, 2) if ma50_pct else None,
             "indicators": indicators,
+            "volume_info": volume_info,
             "error": False,
         }
     except Exception:

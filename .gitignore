@@ -4,4 +4,19 @@ __pycache__/
 .venv/
 *.log
 .DS_Store
-.claude/
+
+# 个人数据（真实持仓/历史/预测，迁移到 PERSONAL_DATA_DIR）
+portfolio.json
+history/
+predictions/
+reviews/
+portfolio_history/
+position_snapshots/
+
+# 环境变量（真实路径不入库，只提交 .env.example）
+.env
+.env.local
+
+# .claude 下除了 skills 之外都忽略
+.claude/*
+!.claude/skills/

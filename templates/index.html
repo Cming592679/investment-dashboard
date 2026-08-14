@@ -172,6 +172,19 @@ function rsiClass(rsi, t) {
   return 'rsi-neutral';
 }
 
+function volLabel(vi) {
+  if (!vi || !vi.volume_ratio) return '';
+  const r = vi.volume_ratio;
+  const trend = vi.volume_trend || '';
+  let cls = 'vol-neutral', icon = '';
+  if (r >= 2.5) { cls = 'vol-climax'; icon = '⚡天量'; }
+  else if (r >= 1.5) { cls = 'vol-heavy'; icon = '🔥放量'; }
+  else if (r <= 0.5) { cls = 'vol-light'; icon = '🧊地量'; }
+  else if (r <= 0.6) { cls = 'vol-light'; icon = '💧缩量'; }
+  else return '';
+  return `<span class="badge ${cls}" title="量比${r.toFixed(1)}x ${trend}">${icon}</span>`;
+}
+
 // ── 指标摘要图标 ──────────────────────────
 function indicatorBadges(ind) {
   if (!ind) return '';
@@ -342,12 +355,14 @@ function renderStocks(stocks, t) {
     const rlbl = rsiLabel(v.rsi, t);
     const ma = v.above_ma50 ? '<span class="ma-up">↑MA50</span>' : (v.above_ma50===false ? '<span class="ma-down">↓MA50</span>' : '');
     const badges = indicatorBadges(v.indicators);
+    const vlbl = volLabel(v.volume_info);
     return `<div class="stock-row">
       <span class="name">${k}<small>${v.name||''}</small></span>
       <span class="price">${fmt(v.price)}</span>
       <span class="chg ${cls}">${fmtPct(v.day_change_pct)}</span>
       ${v.rsi!=null ? `<span class="rsi ${rsic}">RSI ${fmt(v.rsi,1)} ${rlbl}</span>` : ''}
       ${ma}
+      ${vlbl ? `<span class="vol-badge">${vlbl}</span>` : ''}
       ${badges ? `<span class="ind-badges">${badges}</span>` : ''}
     </div>`;
   }).join('');
@@ -538,17 +553,21 @@ function setExitBanner(mode) {
 function renderExitBanner(a) {
   if (!a) return;
   const banner = $('#exit-banner');
-  const s = a.score;
-  let lvl = s>=6?'exit-safe':s>=3?'exit-watch':'exit-run';
+  // 用结论字符串判定（决策树模式下 score 恒为 0，不可用）
+  const c = a.conclusion || '';
+  const isGreen = c.includes('安心') || c.includes('持有') || c.includes('加仓');
+  const isRed = c.includes('跑路') || c.includes('减仓') || c.includes('高位');
+  let lvl = isGreen ? 'exit-safe' : isRed ? 'exit-run' : 'exit-watch';
   banner.className = 'exit-banner '+lvl;
   banner.querySelector('.exit-emoji').textContent = a.emoji;
   banner.querySelector('.exit-action').textContent = a.conclusion;
   banner.querySelector('.exit-desc').textContent = a.desc;
-  banner.querySelector('.exit-score-num').textContent = s+'/'+(a.max_score||10);
+  // 分数已弃用，显示决策树判定
+  banner.querySelector('.exit-score-num').textContent = a.emoji || '--';
 
-  // 标签：根据分数段
-  const tagLabel = s>=6?'✅ 安心持有':s>=3?'⏸ 忍着不动':'⚠ 考虑跑路';
-  const tagCls = s>=6?'tag-green':s>=3?'tag-yellow':'tag-red';
+  // 标签：用结论字符串判定
+  const tagLabel = isGreen ? '✅ 安心持有' : isRed ? '⚠ 考虑跑路' : '⏸ 忍着不动';
+  const tagCls = isGreen ? 'tag-green' : isRed ? 'tag-red' : 'tag-yellow';
   $('#exit-tags').innerHTML = `<span class="exit-tag ${tagCls}">${tagLabel}</span>`;
 }
 
@@ -571,9 +590,10 @@ function renderExitDetail(a) {
       </div>
     </div>`;
   }).join('');
-  // 总分说明
+  // 决策树判定结论（不再使用线性评分）
+  const conclusion = a.conclusion || '';
   container.innerHTML += `<div style="margin-top:6px;font-size:10px;color:var(--text-dim)">
-    综合评分 ${score}/10 = 领先指标(0-5) + 周期(0-2) + 技术面(0-3)
+    🎯 决策树判定: ${a.emoji||''} ${conclusion} — ${a.desc||''}
   </div>`;
 }
 
@@ -631,7 +651,7 @@ function renderHistory(history) {
     const funds_html = Object.entries(h.funds || {}).map(([fid, f]) => {
       // 用结论判断颜色（与标签圆点逻辑一致）
       const c = f.conclusion || '';
-      const icon = c.includes('安心') ? '🟢' : c.includes('忍着') ? '🟡' : c.includes('跑路') ? '🔴' : (f.score >= 6 ? '🟢' : f.score >= 3 ? '🟡' : '🔴');
+      const icon = c.includes('安心')||c.includes('持有')||c.includes('加仓') ? '🟢' : c.includes('忍着')||c.includes('观望')||c.includes('警惕') ? '🟡' : c.includes('跑路')||c.includes('减仓') ? '🔴' : (f.score >= 6 ? '🟢' : f.score >= 3 ? '🟡' : '🔴');
       const name = (FUND_SHORTS || {})[fid] || fid;
       const ret = f.return_pct != null ? (f.return_pct > 0 ? '+' : '') + f.return_pct.toFixed(1) + '%' : '--';
       const retCls = f.return_pct > 0 ? 'up' : f.return_pct < 0 ? 'down' : 'flat';

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serenity Bottleneck Hunter"
+  short_description: "Map themes to overlooked upstream bottleneck stocks"
+  default_prompt: "Use $serenity-bottleneck-hunter to analyze an investment theme and identify overlooked upstream bottleneck stocks."

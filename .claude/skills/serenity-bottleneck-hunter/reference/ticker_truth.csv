@@ -1,0 +1,338 @@
+ticker,name_en,name_zh,exchange,sector,last_verified,source
+000099.SHE,Citic Offshore Helicopter Co Ltd,中信海直,SHE,Common Stock,2026-06-09,EODHD search
+000333.SHE,Midea Group Co Ltd,美的集团,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+000625.SHE,Chongqing Changan Automobile Co Ltd,长安汽车,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+000636.SHE,Guangdong Fenghua Advanced Technology Holding Co Ltd,风华高科Fenghua,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+000660.KO,SK Hynix Inc,SK Hynix,KO,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+000733.SHE,China Zhenhua Group Science & Technology Co Ltd,振华科技,SHE,Common Stock,2026-06-09,EODHD search
+000837.SHE,Qinchuan Machine Tool & Tool Group Share Co Ltd,秦川机床,SHE,Common Stock,2026-06-05,EODHD search
+000977.SHE,Inspur Electronic Info Industr,浪潮信息,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+000988.SHE,Huagong Tech Co Ltd,华工科技,SHE,Common Stock,2026-06-09,EODHD search
+0020.HK,NetX Holdings Bhd,商汤,KLSE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002023.SHE,Sichuan Haite High-tech Co Ltd,海特高新,SHE,Common Stock,2026-06-09,EODHD search
+002050.SHE,Zhejiang Sanhua Co Ltd,三花智控,SHE,Common Stock,2026-06-05,EODHD search
+002074.SHE,Gotion High tech Co Ltd,国轩高科,SHE,Common Stock,2026-06-09,EODHD search
+002085.SHE,Zhejiang Wanfeng Auto Wheel Co Ltd,万丰奥威,SHE,Common Stock,2026-06-09,EODHD search
+002126.SHE,Zhejiang Yinlun Machinery Co Ltd,银轮股份,SHE,Common Stock,2026-06-05,EODHD search
+002151.SHE,Beijing BDStar Navigation Co Ltd,北斗星通,SHE,Common Stock,2026-06-09,EODHD search
+002156.SHE,TongFu Microelectronics Co Ltd,通富微电,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002176.SHE,Jiangxi Special Electric Motor Co Ltd,江特电机,SHE,Common Stock,2026-06-05,EODHD search
+002179.SHE,AVIC Jonhon Optronic Technology Co Ltd,中航光电,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002212.SHE,Topsec Technologies Group Inc,天融信,SHE,Common Stock,2026-06-10,EODHD search
+002230.SHE,Iflytek Co Ltd,科大讯飞,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002236.SHE,Zhejiang Dahua Technology Co Ltd,大华股份,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002253.SHE,Wisesoft Co Ltd,川大智胜,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002268.SHE,Westone Information Industry Inc,电科网安,SHE,Common Stock,2026-06-10,EODHD search
+002315.SHE,Focus Technology Co Ltd,焦点科技,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002338.SHE,Changchun UP Optotech Co Ltd,奥普光电,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002371.SHE,NAURA Technology Group Co Ltd,北方华创,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002384.SHE,Suzhou Dongshan Precision Manufacturing Co Ltd,东山精密,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002389.SHE,Aerospace CH UAV Co Ltd,航天彩虹,SHE,Common Stock,2026-06-09,EODHD search
+002410.SHE,Glodon Software Co Ltd,广联达,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002414.SHE,Wuhan Guide Infrared Co Ltd,高德红外,SHE,Common Stock,2026-06-09,EODHD search
+002415.SHE,Hangzhou Hikvision Digital Technology Co Ltd,海康威视,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002439.SHE,Beijing Venustech Inc,启明星辰,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002463.SHE,"Wus Printed Circuit (Kunshan) Co., Ltd.",沪电股份 Wus,SHE,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+002472.SHE,Zhejiang Shuanghuan Driveline Co Ltd,双环传动,SHE,Common Stock,2026-06-05,EODHD search
+002475.SHE,Luxshare Precision Industry Co Ltd,立讯精密,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002527.SHE,Shanghai STEP Electric Corp,新时达,SHE,Common Stock,2026-06-05,EODHD search
+002664.SHE,Xinzhi Motor Co Ltd,信质电机,SHE,Common Stock,2026-06-05,manual review 2026-06-05 (Dogfood #13 L2 audit)
+002690.SHE,Hefei Meiya Optoelectronic Technology Inc,美亚光电,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002747.SHE,Nanjing ESTUN Automation Co Ltd,埃斯顿,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002859.SHE,Zhejiang Jiemei Electronic and Technology Co Ltd,洁美科技Jmei,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+002896.SHE,Ningbo ZhongDa Leader Intelligent Transmission Co Ltd,中大力德,SHE,Common Stock,2026-06-05,EODHD search
+002916.SHE,"Shennan Circuits Co., Ltd.",深南电路 SCC,SHE,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+002938.SHE,"Avary Holding(Shenzhen)Co., Limited",鹏鼎控股 ZhenDing,SHE,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+002979.SHE,China Leadshine Technology Co Ltd,雷赛智能,SHE,Common Stock,2026-06-05,EODHD search
+005930.KO,Samsung Electronics Co Ltd,Samsung Electronics,KO,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+009150.KO,Samsung Electro-Mechanics Co Ltd,三星电机SamsungEM,KO,Common Stock,2026-06-17,yfinance longName verify 2026-06-17
+0175.HK,Heng Huat Resources Group Bhd,吉利汽车,KLSE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+0268.HK,L&P Global Berhad,金蝶国际,KLSE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+0522.HK,iMBC Co.Ltd,ASMPT,KQ,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+0700.HK,RENEGADE GOLD INC.,腾讯,F,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+1357.HK,Meitu Inc,美图公司,HK,Common Stock,2026-06-05,manual 2026-06-05
+2013.HK,China Steel Structure Co Ltd,微盟集团,TW,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+2015.HK,Feng Hsin Steel Co Ltd,理想汽车,TW,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+2327.TW,Yageo Corporation,国巨Yageo,TW,Common Stock,2026-06-17,yfinance longName verify 2026-06-17
+2356.TW,Inventec Corp,Inventec,TW,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+2382.HK,Quanta Computer Inc,舜宇光学,TW,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+2382.TW,Quanta Computer Inc,Quanta,TW,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+2492.TW,Walsin Technology Corp,华新科Walsin,TW,Common Stock,2026-06-17,yfinance longName verify 2026-06-17
+300033.SHE,Hithink RoyalFlush Info Network,同花顺,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300034.SHE,Beijing Cisri Gaona Materials Tech,钢研高纳,SHE,Common Stock,2026-06-09,EODHD search
+300097.SHE,Dalian Zhiyun Automation Co Ltd,智云股份,SHE,Common Stock,2026-06-05,EODHD search
+300100.SHE,Ningbo Shuanglin Auto Parts,双林股份,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300124.SHE,Shenzhen Inovance Tech,汇川技术,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300188.SHE,Xiamen Meiya Pico Information,美亚柏科,SHE,Common Stock,2026-06-10,EODHD search
+300229.SHE,Beijing TRS Information Tech,拓尔思,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300285.SHE,Shandong Sinocera Func Material,国瓷材料Sinocera,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300308.SHE,Shandong Zhongji Electrical Equipment Co Ltd,中际旭创,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300352.SHE,Beijing VRV Software Corp Ltd,北信源,SHE,Common Stock,2026-06-10,EODHD search
+300369.SHE,Nsfocus Information Technology Co Ltd,绿盟科技,SHE,Common Stock,2026-06-10,EODHD search
+300408.SHE,Chaozhou Three-Circle Group Co Ltd,三环集团CCTC,SHE,Common Stock,2026-06-17,yfinance longName verify 2026-06-17
+300454.SHE,Sangfor Technologies Inc Class A,深信服,SHE,Common Stock,2026-06-10,EODHD search
+300476.SHE,"Victory Giant Technology (HuiZhou) Co.,Ltd",胜宏科技 VictoryG,SHE,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+300580.SHE,Wuxi Best Precision Machinery Co Ltd,贝斯特,SHE,Common Stock,2026-06-05,EODHD search
+300607.SHE,Guangdong Topstar Technology Co Ltd,拓斯达,SHE,Common Stock,2026-06-05,EODHD search
+300659.SHE,Zhongfu Information Inc,中孚信息,SHE,Common Stock,2026-06-10,EODHD search
+300699.SHE,Weihai Guangwei Composites Co Ltd,光威复材,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300718.SHE,Zhejiang Changsheng Sliding Bearings Co Ltd Class A,长盛轴承,SHE,Common Stock,2026-06-05,EODHD search
+300750.SHE,Contemporary Amperex Technology Co Ltd Class A,宁德时代,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300768.SHE,Hangzhou DPtech Technologies Co Ltd,迪普科技,SHE,Common Stock,2026-06-10,EODHD search
+300777.SHE,Sinofibers Technology Co Ltd,中简科技,SHE,Common Stock,2026-06-09,EODHD search
+300806.SHE,Jiangsu Sidike New Materials Sci Te,斯迪克Sidike,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+300866.SHE,Anker Innovations Technology Co Ltd,安克创新,SHE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+301091.SHE,Shenzhen Urban Transport Planning Center Co. Ltd.,深城交,SHE,Common Stock,2026-06-09,EODHD search
+3324.TW,Auras Technology Co Ltd,双鸿科技,TWO,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+3483.TWO,Forcecon Technology Co Ltd,力致科技,TWO,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+3690.HK,Meituan,美团,HK,Common Stock,2026-06-05,manual 2026-06-05
+4078.T,Sakai Chemical Industry Co Ltd,堺化学Sakai,TSE,Common Stock,2026-06-05,fix 2026-06-17 yfinance longName
+4092.T,Nippon Chemical Industrial Co Ltd,日本化学产业,TSE,Common Stock,2026-06-05,manual 2026-06-05
+5392.TWO,AVY Precision Technology,Auras Technology,TWO,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+5727.T,Toho Titanium Co Ltd,东邦钛业,TSE,Common Stock,2026-06-05,manual 2026-06-05
+600038.SHG,Avicopter PLC,中直股份,SHG,Common Stock,2026-06-09,EODHD search
+600183.SHG,"Shengyi Technology Co.,Ltd.",生益科技 Shengyi,SHG,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+600399.SHG,Fushun Special Steel Co Ltd,抚顺特钢,SHG,Common Stock,2026-06-09,EODHD search
+600584.SHG,JCET Group Co Ltd,长电科技,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+600588.SHG,Yonyou Network Technology Co Ltd,用友网络,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+600760.SHG,Avic Shenyang Aircraft Co Ltd,中航沈飞,SHG,Common Stock,2026-06-09,EODHD search
+600862.SHG,Avic Aviation High Technology Co Ltd,中航高科,SHG,Common Stock,2026-06-05,EODHD search
+600893.SHG,AECC Aviation Power Co Ltd,航发动力,SHG,Common Stock,2026-06-09,EODHD search
+601100.SHG,Jiangsu Hengli Hydraulic Co Ltd,恒立液压,SHG,Common Stock,2026-06-05,EODHD search
+601360.SHG,360 Security Technology Inc,三六零,SHG,Common Stock,2026-06-10,EODHD search
+601689.SHG,Ningbo Tuopu Group Co Ltd,拓普集团,SHG,Common Stock,2026-06-05,EODHD search
+603009.SHG,Shanghai Beite Technology Co,北特科技,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+603019.SHG,Dawning Information Industry Co Ltd,中科曙光,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+603039.SHG,Shanghai Weaver Network Co Ltd,泛微网络,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+603186.SHG,"Zhejiang Wazam New Materials Co.,LTD.",华正新材 Huazheng,SHG,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+603228.SHG,"Shenzhen Kinwong Electronic Co., Ltd.",景旺电子 Kinwong,SHG,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+603232.SHG,Shanghai Koal Software Co Ltd,格尔软件,SHG,Common Stock,2026-06-10,EODHD search
+603256.SHG,"Grace Fabric Technology Co.,Ltd.",宏和科技 Honghe,SHG,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+603296.SHG,HUAQIN TECHNOLOGY LTD A,华勤技术,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+603297.SHG,Ningbo Yongxin Optics Co Ltd,永新光学,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+603305.SHG,Ningbo Xusheng Auto Technology Co Ltd,旭升集团,SHG,Common Stock,2026-06-05,EODHD search
+603308.SHG,Anhui Yingliu,应流股份,SHG,Common Stock,2026-06-09,EODHD search
+603501.SHG,Will Semiconductor Co Ltd,韦尔股份,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+603662.SHG,Keli Sensing Technology Ningbo Co Ltd,柯力传感,SHG,Common Stock,2026-06-05,EODHD search
+603667.SHG,Zhejiang XCC Group Co Ltd,五洲新春,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+603728.SHG,Shanghai Moons' Elec Co Ltd,鸣志电器,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+603766.SHG,Loncin Motor Co Ltd,隆鑫通用,SHG,Common Stock,2026-06-09,EODHD search
+603767.SHG,Zhejiang Zomax Transmission,中马传动,SHG,Common Stock,2026-06-05,EODHD search
+605376.SHG,Jiangsu Boqian New Materials Stock Co Ltd,博迁新材Boqian,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+605589.SHG,"Jinan Shengquan Group Share Holding Co., Ltd.",圣泉集团 Shengquan,SHG,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+6268.T,Nabtesco Corp,Nabtesco RV减速器,TSE,Common Stock,2026-06-05,manual 2026-06-05
+6324.T,Harmonic Drive Systems Inc,Harmonic Drive 谐波减速器全球#1,TSE,Common Stock,2026-06-05,manual 2026-06-05
+6506.T,Shuang-Bang Industrial,Yaskawa,TWO,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+6762.T,TDK Corporation,TDK,TSE,Common Stock,2026-06-17,yfinance longName verify 2026-06-17
+6861.T,Innocare Optoelectronics Corp.,Keyence,TW,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688012.SHG,Advanced Micro Fabrication Inc,中微,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688017.SHG,Leader Harmonious Drive Systems Co Ltd,绿的谐波,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688023.SHG,DBAPPSecurity Co Ltd,安恒信息,SHG,Common Stock,2026-06-10,EODHD search
+688030.SHG,Hillstone Networks Co Ltd,山石网科,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688041.SHG,Hygon Information Technology Co. Ltd. A,海光信息,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688070.SHG,Chengdu JOUAV Automation Tech Co. Ltd. A,纵横股份,SHG,Common Stock,2026-06-09,EODHD search
+688072.SHG,Piotech Inc. A,拓荆,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688082.SHG,ACM Research Shanghai Inc,盛美上海,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688088.SHG,ArcSoft Corp Ltd,虹软科技,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688111.SHG,Beijing Kingsoft Office Software In,金山办公,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688120.SHG,Hwatsing Technology Co. Ltd. A,华海清科,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688158.SHG,UCloud Technology Co Ltd,优刻得,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688160.SHG,Kinco Automation (Shanghai) Co. Ltd. A,步科股份,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688168.SHG,Beijing Abt Networks Co Ltd,安博通,SHG,Common Stock,2026-06-10,EODHD search
+688183.SHG,"Shengyi Electronics Co., Ltd.",生益电子 ShengyiE,SHG,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+688201.SHG,Beijing Infosec Technologies Co. Ltd. A,信安世纪,SHG,Common Stock,2026-06-10,EODHD search
+688256.SHG,Cambricon Technologies Corp Ltd,寒武纪,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688297.SHG,AVIC (Chengdu) UAS Co. Ltd. A,中无人机,SHG,Common Stock,2026-06-09,EODHD search
+688320.SHG,Zhejiang He Chuan Technology Corp. Ltd. A,禾川科技,SHG,Common Stock,2026-06-05,EODHD search
+688333.SHG,Xi an Bright Laser Tech Co Ltd,铂力特,SHG,Common Stock,2026-06-09,EODHD search
+688369.SHG,Beijing Seeyon Internet Software Cp,致远互联,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688519.SHG,"Nanya New Material Technology Co.,Ltd",南亚新材 NanyaNM,SHG,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+688561.SHG,Qi An Xin Technology Group Inc,奇安信,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+688787.SHG,Beijing Haitian Ruisheng Science Technology Ltd,海天瑞声,SHG,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+6954.T,Fanuc Corp,Fanuc 工业机器人,TSE,Common Stock,2026-06-05,manual 2026-06-05
+6976.T,Taiyo Yuden Co Ltd,太阳诱电TaiyoYuden,TSE,Common Stock,2026-06-17,yfinance longName verify 2026-06-17
+6981.T,Murata Manufacturing Co Ltd,村田 MLCC #1,TSE,Common Stock,2026-06-05,manual 2026-06-05
+7966.T,Lintec Corp,Lintec 半导体材料,TSE,Common Stock,2026-06-05,manual 2026-06-05
+9618.HK,JD.com Inc,京东,HK,Common Stock,2026-06-05,manual 2026-06-05
+9866.HK,NIO Inc,蔚来汽车,HK,Common Stock,2026-06-05,manual 2026-06-05
+9868.HK,XPeng Inc,小鹏汽车,HK,Common Stock,2026-06-05,manual 2026-06-05
+9888.HK,Baidu Inc,百度,HK,Common Stock,2026-06-05,manual 2026-06-05
+9988.HK,Alibaba Group Holding Ltd,阿里巴巴,HK,Common Stock,2026-06-05,manual 2026-06-05
+ABBNY.US,ABB Ltd,ABB,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ACHR.US,Archer Aviation Inc,Archer,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ADI.US,Analog Devices Inc,ADI,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AEHR.US,Aehr Test Systems,AEHR Test,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AEVA.US,"Aeva Technologies, Inc. Common Stock",Aeva,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AGCO.US,AGCO Corporation,AGCO,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AI.US,Air Liquide SA,C3.ai,PA,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AKAM.US,Akamai Technologies Inc,Akamai,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AMAT.US,Applied Materials Inc,Applied Materials,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AMBA.US,Ambarella Inc,Ambarella,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AMD.US,Advanced Micro Devices Inc,AMD,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AMKR.US,Amkor Technology Inc,Amkor,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AMPX.US,Amprius Technologies Inc.,Amprius,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AMZN.US,Amazon.com Inc,Amazon,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+APP.US,Applovin Corp,AppLovin,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+APPN.US,Appian Corp,Appian,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ARM.US,Arm Holdings plc American Depositary Shares,ARM Holdings,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ASEKY.US,Aisin Seiki Co Ltd,爱信精机,US,Common Stock,2026-06-05,"manual fix 2026-06-05 (原误标 ASE 日月光,真日月光 ADR=ASX.US)"
+ASTS.US,AST SpaceMobile,AST太空移动,NASDAQ,Aerospace & Defense,2026-06-12,eodhd+web
+ASX.US,ASE Industrial Holding Co Ltd ADR,日月光 ASE 封测,US,Common Stock,2026-06-05,manual add 2026-06-05 (ASEKY 错位修复)
+ATI.US,ATI Inc,ATI特种材料,NYSE,Specialty Metals,2026-06-12,eodhd+web
+AUR.US,Aurora Innovation Inc,Aurora,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AUTO.OL,Auto Trader Group plc,AutoStore,LSE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AVAV.US,AeroVironment Inc,AeroVironment,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AVGO.US,Broadcom CDR (CAD Hedged),Broadcom,TO,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+AXTI.US,AXT Inc,AXT Inc,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+BB.US,BlackBerry Ltd,BlackBerry,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+BIDU.US,Baidu Inc,百度,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+BILL.US,Bill Com Holdings Inc,BILL Holdings,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+BRZE.US,Braze Inc,Braze,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CAMT.US,Camtek Ltd.,Camtek,US,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+CAT.US,Caterpillar Inc,Caterpillar,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CDNS.US,Cadence Design Systems Inc,Cadence,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CEVA.US,CEVA Inc,CEVA,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CFLT.US,Confluent Inc,Confluent Kafka,US,Common Stock,2026-06-05,manual 2026-06-05
+CGNX.US,Cognex Corporation,Cognex,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CHKP.US,Check Point Software Technologies Ltd,Check,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CLS.US,Celestica Inc.,Celestica,US,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+CRM.US,Salesforce.com Inc,Salesforce,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CRNC.US,Cerence Inc,Cerence,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CRS.US,Carpenter Technology,卡彭特技术,NYSE,Specialty Metals,2026-06-12,eodhd+web
+CRWD.US,Crowdstrike Holdings Inc,CrowdStrike,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CTS.US,VietinBank Securities JSC,CTS Corp,VN,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+CVLT.US,CommVault Systems Inc,Commvault,US,Common Stock,2026-06-10,EODHD search
+DBX.US,Dropbox Inc,Dropbox,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+DD.US,"DuPont de Nemours, Inc.",DuPont,US,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+DDOG.US,Datadog Inc,Datadog,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+DE.US,Deere & Company,Deere,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+DOCN.US,DigitalOcean Holdings Inc,DigitalOcean,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+DOCU.US,DocuSign Inc,DocuSign,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+DT.US,Dynatrace Holdings LLC,Dynatrace,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+EH.US,EHang Holdings Ltd ADR,亿航智能 EHang,US,Common Stock,2026-06-05,manual add 2026-06-05 (EHGO 错位修复)
+EHGO.US,Eshallgo Inc. Class A Ordinary Shares,Eshallgo 办公设备(非亿航),US,Common Stock,2026-06-05,"manual fix 2026-06-05 (原误标亿航,真亿航 ADR=EH.US)"
+ESTC.US,Elastic NV,Elastic,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ETN.US,Eaton Corporation PLC,Eaton,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+FEIM.US,Frequency Electronics,频率电子,NASDAQ,Aerospace & Defense,2026-06-12,eodhd+web
+FFIV.US,F5 Networks Inc,F5,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+FICO.US,Fair Isaac Corporation,FICO,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+FIVN.US,Five9 Inc,Five9,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+FROG.US,Jfrog Ltd,JFrog,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+FRSH.US,Freshworks Inc,Freshworks,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+FSLY.US,"Fastly, Inc. Class A Common Stock",Fastly,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+FTNT.US,Fortinet Inc,Fortinet,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+GEN.US,Gen Digital Inc,Gen Digital 消费安全,LSE,Common Stock,2026-06-05,manual fix 2026-06-05 (init batch 错配 Genuit Group plc 英国塑料公司)
+GOOGL.US,Alphabet Inc Class A,Google,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+GTLB.US,Gitlab Inc,GitLab,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+HEI.US,HEICO Corp,海科航空,NYSE,Aerospace & Defense,2026-06-12,eodhd+web
+HSAI.US,Hesai Group Sponsored ADR,Hesai,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+HUBS.US,HubSpot Inc,HubSpot,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+HWM.US,Howmet Aerospace,豪迈航空航天,NYSE,Aerospace & Defense,2026-06-12,eodhd+web
+HXGBY.US,Hexagon AB ADR,Hexagon,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+HXL.US,Hexcel Corp,赫氏复材,NYSE,Aerospace Materials,2026-06-12,eodhd+web
+IFX.DE,Infineon Technologies AG,Infineon,XETRA,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+INDI.US,indie Semiconductor Inc,Indie,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+INTC.US,Intel Corporation,Intel,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+INVZ.US,Innoviz Technologies,Innoviz,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+IOT.US,Samsara Inc,Samsara,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+IPWR.US,Ideal Power Inc,Ideal Power,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+IPX.US,IperionX Ltd,IperionX钛材,NASDAQ,Specialty Metals,2026-06-12,eodhd+web
+IQE.LSE,IQE PLC,IQE plc,LSE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ISRG.US,Intuitive Surgical Inc,Intuitive,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+JOBY.US,Joby Aviation,Joby,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+KN.US,Knowles Cor,Knowles,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+KRMN.US,Karman Holdings,卡曼太空与防务,NYSE,Aerospace & Defense,2026-06-12,eodhd+web
+KTOS.US,Kratos Defense & Security Solutions,Kratos,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+KYOCY.US,Kyocera Corporation ADR,京瓷Kyocera ADR,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+LAZR.US,Luminar Technologies Inc,Luminar(已实质清盘),US,Common Stock,2026-06-05,manual 2026-06-05
+LITE.US,Lumentum Holdings Inc,Lumentum,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+LPL.US,Lalpir Power Ltd,LG Display,KAR,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+LUNR.US,Intuitive Machines,直觉机器,NASDAQ,Aerospace & Defense,2026-06-12,eodhd+web
+MBLY.US,Mobileye Global Inc. Class A Common Stock,Mobileye,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+MDB.US,MongoDB,MongoDB,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+META.US,Meta Platforms Inc.,Meta,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+MNDY.US,Monday.Com Ltd,monday.com,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+MOG-A.US,Moog Inc Class A,穆格,NYSE,Aerospace & Defense,2026-06-12,eodhd+web
+MPWR.US,Monolithic Power Systems Inc,MPWR,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+MRAAY.US,Murata Manufacturing Inc,村田Murata ADR,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+MRCY.US,Mercury Systems Inc,Mercury Systems,US,Common Stock,2026-06-16,EODHD search
+MSFT.US,Microsoft Corporation,Microsoft,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+MTRN.US,Materion Corp,Materion,TA,Common Stock,2026-06-05,manual fix 2026-06-16 (init 误配 Maytronics 泳池机器人)
+MTSI.US,MACOM Technology Solutions,MACOM技术,NASDAQ,Semiconductors,2026-06-12,eodhd+web
+MU.US,Micron Technology Inc,Micron,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+MXL.US,MaxLinear Inc,MaxLinear,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NBIS.US,Nebius Group N.V.,Nebius,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NET.US,Cloudflare Inc,Cloudflare,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NICE.US,Nice Ltd,NICE Ltd,TA,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NOVT.US,Novanta Inc,Novanta,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NOW.US,ServiceNow Inc,ServiceNow,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NTAP.US,NetApp Inc,NetApp,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NTNX.US,Nutanix Inc,Nutanix,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NTSK.US,"Netskope, Inc. Class A Common Stock",Netskope,US,Common Stock,2026-06-10,EODHD search
+NVDA.US,NVIDIA Corporation,NVIDIA,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NVTS.US,Navitas Semiconductor Corp,Navitas,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+NXPI.US,NXP Semiconductors NV,NXP,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+OKTA.US,Okta Inc,Okta,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ON.US,ON Semiconductor Corporation,onsemi,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ONTO.US,Onto Innovation Inc,Onto Innovation,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+OUST.US,"Ouster, Inc. Common Stock",Ouster,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+PANW.US,Palo Alto Networks Inc,Palo,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+PATH.US,Uipath Inc,UiPath,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+PAYC.US,"Paycom Software, Inc.",Paycom,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+PD.US,Pagerduty Inc,PagerDuty,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+PKE.US,Park Aerospace Corp.,Park Aerospace,US,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+PL.US,Planet Labs,行星实验室,NYSE,Aerospace & Defense,2026-06-12,eodhd+web
+PLTR.US,Palantir Technologies Inc.,Palantir,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+POWI.US,Power Integrations Inc,Power Integrations,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+QCOM.US,Qualcomm Incorporated,Qualcomm,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+QLYS.US,Qualys Inc,Qualys,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+QRVO.US,Qorvo Inc,Qorvo,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+RBRK.US,"Rubrik, Inc.",Rubrik,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+RDW.US,Redwire Corp,Redwire,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+RDWR.US,Radware Ltd,Radware,US,Common Stock,2026-06-10,EODHD search
+RKLB.US,Rocket Lab USA Inc.,Rocket Lab,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ROG.US,Rogers Corporation,Rogers,US,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+ROK.US,Rockwell Automation Inc,Rockwell,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ROP.US,Roper Technologies Inc,Roper,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+RPD.US,Rapid7 Inc,Rapid7,US,Common Stock,2026-06-10,EODHD search
+RSW.LSE,Renishaw PLC,Renishaw,LSE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+S.US,SentinelOne Inc,SentinelOne,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SAIL.US,"SailPoint, Inc. Common Stock",SailPoint,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SIMO.US,Silicon Motion Technology,Silicon Motion,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SIVE.ST,Sivers IMA Holding AB,Sivers Semiconductors,ST,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SKYT.US,SkyWater Technology,SkyWater晶圆代工,NASDAQ,Semiconductors,2026-06-12,eodhd+web
+SNOW.US,Snowflake Inc.,Snowflake,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SNPS.US,Synopsys Inc,Synopsys,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SOI.PA,Soitec SA,Soitec,LSE,Common Stock,2026-06-05,manual fix 2026-06-16 (init 误配 Schroder Oriental)
+SOUN.US,SoundHound AI Inc,SoundHound,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SPCX.US,SpaceX Corp,太空探索技术公司SpaceX,NASDAQ,Aerospace & Defense,2026-06-13,web(2026-06-12 IPO)
+STM.US,STMicroelectronics NV ADR,STMicroelectronics,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SWKS.US,Skyworks Solutions Inc,Skyworks,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SYK.US,Stryker Corporation,Stryker,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SYM.US,Symbotic Inc,Symbotic,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+SYNA.US,Synaptics Incorporated,Synaptics,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TDY.US,Teledyne Technologies,特励达,NYSE,Aerospace & Defense,2026-06-12,eodhd+web
+TEAM.US,Atlassian Corp Plc,Atlassian,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TENB.US,Tenable Holdings Inc,Tenable,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TER.US,Teradyne Inc,Teradyne,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TRMB.US,Trimble Inc,Trimble,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TSEM.US,Tower Semiconductor Ltd,Tower Semi,TA,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TSLA.US,Tesla Inc,Tesla,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TSM.US,Taiwan Semiconductor Manufacturing,台积电 TSMC,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TTDKY.US,TDK Corp ADR,TDK,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+TTMI.US,"TTM Technologies, Inc.",TTM Technologies,US,Common Stock,2026-06-21,yfinance longName verify 2026-06-21
+TWLO.US,Twilio Inc,Twilio,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+VICR.US,Vicor Corporation,Vicor,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+VNP.TO,5N Plus Inc.,5N Plus,TO,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+VOYG.US,Voyager Technologies,旅行者技术,NYSE,Aerospace & Defense,2026-06-12,eodhd+web
+VRNS.US,Varonis Systems,Varonis,US,Common Stock,2026-06-10,EODHD search
+VRT.US,Vertiv Holdings Co,Vertiv,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+VSH.US,Vinh Son Song Hinh Hydropower JSC,Vishay,VN,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+WDAY.US,Workday Inc,Workday,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+WOLF.US,Wolfspeed Inc,Wolfspeed SiC,V,Common Stock,2026-06-05,manual fix 2026-06-05 (init 错配 Grey Wolf Animal Health; 注意 Wolfspeed 2025 Ch11 重组 NEEDS-VERIFY)
+XFAB.PA,X Fab Silicon Foundries EV,X-FAB,PA,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+XPEV.US,Xpeng Inc,小鹏汽车,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ZETA.US,Zeta Global Holdings Corp,Zeta,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ZI.US,ZIGUP plc,ZoomInfo,LSE,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ZM.US,Zoom Video Communications Inc,Zoom,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
+ZS.US,Zscaler Inc,Zscaler,US,Common Stock,2026-06-05,EODHD init batch 2026-06-05
