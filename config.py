@@ -1336,6 +1336,30 @@ HOLDING_WEIGHTS = {
 # 个人数据目录（与代码分离，不进入 git）
 # ══════════════════════════════════════════════════════════
 
-# 个人数据（portfolio.json / history / predictions / reviews 等）
-# 默认在项目目录，可通过环境变量 PERSONAL_DATA_DIR 指向外部目录。
-DATA_DIR = os.environ.get("PERSONAL_DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+def _load_env_local():
+    """加载项目根目录的 .env.local（不进 git，用户本地配置）。
+    只在环境变量未设置时生效，避免覆盖已 export 的值。"""
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env.local")
+    if not os.path.exists(env_path):
+        return
+    with open(env_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_env_local()
+
+# 个人数据根目录（portfolio.json / history / predictions / reviews 等）。
+# 未配置时直接报错，不静默回退到项目目录，防止数据与代码混在一起。
+DATA_DIR = os.environ.get("PERSONAL_DATA_DIR")
+if not DATA_DIR or not DATA_DIR.strip():
+    raise RuntimeError(
+        "PERSONAL_DATA_DIR is not configured. "
+        "请在项目根目录创建 .env.local 并设置，例如：\n"
+        "  PERSONAL_DATA_DIR=/home/cc/Acai-Knowledge/workspace/personal-investment-data"
+    )
+DATA_DIR = DATA_DIR.strip()
