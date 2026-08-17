@@ -15,6 +15,7 @@ import time as _time
 import urllib.request
 from datetime import date, datetime, timedelta
 from typing import Optional
+from storage import write_json
 
 
 # ══════════════════════════════════════════════════════════
@@ -356,8 +357,7 @@ def backfill_portfolio_history(portfolio: dict, history_dir: str, days: int = 30
             daily["fund_count"] = len(daily["funds"])
 
             snap_path = os.path.join(history_dir, f"{d_str}.json")
-            with open(snap_path, "w", encoding="utf-8") as f:
-                json.dump(daily, f, ensure_ascii=False, indent=2)
+            write_json(snap_path, daily)
 
             index_entries.append({
                 "date": d_str,
@@ -368,8 +368,7 @@ def backfill_portfolio_history(portfolio: dict, history_dir: str, days: int = 30
 
     # 写索引
     index_path = os.path.join(history_dir, "_index.json")
-    with open(index_path, "w", encoding="utf-8") as f:
-        json.dump(index_entries, f, ensure_ascii=False, indent=2)
+    write_json(index_path, index_entries)
 
     print(f"  ✅ 回填完成: {len(index_entries)} 天快照 → {history_dir}")
     return index_entries

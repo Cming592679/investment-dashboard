@@ -8,6 +8,7 @@ import urllib.request, json, sys, os
 from config import DATA_DIR
 from datetime import date
 from collections import defaultdict
+from storage import write_json
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 API = 'http://localhost:5000/api'
@@ -187,8 +188,7 @@ def compute_all(portfolio, save_snapshot=False):
             'total_position': round(total_current, 1),
             'results': results, 'theme_warnings': theme_warnings,
         }
-        with open(os.path.join(snap_dir, f'{today}.json'), 'w') as f:
-            json.dump(snap, f, ensure_ascii=False, indent=2)
+        write_json(os.path.join(snap_dir, f'{today}.json'), snap)
 
     return results, theme_warnings, total_warning, total_current
 

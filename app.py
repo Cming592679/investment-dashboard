@@ -20,6 +20,7 @@ from config import (
 from data_fetcher import get_index_snapshot, get_stock_snapshot
 from fund_nav_fetcher import update_portfolio_nav, backfill_portfolio_history
 from trading_rules import evaluate_daily_actions
+from storage import write_json
 
 # ══════════════════════════════════════════════════════════
 # 数据健康检测 — 指标过期 & 缺失事件
@@ -551,9 +552,7 @@ def _save_daily_snapshot():
     snapshot["predictions"] = preds
 
     snap_path = os.path.join(HISTORY_DIR, f"{today_str}.json")
-    snapshot = _sanitize_json(snapshot)
-    with open(snap_path, "w", encoding="utf-8") as f:
-        json.dump(snapshot, f, ensure_ascii=False, indent=2)
+    write_json(snap_path, _sanitize_json(snapshot))
 
     # 同时写一份纯预测记录到 predictions/（含双轨验证）
     preds_dir = os.path.join(DATA_DIR, "predictions")
@@ -574,13 +573,12 @@ def _save_daily_snapshot():
                 "indicator_predictions": ip,
                 "indicator_verify_date": entry["data"]["prediction"].get("indicator_verify_date", ""),
             }
-    with open(pred_path, "w", encoding="utf-8") as f:
-        json.dump({
-            "date": today_str,
-            "generated_at": now_str,
-            "predictions": preds,
-            "two_tier_predictions": indicator_preds,
-        }, f, ensure_ascii=False, indent=2)
+    write_json(pred_path, {
+        "date": today_str,
+        "generated_at": now_str,
+        "predictions": preds,
+        "two_tier_predictions": indicator_preds,
+    })
 
     # 更新 index
     index = []
@@ -602,8 +600,7 @@ def _save_daily_snapshot():
             "return_pct": snapshot["funds"][fid].get("fund_return_pct"),
         } for fid in snapshot["funds"]}
     })
-    with open(HISTORY_INDEX_PATH, "w", encoding="utf-8") as f:
-        json.dump(index, f, ensure_ascii=False, indent=2)
+    write_json(HISTORY_INDEX_PATH, index)
 
     print(f"📸 快照已保存: {today_str} ({len(snapshot['funds'])} 只基金)")
 
@@ -1086,8 +1083,7 @@ def _load_topics():
 
 def _save_topics(data):
     os.makedirs(os.path.dirname(OPTIMIZE_TOPICS_PATH), exist_ok=True)
-    with open(OPTIMIZE_TOPICS_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    write_json(OPTIMIZE_TOPICS_PATH, data)
 
 
 @app.route("/api/optimize/topics")
@@ -1726,8 +1722,7 @@ def _load_portfolio():
 
 def _save_portfolio(data):
     data["updated"] = date.today().strftime("%Y-%m-%d")
-    with open(PORTFOLIO_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    write_json(PORTFOLIO_PATH, data)
 
 
 @app.route("/portfolio")

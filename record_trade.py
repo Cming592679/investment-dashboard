@@ -11,6 +11,7 @@ import json, os, sys
 from config import DATA_DIR
 from datetime import date
 from collections import defaultdict
+from storage import write_json
 
 def record_trade(pf, action, fund_code, amount_or_shares, note="", **kwargs):
     """记录一笔交易并更新所有关联数据。
@@ -149,8 +150,7 @@ if __name__ == '__main__':
 
     pf = record_trade(pf, action, fund_code, amount, note, **kwargs)
 
-    with open(os.path.join(DATA_DIR, 'portfolio.json'), 'w', encoding='utf-8') as f:
-        json.dump(pf, f, ensure_ascii=False, indent=2)
+    write_json(os.path.join(DATA_DIR, 'portfolio.json'), pf)
 
     print(f'✅ {action} {fund_code} ¥{amount:,.0f} — {note}')
     print(f'   现金: ¥{pf["cash"]:,.2f} | 总资产: ¥{pf["total_assets"]:,.0f}')
