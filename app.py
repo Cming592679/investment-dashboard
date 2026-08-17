@@ -303,6 +303,30 @@ _last_auto_refresh_date = None  # 记录上次自动刷新的日期
 _last_backup_date = None        # 记录上次自动备份的日期
 
 
+def _count_data_errors():
+    """统计缓存中指数/成分股抓取失败的板块（P2：数据源健康）。"""
+    stock_err = 0
+    index_err = 0
+    affected = []
+    with _cache_lock:
+        for fid, entry in _cache.items():
+            if not entry:
+                continue
+            data = entry.get("data", {})
+            se = sum(1 for s in data.get("stocks", {}).values() if s.get("error"))
+            ie = sum(1 for s in data.get("indices", {}).values() if s.get("error"))
+            if se or ie:
+                stock_err += se
+                index_err += ie
+                affected.append(FUNDS.get(fid, {}).get("short", fid))
+    return {
+        "stocks": stock_err,
+        "indices": index_err,
+        "total": stock_err + index_err,
+        "affected_funds": affected,
+    }
+
+
 def _fetch_one_fund(fund_id, fund):
     """抓取单只基金的完整数据（纯函数，不含缓存逻辑）"""
     stocks = {}
@@ -1090,6 +1114,7 @@ def api_health():
     staleness = check_indicator_staleness()
     missing_events = detect_missing_events()
     recently_passed = check_recently_passed_events()
+    data_errors = _count_data_errors()
 
     # 汇总统计
     critical_stale = [s for s in staleness if s["severity"] == "critical"]
@@ -1098,6 +1123,7 @@ def api_health():
     health_score -= len([s for s in staleness if s["severity"] == "warning"]) * 3
     health_score -= len(missing_events) * 5
     health_score -= len(recently_passed) * 2
+    health_score -= min(data_errors["total"] * 2, 20)
     health_score = max(0, health_score)
 
     return jsonify({
@@ -1118,6 +1144,7 @@ def api_health():
             "total": len(recently_passed),
             "items": recently_passed,
         },
+        "data_errors": data_errors,
         "schema_warnings": validate_file(PORTFOLIO_PATH),
         "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     })
