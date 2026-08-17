@@ -8,7 +8,7 @@
 也可以在代码中调用 record_trade()。
 """
 import json, os, sys
-from config import DATA_DIR
+from config import DATA_DIR, TRADING_CONFIG
 from datetime import date
 from collections import defaultdict
 from storage import write_json
@@ -53,6 +53,37 @@ def record_trade(pf, action, fund_code, amount_or_shares, note="", **kwargs):
             if h.get('fund_code') == fund_code:
                 amount = amount_or_shares
                 nav = kwargs.get('nav') or h.get('nav', 1)
+                total_assets = pf.get('total_assets', pf['cash'])
+
+                # ── 硬约束：现金下限（v1.1 唯一仓位硬约束）──
+                min_cash_pct = TRADING_CONFIG["position"]["min_cash_pct"]
+                min_cash = total_assets * min_cash_pct / 100
+                if pf['cash'] - amount < min_cash:
+                    raise ValueError(
+                        f"买入 ¥{amount:,.0f} 将使现金低于 {min_cash_pct:.0%} 下限（唯一硬约束）"
+                    )
+
+                # ── 参考线：板块/主题超线必须填写理由（v1.1）──
+                over_lines = []
+                sector_after_pct = ((h.get('amount', 0) + amount) / total_assets * 100) if total_assets else 0
+                max_sector_pct = TRADING_CONFIG["position"]["max_sector_pct"]
+                if sector_after_pct > max_sector_pct:
+                    over_lines.append(f"板块 {h.get('sector', '')} {sector_after_pct:.1f}% > {max_sector_pct}%")
+                theme = h.get('theme')
+                themes_cfg = (pf.get('position_config') or {}).get('themes', {})
+                if theme:
+                    theme_limit = themes_cfg.get(theme, {}).get('max_exposure', 0.30) * 100
+                    theme_amount = sum(
+                        x.get('amount', 0) for x in pf.get('holdings', []) if x.get('theme') == theme
+                    )
+                    theme_after_pct = ((theme_amount + amount) / total_assets * 100) if total_assets else 0
+                    if theme_after_pct > theme_limit:
+                        over_lines.append(f"主题 {theme} {theme_after_pct:.1f}% > {theme_limit:.0f}%")
+                if over_lines and not note:
+                    raise ValueError(
+                        f"超参考线加仓必须填写理由（引用 Thesis）：{'; '.join(over_lines)}"
+                    )
+
                 # 更新金额和成本
                 h['amount'] = round(h['amount'] + amount, 2)
                 h['cost_basis'] = round(h.get('cost_basis', 0) + amount, 2)
@@ -66,10 +97,14 @@ def record_trade(pf, action, fund_code, amount_or_shares, note="", **kwargs):
                     h['holding_return_pct'] = round(h['holding_return'] / h['cost_basis'] * 100, 2)
 
                 pf['cash'] = round(pf['cash'] - amount, 2)
-                pf['action_log'].insert(0, {
+                entry = {
                     "date": today, "action": f"🟢 买入 ¥{amount:,}",
                     "fund": f"{h.get('fund_name','')} ({fund_code})", "reason": note,
-                })
+                }
+                if over_lines:
+                    entry["over_reference"] = True
+                    entry["over_lines"] = over_lines
+                pf['action_log'].insert(0, entry)
                 break
 
     elif action == 'sell':
@@ -148,7 +183,11 @@ if __name__ == '__main__':
             k, v = a.split('=', 1)
             kwargs[k] = float(v) if v.replace('.','').isdigit() else v
 
-    pf = record_trade(pf, action, fund_code, amount, note, **kwargs)
+    try:
+        pf = record_trade(pf, action, fund_code, amount, note, **kwargs)
+    except ValueError as e:
+        print(f"❌ {e}")
+        sys.exit(1)
 
     write_json(os.path.join(DATA_DIR, 'portfolio.json'), pf)
 

@@ -988,6 +988,22 @@ def _generate_monthly_review():
         if conclusions:
             lines.append(f"\n- 期初结论: {conclusions[0]} | 期末结论: {conclusions[-1]}")
 
+    # ═══ 超参考线记录（v1.1） ═══
+    lines.append(f"\n---\n## 超参考线记录（v1.1：提示不阻止，点名其收益率）")
+    pf_now = _load_portfolio() or {}
+    over_entries = [a for a in (pf_now.get("action_log") or []) if a.get("over_reference")]
+    if over_entries:
+        lines.append(f"\n| 日期 | 动作 | 超线 | 理由 |")
+        lines.append(f"|------|------|------|------|")
+        for a in over_entries:
+            lines.append(
+                f"| {a.get('date', '')} | {a.get('action', '')} "
+                f"| {', '.join(a.get('over_lines') or [])} | {a.get('reason', '')} |"
+            )
+        lines.append(f"\n> 收益率与 Thesis 结果的联动核验将在验证闭环数据积累后加入。")
+    else:
+        lines.append(f"\n- 本月无超参考线加仓记录。")
+
     # ═══ 复盘要点 ═══
     lines.append(f"\n---\n## 复盘要点")
     if not gate["ready"]:
@@ -1775,6 +1791,73 @@ def _save_portfolio(data):
     write_json(PORTFOLIO_PATH, data)
 
 
+def _compute_exposure(pf):
+    """P1-2（v1.1）：计算板块/主题/瓶颈簇敞口 vs 参考线。
+
+    参考线只提示、不阻止（现金下限才是唯一硬约束）。
+    """
+    total = pf.get("total_assets", 0) or 0
+    holdings = pf.get("holdings", []) or []
+    active = [
+        h for h in holdings
+        if h.get("status") not in ("sold", "non_investment") and (h.get("amount") or 0) > 0
+    ]
+
+    # 板块（参考线 20%）
+    sector_amounts = {}
+    for h in active:
+        s = h.get("sector") or "其他"
+        sector_amounts[s] = sector_amounts.get(s, 0) + (h.get("amount") or 0)
+    sector_exposure = [
+        {
+            "name": k,
+            "pct": round(v / total * 100, 1) if total else 0,
+            "limit": 20.0,
+        }
+        for k, v in sorted(sector_amounts.items(), key=lambda x: -x[1])
+    ]
+
+    # 主题（参考线 = position_config.themes.max_exposure，缺省 30%）
+    themes_cfg = (pf.get("position_config") or {}).get("themes", {})
+    theme_amounts = {}
+    for h in active:
+        t = h.get("theme")
+        if t:
+            theme_amounts[t] = theme_amounts.get(t, 0) + (h.get("amount") or 0)
+    theme_exposure = [
+        {
+            "name": k,
+            "pct": round(v / total * 100, 1) if total else 0,
+            "limit": (themes_cfg.get(k, {}).get("max_exposure", 0.30) * 100)
+                     if themes_cfg.get(k) else 30.0,
+        }
+        for k, v in sorted(theme_amounts.items(), key=lambda x: -x[1])
+    ]
+
+    # 瓶颈簇（参考线 30%，按 affected_funds 的 dashboard_id 汇总）
+    dash_amounts = {}
+    for h in active:
+        did = h.get("dashboard_id")
+        if did:
+            dash_amounts[did] = dash_amounts.get(did, 0) + (h.get("amount") or 0)
+    cluster_exposure = []
+    for tag, info in BOTTLENECK_CLUSTERS.items():
+        amt = sum(dash_amounts.get(did, 0) for did in info.get("funds", []))
+        cluster_exposure.append({
+            "tag": tag,
+            "label": info.get("label", tag),
+            "pct": round(amt / total * 100, 1) if total else 0,
+            "limit": 30.0,
+        })
+    cluster_exposure.sort(key=lambda x: -x["pct"])
+
+    return {
+        "sectors": sector_exposure,
+        "themes": theme_exposure,
+        "clusters": cluster_exposure,
+    }
+
+
 @app.route("/portfolio")
 def portfolio_page():
     return render_template("portfolio.html")
@@ -1838,6 +1921,7 @@ def api_portfolio():
                 h["live_return_date"] = nav_date if est is None else ("真实估值" if src == "apizero" else "代理估算" if src == "proxy" else "基准估算")
                 h["live_prediction"] = entry["data"].get("prediction", {}).get("label", "")
 
+    pf["exposure"] = _compute_exposure(pf)
     return jsonify(pf)
 
 

@@ -213,7 +213,7 @@ function render(data) {
       ${live.live_emoji||info.dashboard_emoji||''} ${name}
       <strong>${info.pct}%</strong>
       ${live.live_return_pct != null ? `<span class="${clr(live.live_return_pct)}">${fmtPct(live.live_return_pct)}</span>` : ''}
-      ${!limitOk ? '<span style="color:var(--red);font-size:10px">⚠超限</span>' : ''}
+      ${!limitOk ? '<span style="color:var(--red);font-size:10px">⚠超参考线</span>' : ''}
     </div>`;
   }
 
@@ -323,13 +323,17 @@ function render(data) {
     <div id="action-section"></div>
 
     <!-- 板块分配 -->
-    <div class="section-title">📊 板块分配 <span class="legend-limits">（上限 20%/板块）</span></div>
+    <div class="section-title">📊 板块分配 <span class="legend-limits">（参考 20%/板块，不阻止）</span></div>
     <div class="allocation-bar-wrap">${barHTML}</div>
     <div class="allocation-legend">${legendHTML}</div>
 
     <!-- 板块实时状态 -->
     <div class="section-title">🎯 板块实时判定</div>
     <div class="sector-grid">${sectorCardsHTML}</div>
+
+    <!-- 敞口参考线 -->
+    <div class="section-title">📐 敞口参考线 <span class="legend-limits">（v1.1：仅提示，不阻止加仓；超线加仓需记录理由）</span></div>
+    <div id="exposure-panel" style="margin-bottom:20px">⏳ 加载中...</div>
 
     <!-- 持仓明细 -->
     <div class="section-title">📋 持仓明细</div>
@@ -365,6 +369,7 @@ function render(data) {
       <span class="refresh-small" onclick="load()">🔄 刷新</span>
     </div>
   `;
+  renderExposure(data.exposure);
 }
 
 load();
@@ -401,6 +406,29 @@ function renderAlerts(alerts) {
   panel.innerHTML += '<div style="margin-top:8px">' +
     alerts.map(a => `<div style="color:var(--red);font-size:12px;padding:2px 0">${a}</div>`).join('') +
     '</div>';
+}
+
+function exposureGroup(title, items) {
+  if (!items || !items.length) return '';
+  const rows = items.map(x => {
+    const over = x.pct > x.limit;
+    return `<div style="display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${x.name || x.label || ''}</span>
+      <span>${x.pct}% <span style="color:var(--text2)">/ 参考 ${x.limit}%</span>${over ? ' <span style="color:var(--red)">⚠超参考线</span>' : ''}</span>
+    </div>`;
+  }).join('');
+  return `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden">
+    <div style="padding:8px 12px;font-size:12px;color:var(--text2);background:var(--card2)">${title}</div>${rows}</div>`;
+}
+
+function renderExposure(ex) {
+  if (!ex) return;
+  const panel = document.getElementById('exposure-panel');
+  if (!panel) return;
+  panel.innerHTML =
+    exposureGroup('板块（参考 20%）', ex.sectors) +
+    exposureGroup('主题（参考线取 position_config）', ex.themes) +
+    exposureGroup('瓶颈簇（参考 30%）', ex.clusters);
 }
 
 async function loadActions() {
