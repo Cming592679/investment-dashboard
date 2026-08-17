@@ -56,7 +56,7 @@
       </div>
       <div class="exit-score-box">
         <span class="exit-score-num">--</span>
-        <span class="exit-score-label">逃跑指数</span>
+        <span class="exit-score-label">当前判定</span>
       </div>
     </div>
     <div id="exit-tags" class="exit-tags"></div>
@@ -115,7 +115,6 @@
           <div class="legend-row"><span class="dot green"></span> ≥6分 = 🟢 安心持有（可加仓）</div>
           <div class="legend-row"><span class="dot yellow"></span> 3-5分 = 🟡 忍着不动（多看少动）</div>
           <div class="legend-row"><span class="dot red"></span> 0-2分 = 🔴 考虑跑路（反弹减仓）</div>
-          <div class="legend-row" style="margin-top:4px">领先指标(0-5) + 周期(0-2) + 技术面(0-3)</div>
           <div class="legend-row">日涨跌幅已大幅降权（基金无需盯盘）</div>
         </div>
       </div>
@@ -253,7 +252,7 @@ function updateTabDot(btn, s) {
     dot.className = 'tab-dot dot-yellow';
   else
     dot.className = 'tab-dot dot-red';
-  dot.title = `${s.emoji} ${s.action} (${s.score}/${s.max_score||10})`;
+  dot.title = `${s.emoji} ${s.action}`;
 }
 
 // ── 标签页切换 ────────────────────────────
@@ -575,7 +574,6 @@ function renderExitBanner(a) {
 function renderExitDetail(a) {
   if (!a || !a.details) return;
   const container = $('#exit-detail');
-  const score = a.score || 5;
   container.innerHTML = (a.details||[]).map(d => {
     // 推断每条 detail 的趋势（从文本内容判断）
     const isUp = d.includes('→ +5') || d.includes('→ +4') || d.includes('→ +3') || d.includes('→ +2');
@@ -651,11 +649,11 @@ function renderHistory(history) {
     const funds_html = Object.entries(h.funds || {}).map(([fid, f]) => {
       // 用结论判断颜色（与标签圆点逻辑一致）
       const c = f.conclusion || '';
-      const icon = c.includes('安心')||c.includes('持有')||c.includes('加仓') ? '🟢' : c.includes('忍着')||c.includes('观望')||c.includes('警惕') ? '🟡' : c.includes('跑路')||c.includes('减仓') ? '🔴' : (f.score >= 6 ? '🟢' : f.score >= 3 ? '🟡' : '🔴');
+      const icon = c.includes('安心')||c.includes('持有')||c.includes('加仓') ? '🟢' : c.includes('忍着')||c.includes('观望')||c.includes('警惕') ? '🟡' : c.includes('跑路')||c.includes('减仓') ? '🔴' : '🟡';
       const name = (FUND_SHORTS || {})[fid] || fid;
       const ret = f.return_pct != null ? (f.return_pct > 0 ? '+' : '') + f.return_pct.toFixed(1) + '%' : '--';
       const retCls = f.return_pct > 0 ? 'up' : f.return_pct < 0 ? 'down' : 'flat';
-      return `<span class="opt-hist-chip">${icon} ${name} <span class="chg ${retCls}">${ret}</span> ${f.score}/10</span>`;
+      return `<span class="opt-hist-chip">${icon} ${name} <span class="chg ${retCls}">${ret}</span></span>`;
     }).join('');
     return `<div class="opt-hist-day">
       <span class="opt-hist-date">${h.date}</span>

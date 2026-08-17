@@ -537,7 +537,6 @@ def _save_daily_snapshot():
 
             snapshot["funds"][fid] = {
                 "name": d["name"],
-                "score": a["score"],
                 "conclusion": a["conclusion"],
                 "emoji": a["emoji"],
                 "details": a.get("details", []),
@@ -598,7 +597,6 @@ def _save_daily_snapshot():
         "date": today_str,
         "fetched_at": now_str,
         "funds": {fid: {
-            "score": snapshot["funds"][fid]["score"],
             "conclusion": snapshot["funds"][fid]["conclusion"],
             "return_pct": snapshot["funds"][fid].get("fund_return_pct"),
         } for fid in snapshot["funds"]}
@@ -925,23 +923,20 @@ def _generate_monthly_review():
             lines.append(f"| {conf} | 0 | — | — |")
 
     # ═══ 各板块明细 ═══
-    lines.append(f"\n---\n## 各板块评分走势")
+    lines.append(f"\n---\n## 各板块结论走势")
     for fid, fund_info in FUNDS.items():
         lines.append(f"\n### {fund_info['short']} ({fid})")
-        lines.append(f"\n| 日期 | 评分 | 结论 | 实际涨跌 |")
-        lines.append(f"|------|-----|------|---------|")
+        lines.append(f"\n| 日期 | 结论 | 实际涨跌 |")
+        lines.append(f"|------|------|---------|")
         for snap in snapshots:
             fs = snap.get("funds", {}).get(fid)
             if fs:
                 r = fs.get("fund_return_pct")
-                lines.append(f"| {snap['date']} | {fs['score']}/10 | {fs['conclusion']} | {f'{r:+.2f}%' if r is not None else '—'} |")
-        scores = [snap.get("funds", {}).get(fid, {}).get("score", 5)
-                  for snap in snapshots if snap.get("funds", {}).get(fid)]
-        if scores:
-            avg = sum(scores) / len(scores)
-            trend = "上升" if len(scores) >= 2 and scores[-1] > scores[0] else \
-                    "下降" if len(scores) >= 2 and scores[-1] < scores[0] else "持平"
-            lines.append(f"\n- 本月平均评分: {avg:.1f}/10 | 趋势: {trend} | 最高: {max(scores)}/10, 最低: {min(scores)}/10")
+                lines.append(f"| {snap['date']} | {fs.get('conclusion', '—')} | {f'{r:+.2f}%' if r is not None else '—'} |")
+        conclusions = [snap.get("funds", {}).get(fid, {}).get("conclusion")
+                       for snap in snapshots if snap.get("funds", {}).get(fid)]
+        if conclusions:
+            lines.append(f"\n- 期初结论: {conclusions[0]} | 期末结论: {conclusions[-1]}")
 
     # ═══ 复盘要点 ═══
     lines.append(f"\n---\n## 复盘要点")
@@ -1168,12 +1163,11 @@ def api_bottleneck_exposure():
                     "short": entry["data"]["short"],
                     "conclusion": a["conclusion"],
                     "emoji": a["emoji"],
-                    "score": a["score"],
                 }
                 if a["conclusion"] in ("安心持有", "继续持有"):
                     green_count += 1
             else:
-                fund_statuses[fid] = {"short": FUNDS.get(fid, {}).get("short", fid), "conclusion": "?", "emoji": "⚪", "score": "?"}
+                fund_statuses[fid] = {"short": FUNDS.get(fid, {}).get("short", fid), "conclusion": "?", "emoji": "⚪"}
 
         warn = green_count >= BOTTLENECK_CONCENTRATION_WARN and len(info["funds"]) >= 3
         clusters[tag] = {
@@ -1437,7 +1431,7 @@ def compute_assessment(fund, stocks, indices, specials, fund_id=None):
     # 决策树判定
     # ══════════════════════════════════════════════════
 
-    conclusion = None  # 初始化，防止量能分支引用未赋值的变量
+    conclusion = None
 
     # 分支1: 瓶颈破坏(利空) → 最强信号，直接红色
     if disruption_downgrade:
@@ -1459,41 +1453,11 @@ def compute_assessment(fund, stocks, indices, specials, fund_id=None):
         emoji = "🟡"
         desc = f"暴跌发生在周期早期+基本面完好 → 不宜追卖，等企稳。超卖解读: {w['oversold_read']}"
 
-    # ── 量能分支: 检查放量/缩量信号 ──
-    volume_signal = _check_volume_signal(stocks)
-
-    # 分支3.5: 放量反弹+技术面好转 → 反转升格
-    if volume_signal == "heavy_up" and not disruption_downgrade and leading_bullish:
-        macd_golden = sum(1 for s in stocks.values()
-                         if s.get("indicators", {}).get("macd", {}).get("signal") == "golden_cross")
-        if macd_golden >= 1 or ma_ratio >= 0.5:
-            conclusion = "关注反弹"
-            emoji = "🟢"
-            desc = "放量反弹+技术面同步好转 → 量价配合，反转概率升高。可考虑试探性建仓"
-            details.append("📊 量能: 放量反弹，量价配合良好")
-    elif volume_signal == "light_up" and has_crash:
-        # 暴跌后缩量反弹 → 死猫跳警告
-        if not conclusion:
-            conclusion = "忍着不动"
-            emoji = "🟡"
-            desc = "暴跌后缩量反弹 → 疑似死猫跳，等放量确认"
-        elif conclusion in ("忍着不动", "超卖观望"):
-            desc += "。⚠但反弹缩量，需放量确认方可升格"
-        details.append("📊 量能: 反弹缩量，等放量确认")
-    elif volume_signal == "heavy_down":
-        if not conclusion:
-            conclusion = "忍着不动"
-            emoji = "🟡"
-            desc = "放量下跌中，恐慌盘在出清——关注企稳信号"
-        details.append("📊 量能: 放量下跌，恐慌盘在出清——关注企稳信号")
-    elif volume_signal == "light_down":
-        if not conclusion:
-            conclusion = "忍着不动"
-            emoji = "🟡"
-            desc = "缩量阴跌，市场冷清无人接盘"
-        elif conclusion == "忍着不动":
-            desc += "。⚠缩量阴跌，无人接盘"
-        details.append("📊 量能: 缩量下跌，市场冷清")
+    # 分支3.5: 非早期暴跌 + 趋势破位 → 背离观察（修复漏判：不再落到"安心持有"）
+    elif has_crash and ma_broken:
+        conclusion = "忍着不动"
+        emoji = "🟡"
+        desc = "价格暴跌但基本面未证伪 → 价格-基本面背离，谨慎观察企稳信号，不追卖也不抄底"
 
     # 分支4: 深度超卖 + 基本面完好 → 逆向机会
     elif deep_oversold and leading_bullish and not disruption_downgrade:
@@ -1538,6 +1502,29 @@ def compute_assessment(fund, stocks, indices, specials, fund_id=None):
         emoji = "🟡"
         desc = "信号分歧，多看少动"
 
+    # ── 量能调节（P0-2：从"主导结论"降为"调节信号"）──
+    volume_signal = _check_volume_signal(stocks)
+    if volume_signal == "heavy_up" and not disruption_downgrade and leading_bullish:
+        macd_golden = sum(1 for s in stocks.values()
+                         if s.get("indicators", {}).get("macd", {}).get("signal") == "golden_cross")
+        if macd_golden >= 1 or ma_ratio >= 0.5:
+            if conclusion in ("超卖观望", "忍着不动"):
+                conclusion = "关注反弹"
+                emoji = "🟢"
+                desc = "放量反弹+技术面同步好转 → 量价配合，反转概率升高。可考虑试探性建仓"
+            details.append("📊 量能: 放量反弹，量价配合良好")
+    elif volume_signal == "light_up" and has_crash:
+        if conclusion in ("超卖观望", "忍着不动", "关注加仓"):
+            desc += "。⚠但反弹缩量，需放量确认方可升格"
+        details.append("📊 量能: 反弹缩量，等放量确认")
+    elif volume_signal == "heavy_down":
+        if conclusion in ("安心持有", "忍着不动"):
+            details.append("📊 量能: 放量下跌，恐慌盘在出清——关注企稳信号")
+    elif volume_signal == "light_down":
+        if conclusion in ("安心持有", "忍着不动"):
+            desc += "。⚠缩量阴跌，无人接盘"
+        details.append("📊 量能: 缩量下跌，市场冷清")
+
     # ── 附加联动降级提示 ──
     if cascade_active and conclusion == "安心持有":
         conclusion = "忍着不动"
@@ -1561,7 +1548,6 @@ def _generate_prediction(fund_id, assessment, leading, cycle):
     down_count = sum(1 for v in leading.values() if v.get("trend") == "down")
     flat_count = sum(1 for v in leading.values() if v.get("trend") == "flat")
     total = len(leading)
-    score = assessment["score"]
     cycle_risk = cycle.get("risk", "green") if cycle else "green"
 
     # 预测逻辑
@@ -1637,8 +1623,6 @@ def _generate_prediction(fund_id, assessment, leading, cycle):
         watchpoints.append(f"{first['event']}（{first['date'].strftime('%m/%d')}）后重新评估")
     if down_count > 0 or flat_count > 0:
         watchpoints.append(f"关注 {down_count+flat_count} 项走弱指标是否改善")
-    if score <= 4:
-        watchpoints.append("综合评分若跌破3 → 果断跑路")
 
     # ── P0-任务3：指标层预测 ─────────────────
     # 对每个有真实数据的领先指标，预测下次读数的方向
