@@ -1,0 +1,100 @@
+# Investment Rulebook v1.0 — 参数单一事实源（P1-1a）
+#
+# 来源：INVESTMENT_RULEBOOK_DRAFT.md v1.0（2026-08-17 冻结）
+# 状态标注：confirmed = 已确认；candidate = 未冻结（留待数据，B13/B9/C16）
+# 本文件是 v1.0 参数的权威记录；运行时迁移（接入 config/trading_rules）在 P1-1b 进行。
+
+version: 1.0
+updated: 2026-08-17
+
+objective:
+  priority: loss-minimization-first
+  opportunity: price-fundamental-divergence
+
+position_tiers:            # B6 confirmed
+  explore: 0.03            # 试探仓，允许真实仓位；不因价格背离自动升级（A2）
+  watch: 0.05
+  verify: 0.08
+  core: 0.15
+  aggregate_cap: null      # B8：暂不设 Explore/Watch 合计上限
+
+risk_limits:               # B7 confirmed
+  single_fund_max: 0.15
+  sector_max: 0.20
+  theme_cluster_max: 0.30
+  cash_floor: 0.10
+  position_count_min: 5    # candidate（B13）
+  position_count_max: 8    # candidate（B13）
+
+trend_gate:                # C15 confirmed
+  type: default-filter     # 非绝对规则；描述风险，不判断 Thesis 是否成立
+  ma_short: 20
+  ma_long: 60
+  min_stocks_ratio: 0.5
+  three_tier: true         # 恶化→Reduce 候选 / 正常→谨慎观察 / 明显改善+大幅回调→逆向吸入候选（人工判断）
+
+rsi:                       # B12 confirmed
+  role: signal-input-only  # 不单独产生 Add/Reduce
+  weighted: true           # 加权 RSI（HOLDING_WEIGHTS）
+  entry_bands:
+    early_mid: 50
+    late: 40
+
+divergence:                # C14 confirmed
+  classes:
+    - price-only
+    - price-thesis
+    - price-fundamental
+    - price-valuation
+    - price-trend
+    - thesis-invalidation
+  auto_execute_only: thesis-invalidation
+  human_confirm_required: [price-thesis, price-fundamental, price-valuation, price-trend]
+
+overrun:                   # C16 candidate（不冻结为永久硬规则）
+  weekly_surge_a: 15
+  weekly_surge_us: 10
+  sell_pct: 0.20
+
+deep_pullback:             # C20 confirmed：无固定阈值，系统提示异常偏离，人工定性
+  fixed_threshold: null
+  mode: system-hints-human-judges
+
+fundamental_improvement:   # C19 confirmed：人工判断为主，系统辅助分类
+  mode: human-primary-system-assisted
+
+panic:                     # A5 confirmed（阈值 candidate B13）
+  sell_recorded_not_executed: true
+  buy_mode: halved         # 买入减半，不禁止当日加仓；需人工确认
+  daily_drop_pct: -5       # candidate
+  rsi_threshold: 30        # candidate
+  rsi_count: 3             # candidate
+
+pre_event:                 # candidate（B13）
+  hours: 48
+
+structural_stop:           # A3 原则 confirmed；比例 candidate（B13）
+  principle: thesis-invalidation-exit
+  observe_months: 1
+  reduce_ratio: 0.30
+  breakthrough_ratio: 0.50
+  liquidation_ratio: 1.0
+
+rebalance:                 # B10 confirmed
+  cadence: monthly
+  deviation_tiers: 1
+
+verification:              # B9 candidate（不冻结）
+  gate_candidate: true
+  days: 90
+  min_predictions: 60
+  hit_rate: 0.60
+  better_than_baseline: true
+
+prediction:
+  horizon_days: 30
+
+cadence:                   # B11 confirmed
+  daily: discover-and-classify   # 自动发现与分类，不自动执行（除证伪 Exit）
+  weekly_digest: true            # 信息摘要，非交易决策点
+  monthly: decision-point
