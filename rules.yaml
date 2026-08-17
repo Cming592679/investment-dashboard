@@ -4,7 +4,7 @@
 # 状态标注：confirmed = 已确认；candidate = 未冻结（留待数据，B13/B9/C16）
 # 本文件是 v1.0 参数的权威记录；运行时迁移（接入 config/trading_rules）在 P1-1b 进行。
 
-version: 1.0
+version: 1.1
 updated: 2026-08-17
 
 objective:
@@ -18,11 +18,16 @@ position_tiers:            # B6 confirmed
   core: 0.15
   aggregate_cap: null      # B8：暂不设 Explore/Watch 合计上限
 
-risk_limits:               # B7 confirmed
+risk_limits:               # B7 confirmed；v1.1（B14）模式区分
+  cash_floor: 0.10
   single_fund_max: 0.15
   sector_max: 0.20
   theme_cluster_max: 0.30
-  cash_floor: 0.10
+  mode:
+    cash_floor: hard       # 唯一仓位硬约束
+    single_fund_max: reference   # 参考线：不阻止、超线记录理由
+    sector_max: reference
+    theme_cluster_max: reference
   position_count_min: 5    # candidate（B13）
   position_count_max: 8    # candidate（B13）
 
