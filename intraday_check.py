@@ -68,22 +68,77 @@ def _weighted_rsi(fund_id, stocks):
     return None, 0, 0
 
 
+MODULE_DASHBOARD = {
+    'CPO': 'CPO',
+    '半导体设备': '019633',
+    '军工电子': '015789',
+    '存储芯片': 'STORAGE',
+    '电子材料': '021528',
+    '电网设备': '025856',
+    '机器人': '020608',
+    '海外半导体': '024239',
+}
+
+
+def _fundamental_state(dash_data):
+    """基本面解释框架（v1.1）：结论 + 领先指标方向。
+
+    Returns: {"level": "ok"|"warning"|"weak", "message": ...}
+    """
+    d = dash_data or {}
+    a = d.get('assessment') or {}
+    conclusion = a.get('conclusion', '')
+    leading = d.get('leading_indicators') or {}
+    ups = sum(1 for v in leading.values() if v.get('trend') == 'up')
+    downs = sum(1 for v in leading.values() if v.get('trend') == 'down')
+    flats = len(leading) - ups - downs
+    lead_str = f"，领先 {ups}↑{flats}→{downs}↓" if leading else ""
+    if conclusion in ("考虑跑路", "高位警惕"):
+        return {"level": "weak", "message": f"基本面走弱（结论：{conclusion}{lead_str}）"}
+    if downs > 0:
+        return {"level": "warning", "message": f"基本面现转弱信号（结论：{conclusion}{lead_str}）"}
+    return {"level": "ok", "message": f"基本面正常（结论：{conclusion}{lead_str}）"}
+
+
+def _fundamental_context(dash_data):
+    """根据基本面状态生成展示上下文（弱 → 离场处理提示）。"""
+    st = _fundamental_state(dash_data)
+    if st["level"] == "weak":
+        return f"⚠ {st['message']} → 应按离场计划处理，不应等回调再进；请人工复核该计划"
+    if st["level"] == "warning":
+        return f"⚠ {st['message']} → 回调再进逻辑需复核，接近离场条件则改为减仓"
+    return st["message"]
+
+
 def check_plan(plan, portfolio):
     """检查一条 plan 是否触发。返回状态字符串。"""
     module = plan.get('module', '')
     trigger = plan.get('trigger', '')
+    direction = plan.get('direction', '')
     today = date.today()
 
+    # 基本面解释框架：先取该模块对应的 dashboard 数据（价格是输入，基本面是解释框架）
+    dash_data = None
+    fund_state = None
+    did = MODULE_DASHBOARD.get(module)
+    if did:
+        dash_data = get_dashboard_data(did)
+        fund_state = _fundamental_state(dash_data)
+
+    # 买入计划 + 基本面走弱 → 计划失效并反转为离场观察（逻辑层，不是仅提醒）
+    if direction == 'buy' and fund_state and fund_state['level'] == 'weak':
+        return (f"⚠ {fund_state['message']} → 本买入计划已失效，转为离场观察："
+                f"若结论保持红色或领先指标继续恶化，应减仓/清仓，不应等回调再进")
+
     # === CPO: 加权RSI < 50 ===
-    if module == 'CPO' and plan['direction'] == 'buy':
-        d = get_dashboard_data('CPO')
-        stocks = d.get('stocks', {})
+    if module == 'CPO' and direction == 'buy':
+        stocks = (dash_data or {}).get('stocks', {})
         wrsi, covered, total = _weighted_rsi('CPO', stocks)
         if wrsi is not None:
+            ctx = _fundamental_context(dash_data) if fund_state else ""
             if wrsi < 50:
-                return f"✅ 触发！加权RSI={wrsi:.1f}<50（核心权重股主导）→ {plan['action_if_triggered']}"
-            else:
-                return f"❌ 未触发 加权RSI={wrsi:.1f}≥50 → {plan['action_if_not']}"
+                return f"✅ 触发！加权RSI={wrsi:.1f}<50 → {plan['action_if_triggered']} | {ctx}"
+            return f"❌ 未触发 加权RSI={wrsi:.1f}≥50 → {plan['action_if_not']} | {ctx}"
         return f"? 无RSI数据"
 
     # === 半导体设备: SMIC Q2 8/15 ===
@@ -97,16 +152,19 @@ def check_plan(plan, portfolio):
         else:
             return f"📋 已过期 {abs(days_left)} 天，请跟进结果"
 
-    # === 军工电子: 持有收益 > -15% ===
+    # === 军工电子: 领先指标转down 或 持有收益 > -15% ===
     if module == '军工电子':
+        ctx = f" | {fund_state['message']}" if fund_state else ""
+        if fund_state and fund_state['level'] != 'ok':
+            return f"✅ 触发！领先指标转down → {plan['action_if_triggered']}{ctx}"
         for h in portfolio['holdings']:
             if h.get('fund_code') == '015789':
                 ret = h.get('holding_return_pct', -99)
                 if ret > -15:
-                    return f"✅ 触发！持有收益 {ret:+.1f}% > -15% → {plan['action_if_triggered']}"
+                    return f"✅ 触发！持有收益 {ret:+.1f}% > -15% → {plan['action_if_triggered']}{ctx}"
                 else:
                     gap = -15 - ret
-                    return f"❌ 未触发 持有收益 {ret:+.1f}% 还需涨 {gap:.1f}% → {plan['action_if_not']}"
+                    return f"❌ 未触发 持有收益 {ret:+.1f}% 还需涨 {gap:.1f}% → {plan['action_if_not']}{ctx}"
         return "? 无持仓数据"
 
     # === 产业机遇: 季度报告 ===
