@@ -515,9 +515,17 @@ def _check_buy_signals(fid: str, holding: dict, scores: dict, regime: str,
     if regime == "Pre-Event":
         return _rejected(fid, "买入", "Pre-Event体制 → 冻结交易", scores)
 
-    # 趋势过滤器
+    # 趋势闸门（v1.0 C15：默认风险过滤器，非绝对规则；三档分级）
     if not _trend_filter_pass(dash_data):
-        return _rejected(fid, "买入", "MA20<MA60 → 趋势向下，禁止买入", scores)
+        if l2_sell < 0:
+            return _rejected(fid, "买入", "趋势恶化+基本面恶化 → 不加仓（并进入 Reduce 候选）", scores)
+        deep_pullback = any(
+            (s.get("day_change_pct") or 0) <= -5
+            for s in dash_data.get("stocks", {}).values()
+        )
+        if l2_buy >= 2 and deep_pullback:
+            return _rejected(fid, "买入", "趋势恶化但基本面明显改善+价格大幅回调 → 逆向吸入候选，需人工确认是否接飞刀", scores)
+        return _rejected(fid, "买入", "趋势恶化+基本面正常 → 谨慎观察，默认不加仓", scores)
 
     # 核心条件：叠层得分 ≥ 阈值 且 L2瓶颈面非负
     if total_buy < buy_threshold:
@@ -525,8 +533,7 @@ def _check_buy_signals(fid: str, holding: dict, scores: dict, regime: str,
     if l2_sell < 0:
         return _rejected(fid, "买入", "L2瓶颈面恶化 → 买入信号作废", scores)
 
-    # 计算买入金额
-    rsi_coef = _get_rsi_tier_coefficient(dash_data, cfg)
+    # 计算买入金额（B12：RSI 仅作 Signal 输入，不再缩放金额）
     size_pct = cfg["position"]["standard_size_pct"]
     base_amount = total_assets * (size_pct / 100)
 
@@ -538,8 +545,7 @@ def _check_buy_signals(fid: str, holding: dict, scores: dict, regime: str,
     else:
         confidence_coef = 0.5
 
-    buy_coef = min(rsi_coef, confidence_coef)  # 保守取小
-    buy_amount = base_amount * buy_coef
+    buy_amount = base_amount * confidence_coef
 
     # Panic 体制 → 买入减半
     if regime == "Panic":
@@ -558,6 +564,10 @@ def _check_buy_signals(fid: str, holding: dict, scores: dict, regime: str,
     if buy_amount < 100:  # 最少¥100
         return _rejected(fid, "买入", f"计算金额 ¥{buy_amount:.0f} < ¥100 最低门槛", scores)
 
+    stocks = dash_data.get("stocks", {})
+    rsis = [s.get("rsi") for s in stocks.values() if s.get("rsi") is not None]
+    avg_rsi = round(sum(rsis) / len(rsis), 1) if rsis else None
+
     return {
         "fund_id": fid,
         "fund_name": holding.get("fund_name", ""),
@@ -567,9 +577,9 @@ def _check_buy_signals(fid: str, holding: dict, scores: dict, regime: str,
         "amount": round(buy_amount, 2),
         "regime": regime,
         "scores": scores,
-        "rsi_coefficient": rsi_coef,
+        "rsi": avg_rsi,
         "confidence_coefficient": confidence_coef,
-        "reason": f"叠层得分 {total_buy}≥{buy_threshold}，RSI分级{rsi_coef}，信心{confidence_coef}",
+        "reason": f"叠层得分 {total_buy}≥{buy_threshold}，信心{confidence_coef}，RSI {avg_rsi}（Signal 输入）",
     }
 
 
@@ -593,21 +603,6 @@ def _trend_filter_pass(dash_data: dict) -> bool:
         return True
     # ≥50%的成分股 MA20 > MA60 才通过
     return above_count / total_count >= 0.5
-
-
-def _get_rsi_tier_coefficient(dash_data: dict, cfg: dict) -> float:
-    """计算 RSI 分级加仓系数"""
-    stocks = dash_data.get("stocks", {})
-    if not stocks:
-        return 0.5  # 默认中性
-
-    avg_rsi = sum(s.get("rsi", 50) or 50 for s in stocks.values()) / len(stocks)
-
-    for tier in cfg["rsi_tiers"]:
-        if tier["rsi_min"] <= avg_rsi < tier["rsi_max"]:
-            return tier["coefficient"]
-
-    return 0.5  # RSI >45 时默认半仓
 
 
 # ══════════════════════════════════════════════════════════

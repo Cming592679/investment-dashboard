@@ -15,7 +15,7 @@ holding: fund_name, fund_code, dashboard_id, sector, amount, daily_return,
      holding_return, holding_return_pct, nav, nav_date, status, day_return_pct,
      notes, shares, cost_basis, tier, base, max, theme, sell_shares,
      sell_settle_dates, live_conclusion, live_emoji, live_return_pct,
-     live_return_date, live_prediction
+     live_return_date, live_prediction, evidence_stage
 action: date, action, fund, reason, amount
 plan: module, fund, direction, target, executed, remaining, status, trigger,
      action_if_triggered, action_if_not, note, created, fund_code, fund_name, condition
@@ -53,6 +53,10 @@ HOLDING_NUMERIC = [
     "base",
     "max",
 ]
+
+HOLDING_ENUM = {
+    "evidence_stage": {"explore", "watch", "verify", "core", ""},
+}
 
 
 def _type_name(v):
@@ -111,6 +115,11 @@ def validate_portfolio(pf):
                 if key in h and h[key] is not None and not isinstance(h[key], (int, float)):
                     warnings.append(
                         f"holdings[{i}].{key} 类型错误: 期望 number，实际 {_type_name(h[key])}"
+                    )
+            for key, allowed in HOLDING_ENUM.items():
+                if key in h and h[key] not in allowed and h[key] is not None:
+                    warnings.append(
+                        f"holdings[{i}].{key} 取值不在允许集合 {sorted(allowed)}: {h[key]!r}"
                     )
 
     # 重复项检查（只报告，不自动删除）
