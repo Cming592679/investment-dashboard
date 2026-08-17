@@ -104,17 +104,17 @@
         <div id="predict-panel" class="predict-box"></div>
       </div>
       <div class="sub-panel">
-        <h2>📊 评分拆解</h2>
+        <h2>📋 判定依据</h2>
         <div id="exit-detail" class="exit-detail-list">
           <div class="loading-hint">--</div>
         </div>
       </div>
       <div class="sub-panel">
-        <h2>📋 评分说明</h2>
+        <h2>📋 判定说明</h2>
         <div class="legend-list">
-          <div class="legend-row"><span class="dot green"></span> ≥6分 = 🟢 安心持有（可加仓）</div>
-          <div class="legend-row"><span class="dot yellow"></span> 3-5分 = 🟡 忍着不动（多看少动）</div>
-          <div class="legend-row"><span class="dot red"></span> 0-2分 = 🔴 考虑跑路（反弹减仓）</div>
+          <div class="legend-row"><span class="dot green"></span> 🟢 安心持有 / 关注加仓</div>
+          <div class="legend-row"><span class="dot yellow"></span> 🟡 忍着不动 / 超卖观望</div>
+          <div class="legend-row"><span class="dot red"></span> 🔴 考虑跑路 / 高位警惕</div>
           <div class="legend-row">日涨跌幅已大幅降权（基金无需盯盘）</div>
         </div>
       </div>
@@ -575,10 +575,9 @@ function renderExitDetail(a) {
   if (!a || !a.details) return;
   const container = $('#exit-detail');
   container.innerHTML = (a.details||[]).map(d => {
-    // 推断每条 detail 的趋势（从文本内容判断）
-    const isUp = d.includes('→ +5') || d.includes('→ +4') || d.includes('→ +3') || d.includes('→ +2');
-    const isFlat = d.includes('→ +1') || d.includes('→ +0');
-    const isDown = d.includes('→ -1');
+    // 推断每条 detail 的倾向（从内容标记判断）
+    const isUp = d.includes('📈') || d.includes('🟢') || d.includes('→ +') || d.includes('修复') || d.includes('利好');
+    const isDown = d.includes('🚨') || d.includes('📉') || d.includes('⚠') || d.includes('→ -') || d.includes('破位') || d.includes('利空') || d.includes('恶化');
     const icon = isUp ? '🟢' : isDown ? '🔴' : '🟡';
     const cls = isUp ? 'green' : isDown ? 'red' : 'yellow';
     return `<div class="exit-flag-row flag-${cls}">
@@ -669,8 +668,35 @@ function renderReviews(reviews) {
     return;
   }
   container.innerHTML = reviews.map(r => `
-    <div class="opt-review-row">📋 <span>${r.file.replace('.md','')}</span></div>
-  `).join('');
+    <div class="opt-review-row" style="cursor:pointer" onclick="toggleReview('${r.file.replace('.md','')}', this)">
+      📋 <span>${r.file.replace('.md','')}</span>
+      <span style="font-size:10px;color:var(--text-dim)">点击阅读</span>
+    </div>
+  `).join('') + '<div id="review-content" style="margin-top:8px"></div>';
+}
+
+async function toggleReview(month, el) {
+  const panel = document.getElementById('review-content');
+  if (!panel) return;
+  if (panel.dataset.month === month) {
+    panel.innerHTML = '';
+    delete panel.dataset.month;
+    return;
+  }
+  try {
+    const r = await fetch('/api/review/' + month);
+    const data = await r.json();
+    panel.innerHTML = data.error
+      ? `<div class="opt-empty">${data.error}</div>`
+      : `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:480px;overflow:auto;font-size:12px;line-height:1.7;white-space:pre-wrap">${escapeHtml(data.content)}</div>`;
+    panel.dataset.month = month;
+  } catch(e) {
+    panel.innerHTML = '<div class="opt-empty">加载失败</div>';
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // 基金简称映射（用于历史快照显示）

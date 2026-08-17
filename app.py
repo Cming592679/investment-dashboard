@@ -1233,6 +1233,19 @@ def api_review():
     return jsonify([{"file": f, "path": f"/reviews/{f}"} for f in files])
 
 
+@app.route("/api/review/<month>")
+def api_review_month(month):
+    """返回指定月份复盘报告内容（如 /api/review/2026-07）"""
+    if not re.fullmatch(r"\d{4}-\d{2}", month):
+        return jsonify({"error": "invalid month"}), 400
+    path = os.path.join(REVIEWS_DIR, f"{month}.md")
+    if not os.path.exists(path):
+        return jsonify({"error": "not found"}), 404
+    with open(path, encoding="utf-8") as f:
+        content = f.read()
+    return jsonify({"file": f"{month}.md", "content": content})
+
+
 @app.route("/api/review/generate", methods=["POST"])
 def api_review_generate():
     """生成月度复盘报告（委托给 _generate_monthly_review）"""
@@ -1867,15 +1880,23 @@ def _compute_exposure(pf):
         did = h.get("dashboard_id")
         if did:
             dash_amounts[did] = dash_amounts.get(did, 0) + (h.get("amount") or 0)
-    cluster_exposure = []
+    merged_clusters = {}
     for tag, info in BOTTLENECK_CLUSTERS.items():
         amt = sum(dash_amounts.get(did, 0) for did in info.get("funds", []))
-        cluster_exposure.append({
-            "tag": tag,
-            "label": info.get("label", tag),
-            "pct": round(amt / total * 100, 1) if total else 0,
+        pct = round(amt / total * 100, 1) if total else 0
+        if pct < 5.0:
+            continue  # 只显示有实际敞口的瓶颈簇（≥5%），避免 0%/微小重复噪音
+        label = info.get("label", tag)
+        # 同名瓶颈（如 HBM 三寡头 在设备侧/存储侧各定义一次）合并为共享瓶颈总敞口
+        merged_clusters[label] = merged_clusters.get(label, 0.0) + pct
+    cluster_exposure = [
+        {
+            "label": label,
+            "pct": round(pct, 1),
             "limit": 30.0,
-        })
+        }
+        for label, pct in sorted(merged_clusters.items(), key=lambda x: -x[1])
+    ]
     cluster_exposure.sort(key=lambda x: -x["pct"])
 
     return {

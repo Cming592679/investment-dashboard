@@ -331,10 +331,6 @@ function render(data) {
     <div class="section-title">🎯 板块实时判定</div>
     <div class="sector-grid">${sectorCardsHTML}</div>
 
-    <!-- 敞口参考线 -->
-    <div class="section-title">📐 敞口参考线 <span class="legend-limits">（v1.1：仅提示，不阻止加仓；超线加仓需记录理由）</span></div>
-    <div id="exposure-panel" style="margin-bottom:20px">⏳ 加载中...</div>
-
     <!-- 持仓明细 -->
     <div class="section-title">📋 持仓明细</div>
     <div style="overflow-x:auto;">
@@ -358,6 +354,10 @@ function render(data) {
     <!-- 待执行计划 -->
     <div class="section-title">📋 待执行计划</div>
     <div id="plans-panel" style="margin-bottom:16px;font-size:13px;color:var(--text2)">⏳ 加载中...</div>
+
+    <!-- 敞口参考线（仅供参考，放在页面次要位置） -->
+    <div class="section-title">📐 敞口参考线 <span class="legend-limits">（v1.1：仅提示，不阻止加仓；超线加仓需记录理由）</span></div>
+    <div id="exposure-panel" style="margin-bottom:20px">⏳ 加载中...</div>
 
     <!-- 操作日志 -->
     <div class="section-title">📝 操作日志</div>
@@ -391,11 +391,17 @@ function renderPlans(plans) {
   const panel = document.getElementById('plans-panel');
   if (!plans.length) { panel.innerHTML = '✅ 无待执行计划'; return; }
   panel.innerHTML = plans.map(p => {
-    const icon = p.status.includes('触发') ? '✅' : p.status.includes('等') ? '👀' : '❌';
-    const bg = p.status.includes('触发') ? 'rgba(63,185,80,0.08)' : 'transparent';
+    const s = p.status || '';
+    let icon = '❌';
+    let color = '';
+    if (s.startsWith('✅')) { icon = '✅'; }
+    else if (s.includes('未触发')) { icon = '❌'; color = 'var(--yellow)'; }
+    else if (s.includes('⚠')) { icon = '⚡'; color = 'var(--red)'; }
+    else if (s.includes('👀') || s.includes('等') || s.includes('观察')) { icon = '👀'; }
+    const bg = s.startsWith('✅') ? 'rgba(63,185,80,0.08)' : 'transparent';
     return `<div style="background:${bg};padding:6px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between">
       <span>${icon} <b>${p.module}</b></span>
-      <span style="font-size:12px">${p.status}</span>
+      <span style="font-size:12px${color ? ';color:' + color : ''}">${s}</span>
     </div>`;
   }).join('');
 }
@@ -428,7 +434,7 @@ function renderExposure(ex) {
   panel.innerHTML =
     exposureGroup('板块（参考 20%）', ex.sectors) +
     exposureGroup('主题（参考线取 position_config）', ex.themes) +
-    exposureGroup('瓶颈簇（参考 30%）', ex.clusters);
+    exposureGroup('瓶颈簇（参考 30%，仅显示 ≥5%）', ex.clusters);
 }
 
 async function loadActions() {
@@ -495,11 +501,25 @@ function renderActions(data) {
     html += '</div>';
   }
 
-  // 被否决信号
-  if ((data.conflicts_resolved||[]).length > 0) {
-    html += '<details style="margin-bottom:12px"><summary style="font-size:12px;color:var(--text2);cursor:pointer;padding:4px 0">⚪ 被否决的信号 (${data.conflicts_resolved.length}条)</summary>';
+  // 逆向吸入候选（趋势闸门默认过滤器下的需人工确认项，v1.1）
+  const inhale = (data.conflicts_resolved||[]).filter(c => (c._reject_reason||c.reason||'').includes('逆向吸入候选'));
+  if (inhale.length > 0) {
+    html += '<div style="margin-bottom:12px">';
+    html += '<div style="font-size:12px;color:var(--yellow);margin-bottom:6px">⚡ 逆向吸入候选（趋势闸门默认过滤器，需人工确认是否接飞刀）</div>';
+    for (const c of inhale) {
+      html += `<div style="background:rgba(210,153,29,0.08);border:1px solid var(--yellow);border-radius:8px;padding:10px 14px;margin-bottom:6px;font-size:13px">
+        <b>${c.fund_id||c.sector||'?'}</b> · ${c._reject_reason||c.reason||''}
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  // 被否决信号（不含逆向吸入候选，避免重复）
+  const otherRejects = (data.conflicts_resolved||[]).filter(c => !(c._reject_reason||c.reason||'').includes('逆向吸入候选'));
+  if (otherRejects.length > 0) {
+    html += '<details style="margin-bottom:12px"><summary style="font-size:12px;color:var(--text2);cursor:pointer;padding:4px 0">⚪ 被否决的信号 (${otherRejects.length}条)</summary>';
     html += '<div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">';
-    for (const c of data.conflicts_resolved) {
+    for (const c of otherRejects) {
       html += `<div style="font-size:12px;color:var(--text2);padding:4px 10px;background:var(--card);border-radius:4px">
         ${c.fund_id||c.sector||'?'} · ${c._reject_reason||c.reason||''}
       </div>`;
