@@ -21,6 +21,7 @@ from data_fetcher import get_index_snapshot, get_stock_snapshot
 from fund_nav_fetcher import update_portfolio_nav, backfill_portfolio_history
 from trading_rules import evaluate_daily_actions
 from storage import write_json
+from backup import backup_personal_data, last_backup_info
 
 # ══════════════════════════════════════════════════════════
 # 数据健康检测 — 指标过期 & 缺失事件
@@ -298,6 +299,7 @@ _cache = {}       # {fund_id: {"data": {...}, "fetched_at": datetime}}
 _cache_lock = threading.Lock()
 _fetching = False
 _last_auto_refresh_date = None  # 记录上次自动刷新的日期
+_last_backup_date = None        # 记录上次自动备份的日期
 
 
 def _fetch_one_fund(fund_id, fund):
@@ -667,6 +669,17 @@ def _scheduler_loop():
             except Exception as e:
                 print(f"  ⚠ 净值更新失败: {e}")
 
+        # 每日 20:05-20:06 个人数据备份（净值更新完成后，数据最完整）
+        if now.hour == 20 and now.minute in (5, 6):
+            global _last_backup_date
+            if _last_backup_date != today:
+                result = backup_personal_data()
+                if result.get("status") == "ok":
+                    print(f"🗄 每日备份完成 → {result.get('target')}（{result.get('copied')} 项）")
+                else:
+                    print(f"  ⚠ 备份警告: {result.get('error')}")
+                _last_backup_date = today
+
 
 # ══════════════════════════════════════════════════════════
 # 复盘辅助函数
@@ -1028,6 +1041,7 @@ def api_health():
     return jsonify({
         "health_score": health_score,
         "status": "healthy" if health_score >= 80 else "warning" if health_score >= 50 else "critical",
+        "backup": last_backup_info() or {"status": "never"},
         "staleness": {
             "total": len(staleness),
             "critical": len(critical_stale),
