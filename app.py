@@ -465,6 +465,10 @@ def _refresh_all():
             _save_daily_snapshot()
         except Exception as e:
             print(f"  ⚠ 快照保存失败: {e}")
+        try:
+            _backfill_predictions()
+        except Exception as e:
+            print(f"  ⚠ 预测回填失败: {e}")
     finally:
         with _cache_lock:
             _fetching = False
@@ -604,6 +608,52 @@ def _save_daily_snapshot():
     write_json(HISTORY_INDEX_PATH, index)
 
     print(f"📸 快照已保存: {today_str} ({len(snapshot['funds'])} 只基金)")
+
+
+def _backfill_predictions():
+    """P0-3：预测到期后自动回填实际收益到 predictions/<date>.json。
+
+    对每条 verify_date 已到且尚无 actual 的预测，从 history/<verify_date>.json
+    读取 fund_return_pct 写回。只做回填，不修改预测内容本身。
+    """
+    preds_dir = os.path.join(DATA_DIR, "predictions")
+    if not os.path.isdir(preds_dir):
+        return 0
+    today = date.today().isoformat()
+    updated = 0
+    for fname in sorted(os.listdir(preds_dir)):
+        if not fname.endswith(".json") or fname.startswith("_"):
+            continue
+        path = os.path.join(preds_dir, fname)
+        try:
+            with open(path, encoding="utf-8") as f:
+                pe = json.load(f)
+        except Exception:
+            continue
+        preds = pe.get("predictions", {})
+        changed = False
+        for fid, p in preds.items():
+            vd = p.get("verify_date", "")
+            if not vd or vd > today or p.get("actual") is not None:
+                continue
+            snap_path = os.path.join(HISTORY_DIR, vd + ".json")
+            if not os.path.exists(snap_path):
+                continue
+            try:
+                with open(snap_path, encoding="utf-8") as f:
+                    snap = json.load(f)
+            except Exception:
+                continue
+            actual = snap.get("funds", {}).get(fid, {}).get("fund_return_pct")
+            if actual is not None:
+                p["actual"] = actual
+                changed = True
+        if changed:
+            write_json(path, pe)
+            updated += 1
+    if updated:
+        print(f"🔁 预测回填: {updated} 个预测文件已回填实际值")
+    return updated
 
 
 def _sanitize_json(obj):
