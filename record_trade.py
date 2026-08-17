@@ -130,7 +130,7 @@ def record_trade(pf, action, fund_code, amount_or_shares, note="", **kwargs):
 
 
 if __name__ == '__main__':
-    with open(os.path.join(DATA_DIR, 'portfolio.json')) as f:
+    with open(os.path.join(DATA_DIR, 'portfolio.json'), encoding='utf-8') as f:
         pf = json.load(f)
 
     if len(sys.argv) < 5:
@@ -149,7 +149,7 @@ if __name__ == '__main__':
 
     pf = record_trade(pf, action, fund_code, amount, note, **kwargs)
 
-    with open('portfolio.json', 'w') as f:
+    with open(os.path.join(DATA_DIR, 'portfolio.json'), 'w', encoding='utf-8') as f:
         json.dump(pf, f, ensure_ascii=False, indent=2)
 
     print(f'✅ {action} {fund_code} ¥{amount:,.0f} — {note}')
