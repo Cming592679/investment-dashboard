@@ -107,7 +107,7 @@ FUNDS = {
         },
         "indices": {
             "SMH":  "VanEck半导体ETF",
-            "SOX":  "费城半导体指数",
+            "^SOX": "费城半导体指数",
             "QQQ":  "纳指100ETF",
         },
         "specials": {
@@ -253,7 +253,7 @@ FUNDS = {
         },
         "indices": {
             "SMH": "VanEck半导体ETF",
-            "SOX": "费城半导体指数",
+            "^SOX": "费城半导体指数",
         },
         "specials": {
             "WDC": {"name": "西部数据", "note": "NAND Flash原厂，与铠侠合并进行中"},
