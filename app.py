@@ -22,6 +22,7 @@ from fund_nav_fetcher import update_portfolio_nav, backfill_portfolio_history
 from trading_rules import evaluate_daily_actions
 from storage import write_json
 from backup import backup_personal_data, last_backup_info
+from portfolio_schema import validate_file
 
 # ══════════════════════════════════════════════════════════
 # 数据健康检测 — 指标过期 & 缺失事件
@@ -1056,6 +1057,7 @@ def api_health():
             "total": len(recently_passed),
             "items": recently_passed,
         },
+        "schema_warnings": validate_file(PORTFOLIO_PATH),
         "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     })
 
@@ -1852,6 +1854,8 @@ if __name__ == "__main__":
     print("⏰ 定时刷新已启动（每日 18:00）")
     print("📊 Investment Dashboard 基金监控仪表盘")
     print(f"   已配置 {len(FUNDS)} 只基金")
+    for w in validate_file(PORTFOLIO_PATH):
+        print(f"⚠ portfolio schema: {w}")
     print("   打开 http://localhost:5000")
 
     app.run(debug=True, host="127.0.0.1", port=5000)
