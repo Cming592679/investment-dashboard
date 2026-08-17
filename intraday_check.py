@@ -4,7 +4,7 @@
   python3 intraday_check.py           # 输出当前状态
   python3 intraday_check.py --json    # JSON输出（供前端）
 """
-import urllib.request, json, sys, os
+import urllib.request, json, sys, os, time
 from datetime import date, datetime
 from collections import defaultdict
 
@@ -15,14 +15,23 @@ API = 'http://localhost:5000/api'
 # 数据获取
 # ═══════════════════════════════════
 
+_estimate_cache = {}  # code -> (ts, data)
+_ESTIMATE_CACHE_SECONDS = 60
+
+
 def get_estimate(code):
-    """获取单只基金盘中估值"""
+    """获取单只基金盘中估值（60s 缓存，避免页面刷新耗尽 apizero 免费配额）"""
+    now = time.time()
+    cached = _estimate_cache.get(code)
+    if cached and now - cached[0] < _ESTIMATE_CACHE_SECONDS:
+        return cached[1]
     try:
         url = f"https://v1.apizero.cn/api/fund?action=estimate&code={code}"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         resp = urllib.request.urlopen(req, timeout=8).read().decode('utf-8')
         data = json.loads(resp)
         if data.get('code') == 0:
+            _estimate_cache[code] = (now, data['data'])
             return data['data']
     except: pass
     return None

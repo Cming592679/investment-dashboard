@@ -22,7 +22,7 @@ from fund_nav_fetcher import update_portfolio_nav, backfill_portfolio_history
 from trading_rules import evaluate_daily_actions
 from storage import write_json
 from backup import backup_personal_data, last_backup_info
-from portfolio_schema import validate_file
+from portfolio_schema import validate_file, validate_portfolio
 
 # ══════════════════════════════════════════════════════════
 # 数据健康检测 — 指标过期 & 缺失事件
@@ -830,13 +830,14 @@ def _compute_confidence_calibration(predictions_data, index_data):
             buckets[conf]["total"] += 1
             direction = p.get("direction", "")
             verify_date = p.get("verify_date", "")
-            # 查找验证日的实际收益
-            actual = None
-            for idx_entry in index_data:
-                if idx_entry.get("date") == verify_date:
-                    f = idx_entry.get("funds", {}).get(fid, {})
-                    actual = f.get("fund_return_pct")
-                    break
+            # 优先用预测文件回填的 actual（P0-3），缺失时回退到快照
+            actual = p.get("actual")
+            if actual is None:
+                for idx_entry in index_data:
+                    if idx_entry.get("date") == verify_date:
+                        f = idx_entry.get("funds", {}).get(fid, {})
+                        actual = f.get("fund_return_pct")
+                        break
             if actual is None:
                 continue
             # 判定
@@ -932,11 +933,12 @@ def _generate_monthly_review():
             direction = p.get("direction", "")
             conf = p.get("confidence", "低")
             verify_date = p.get("verify_date", "")
-            actual = None
-            for snap in snapshots:
-                if snap.get("date") == verify_date:
-                    actual = snap.get("funds", {}).get(fid, {}).get("fund_return_pct")
-                    break
+            actual = p.get("actual")
+            if actual is None:
+                for snap in snapshots:
+                    if snap.get("date") == verify_date:
+                        actual = snap.get("funds", {}).get(fid, {}).get("fund_return_pct")
+                        break
             if actual is None:
                 continue
             threshold = _calc_dynamic_threshold(fid, snapshots)
@@ -1975,10 +1977,31 @@ def api_portfolio():
 
 @app.route("/api/portfolio/update", methods=["POST"])
 def api_portfolio_update():
-    """更新持仓数据（手动触发）"""
+    """更新持仓数据（手动触发）。
+
+    P1：白名单字段校验 + 更新后结构校验，防止任意 JSON 破坏数据模型。
+    """
     data = request.json
+    if not isinstance(data, dict):
+        return jsonify({"error": "请求体必须是 object"}), 400
+    allowed = {
+        "cash", "total_assets", "holdings", "action_log",
+        "pending_plans", "trade_rules", "position_config",
+    }
+    unknown = set(data) - allowed
+    if unknown:
+        return jsonify({
+            "error": f"不支持的字段: {sorted(unknown)}",
+            "allowed": sorted(allowed),
+        }), 400
     pf = _load_portfolio() or {}
     pf.update(data)
+    warnings = validate_portfolio(pf)
+    if warnings:
+        return jsonify({
+            "error": "更新后结构校验失败，未保存",
+            "warnings": warnings,
+        }), 400
     _save_portfolio(pf)
     return jsonify({"status": "saved", "updated": pf["updated"]})
 
