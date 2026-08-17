@@ -1908,6 +1908,115 @@ def _compute_exposure(pf):
     }
 
 
+def _fundamental_state_local(dash_data):
+    """基本面解释框架（与 intraday_check 一致，供统一评估使用）。"""
+    d = dash_data or {}
+    a = d.get("assessment") or {}
+    conclusion = a.get("conclusion", "")
+    leading = d.get("leading_indicators") or {}
+    ups = sum(1 for v in leading.values() if v.get("trend") == "up")
+    downs = sum(1 for v in leading.values() if v.get("trend") == "down")
+    flats = len(leading) - ups - downs
+    lead_str = f"，领先 {ups}↑{flats}→{downs}↓" if leading else ""
+    if conclusion in ("考虑跑路", "高位警惕"):
+        return {"level": "weak", "conclusion": conclusion, "msg": f"基本面走弱（结论：{conclusion}{lead_str}）"}
+    if downs > 0:
+        return {"level": "warning", "conclusion": conclusion, "msg": f"基本面转弱信号（结论：{conclusion}{lead_str}）"}
+    return {"level": "ok", "conclusion": conclusion, "msg": f"基本面正常（结论：{conclusion}{lead_str}）"}
+
+
+def _build_action_plan(pf, dash_cache, action_result):
+    """统一评估入口：合并决策树结论 + 基本面状态 + 叠层信号 + 档位/敞口，输出一份行动计划。"""
+    from rules import load_rules
+
+    tier_caps = load_rules().get("position_tiers", {})
+    exposure = _compute_exposure(pf)
+    sector_over = {x["name"]: x for x in exposure.get("sectors", []) if x["pct"] > x["limit"]}
+    theme_over = {x["name"]: x for x in exposure.get("themes", []) if x["pct"] > x["limit"]}
+
+    holdings = pf.get("holdings", []) or []
+    active = [
+        h for h in holdings
+        if h.get("status") not in ("sold", "non_investment") and (h.get("amount") or 0) > 0
+    ]
+    total = pf.get("total_assets", 0) or 0
+
+    buys = {s.get("fund_id"): s for s in action_result.get("buy_signals", [])}
+    sells = {
+        s.get("fund_id"): s
+        for s in action_result.get("sell_profit", []) + action_result.get("sell_stop", [])
+    }
+    rejects = {c.get("fund_id"): c for c in action_result.get("conflicts_resolved", [])}
+
+    plan = []
+    for h in active:
+        fid = h.get("dashboard_id") or h.get("fund_code")
+        sector = h.get("sector") or "其他"
+        theme = h.get("theme")
+        entry = dash_cache.get(fid) if fid else None
+        dash = entry.get("data", {}) if entry else {}
+        a = dash.get("assessment") or {}
+        fs = _fundamental_state_local(dash)
+        day_ret = dash.get("fund_return_pct")
+
+        action = "hold"
+        reason = fs["msg"]
+        needs_confirm = False
+        if fs["level"] == "weak":
+            action = "exit"
+            reason = f"{fs['msg']} → 达到离场条件应减仓/清仓"
+        elif fid in sells:
+            action = "reduce"
+            reason = sells[fid].get("reason", reason)
+        elif fid in rejects and "逆向吸入候选" in (rejects[fid].get("_reject_reason") or ""):
+            action = "inhale"
+            reason = rejects[fid].get("_reject_reason", reason)
+            needs_confirm = True
+        elif fid in rejects:
+            action = "hold"
+            reason = rejects[fid].get("_reject_reason", reason)
+        elif fid in buys:
+            action = "buy"
+            reason = buys[fid].get("reason", reason)
+            over = []
+            if sector in sector_over:
+                over.append(f"板块 {sector} {sector_over[sector]['pct']}% > {sector_over[sector]['limit']}%")
+            if theme and theme in theme_over:
+                over.append(f"主题 {theme} {theme_over[theme]['pct']}% > {theme_over[theme]['limit']}%")
+            if over:
+                reason += " | ⚠ 超参考线（加仓需记录理由）"
+                needs_confirm = True
+
+        divergence = "—"
+        if fs["level"] != "weak" and day_ret is not None:
+            if day_ret <= -3:
+                divergence = "价格回调+基本面完好 → 逆向吸入候选（人工确认）"
+            elif day_ret >= 3:
+                divergence = "今日大涨+基本面未变 → 观察不追高"
+        elif fs["level"] == "weak":
+            divergence = "基本面走弱 → 离场/减仓优先"
+
+        plan.append({
+            "fund_id": fid,
+            "sector": sector,
+            "theme": theme,
+            "fund_name": h.get("fund_name", ""),
+            "amount": h.get("amount", 0),
+            "pct": round((h.get("amount") or 0) / total * 100, 1) if total else 0,
+            "evidence_stage": h.get("evidence_stage", ""),
+            "tier_cap_pct": round((tier_caps.get(h.get("evidence_stage"), 0) or 0) * 100, 1),
+            "conclusion": a.get("conclusion", "—"),
+            "emoji": a.get("emoji", ""),
+            "fundamental": fs["level"],
+            "fundamental_msg": fs["msg"],
+            "action": action,
+            "reason": reason,
+            "needs_confirm": needs_confirm,
+            "divergence": divergence,
+        })
+    return plan
+
+
 @app.route("/portfolio")
 def portfolio_page():
     return render_template("portfolio.html")
@@ -1973,6 +2082,34 @@ def api_portfolio():
 
     pf["exposure"] = _compute_exposure(pf)
     return jsonify(pf)
+
+
+@app.route("/api/action-plan")
+def api_action_plan():
+    """统一评估入口：一份今日行动计划（决策树 + 基本面 + 叠层信号 + 档位 + 敞口）。"""
+    pf = _load_portfolio()
+    if not pf:
+        return jsonify({"error": "portfolio.json not found"}), 404
+    with _cache_lock:
+        dash_cache = {fid: entry for fid, entry in _cache.items()}
+    action_result = evaluate_daily_actions(pf, dash_cache)
+    plan = _build_action_plan(pf, dash_cache, action_result)
+    total = pf.get("total_assets", 0) or 0
+    cash_pct = round(pf.get("cash", 0) / total * 100, 1) if total else 0
+    return jsonify({
+        "date": action_result.get("date"),
+        "cash_pct": cash_pct,
+        "cash_floor_ok": cash_pct >= 10.0,
+        "plan": plan,
+        "summary": {
+            "exit": sum(1 for x in plan if x["action"] == "exit"),
+            "reduce": sum(1 for x in plan if x["action"] == "reduce"),
+            "buy": sum(1 for x in plan if x["action"] == "buy"),
+            "inhale": sum(1 for x in plan if x["action"] == "inhale"),
+            "hold": sum(1 for x in plan if x["action"] == "hold"),
+        },
+        "signals": action_result,
+    })
 
 
 @app.route("/api/portfolio/update", methods=["POST"])

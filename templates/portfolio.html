@@ -183,6 +183,7 @@ async function load() {
     const data = await r.json();
     if (data.error) { document.getElementById('app').innerHTML = `<div class="loading">❌ ${data.error}</div>`; return; }
     render(data);
+    loadActionPlan();
   } catch(e) {
     document.getElementById('app').innerHTML = `<div class="loading">❌ 加载失败: ${e.message}</div>`;
   }
@@ -319,7 +320,11 @@ function render(data) {
       </div>
     </div>
 
-    <!-- ═══ 今日操作建议 ═══ -->
+    <!-- 今日行动计划（统一评估） -->
+    <div class="section-title">🎯 今日行动计划 <span class="legend-limits">（决策树 + 基本面 + 信号 + 档位 + 敞口 统一）</span></div>
+    <div id="plan-panel" style="margin-bottom:16px">⏳ 加载中...</div>
+
+    <!-- 今日操作建议（叠层信号详情） -->
     <div id="action-section"></div>
 
     <!-- 板块分配 -->
@@ -435,6 +440,50 @@ function renderExposure(ex) {
     exposureGroup('板块（参考 20%）', ex.sectors) +
     exposureGroup('主题（参考线取 position_config）', ex.themes) +
     exposureGroup('瓶颈簇（参考 30%，仅显示 ≥5%）', ex.clusters);
+}
+
+async function loadActionPlan() {
+  const panel = document.getElementById('plan-panel');
+  if (!panel) return;
+  try {
+    const r = await fetch('/api/action-plan');
+    const data = await r.json();
+    renderActionPlan(panel, data);
+  } catch(e) {
+    panel.innerHTML = '<div class="opt-empty">行动计划加载失败</div>';
+  }
+}
+
+function renderActionPlan(panel, data) {
+  if (!data || !data.plan) { panel.innerHTML = '<div class="opt-empty">暂无数据</div>'; return; }
+  const s = data.summary || {};
+  const cashOk = data.cash_floor_ok
+    ? `✅ 现金 ${data.cash_pct}% ≥ 10%（唯一硬约束通过）`
+    : `🔴 现金 ${data.cash_pct}% < 10%（唯一硬约束）`;
+  const summary = `<div style="font-size:12px;color:var(--text2);margin-bottom:8px">${cashOk} · 退出 ${s.exit||0} · 减仓 ${s.reduce||0} · 买入候选 ${s.buy||0} · 逆向吸入 ${s.inhale||0} · 持有 ${s.hold||0}</div>`;
+  const actionMap = {
+    exit: ['退出', 'var(--red)'],
+    reduce: ['减仓', 'var(--red)'],
+    buy: ['买入候选', 'var(--green)'],
+    inhale: ['逆向吸入 · 需确认', 'var(--yellow)'],
+    hold: ['持有', 'var(--text2)'],
+  };
+  const rows = data.plan.map(x => {
+    const [al, ac] = actionMap[x.action] || ['—', 'var(--text2)'];
+    const confirmTag = x.needs_confirm ? ' <span style="color:var(--yellow)">(需人工确认)</span>' : '';
+    const capInfo = x.tier_cap_pct ? ` · 档位上限 ${x.tier_cap_pct}%` : '';
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span><b>${x.emoji||''} ${x.sector}</b> <span style="font-size:11px;color:var(--text2)">${x.fund_name||''}</span></span>
+        <span style="color:${ac};font-weight:600;white-space:nowrap">${al}${confirmTag}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">仓位 ${x.pct}%${capInfo} · 档位 ${x.evidence_stage||'—'} · 结论 ${x.conclusion}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">${x.fundamental_msg}</div>
+      ${x.reason !== x.fundamental_msg ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">${x.reason}</div>` : ''}
+      ${x.divergence !== '—' ? `<div style="font-size:12px;color:var(--yellow);margin-top:2px">${x.divergence}</div>` : ''}
+    </div>`;
+  }).join('');
+  panel.innerHTML = summary + rows;
 }
 
 async function loadActions() {
