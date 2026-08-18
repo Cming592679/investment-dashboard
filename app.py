@@ -39,7 +39,7 @@ CORPORATE_CALENDAR = {
             {"date": date(2026, 7, 16), "event": "Q2 法说会", "importance": "critical"},
             {"date": date(2026, 10, 15), "event": "Q3 法说会", "importance": "critical"},
         ],
-        "affected_funds": ["019633", "014194", "024239", "CPO"],
+        "affected_funds": ["019633", "CPO"],
     },
     "NVDA": {
         "ticker": "NVDA",
@@ -47,7 +47,7 @@ CORPORATE_CALENDAR = {
         "events": [
             {"date": date(2026, 8, 20), "event": "Q2 财报", "importance": "critical"},
         ],
-        "affected_funds": ["024239", "CPO", "021528"],
+        "affected_funds": ["CPO", "021528"],
     },
     "ASML": {
         "ticker": "ASML",
@@ -55,7 +55,7 @@ CORPORATE_CALENDAR = {
         "events": [
             {"date": date(2026, 7, 17), "event": "Q2 财报", "importance": "critical"},
         ],
-        "affected_funds": ["019633", "014194", "024239"],
+        "affected_funds": ["019633"],
     },
     "SK海力士": {
         "ticker": "000660.KS",
@@ -63,7 +63,7 @@ CORPORATE_CALENDAR = {
         "events": [
             {"date": date(2026, 7, 25), "event": "Q2 财报(HBM)", "importance": "critical"},
         ],
-        "affected_funds": ["024239", "019633"],
+        "affected_funds": ["019633"],
     },
     "三星": {
         "ticker": "005930.KS",
@@ -71,7 +71,7 @@ CORPORATE_CALENDAR = {
         "events": [
             {"date": date(2026, 7, 30), "event": "Q2 财报", "importance": "high"},
         ],
-        "affected_funds": ["024239"],
+        "affected_funds": [],
     },
     "美光": {
         "ticker": "MU",
@@ -79,7 +79,7 @@ CORPORATE_CALENDAR = {
         "events": [
             {"date": date(2026, 9, 25), "event": "Q4 财报", "importance": "high"},
         ],
-        "affected_funds": ["019633", "024239"],
+        "affected_funds": ["019633"],
     },
     "中芯国际": {
         "ticker": "688981.SS",
@@ -87,7 +87,7 @@ CORPORATE_CALENDAR = {
         "events": [
             {"date": date(2026, 8, 15), "event": "Q2 财报", "importance": "critical"},
         ],
-        "affected_funds": ["014194"],
+        "affected_funds": [],
     },
     "北方华创": {
         "ticker": "002371.SZ",
@@ -95,7 +95,7 @@ CORPORATE_CALENDAR = {
         "events": [
             {"date": date(2026, 8, 25), "event": "Q2 财报", "importance": "critical"},
         ],
-        "affected_funds": ["014194"],
+        "affected_funds": [],
     },
     "中际旭创": {
         "ticker": "300308.SZ",
