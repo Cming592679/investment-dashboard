@@ -8,7 +8,7 @@ import time as _time
 from datetime import datetime, date, timedelta
 from flask import Flask, render_template, jsonify, request
 from config import (
-    FUNDS, EXIT_LEVELS,
+    FUNDS,
     LEADING_INDICATORS, KEY_DATES, CYCLE_ASSESSMENTS,
     BOTTLENECK_CLUSTERS, BOTTLENECK_CONCENTRATION_WARN,
     SHARED_INDICATORS, BOTTLENECK_DISRUPTION,
