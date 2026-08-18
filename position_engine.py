@@ -100,8 +100,8 @@ def compute_all(portfolio, save_snapshot=False):
         code = h.get('fund_code', '')
         did = h.get('dashboard_id', code)
         name = h.get('fund_name', code)[:20]
-        tier = h.get('tier', 'active')
-        base = h.get('base', 0.08) if tier != 'overweight' else 0.08
+        stage = h.get('evidence_stage') or h.get('tier', 'active')
+        base = h.get('base', 0.08)  # v1.1：overweight 不再是档位，由敞口层动态判定
         max_pos = h.get('max', 0.15)
         theme = h.get('theme', '')
         current_amt = h['amount']
@@ -151,7 +151,7 @@ def compute_all(portfolio, save_snapshot=False):
             action = '🔴 REDUCE'
 
         results.append({
-            'code': code, 'name': name, 'tier': tier, 'theme': theme,
+            'code': code, 'name': name, 'tier': stage, 'theme': theme,
             'current': round(current_pct * 100, 1),
             'base_pct': round(base * 100, 1),
             'rsi': round(avg_rsi, 1) if avg_rsi else None,

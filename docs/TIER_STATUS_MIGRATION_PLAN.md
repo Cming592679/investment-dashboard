@@ -1,6 +1,7 @@
 # tier / status 语义统一 — 迁移方案（草案，未实施）
 
-> 状态：**仅方案**。本文件不改变任何代码或数据语义，等待用户确认后作为独立 P1 提交实施。
+> 状态：**已实施（2026-08-18，用户确认"方案通过"）**。数据归一化已写入 portfolio.json；
+> 代码层（position_engine/schema）已收敛。下方为迁移依据与实施记录。
 > 依据：`INVESTMENT_RULEBOOK_DRAFT.md` v1.1（Tier = 证据成熟度授权档）+ `RULEBOOK_MAPPING_AUDIT.md` §3.4/3.5。
 
 ---

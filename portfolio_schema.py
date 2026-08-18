@@ -5,7 +5,7 @@
 - 未知字段一律允许（为 v1.0 预留 evidence_stage / divergence / override 等扩展空间，
   避免下一次再做结构迁移）；
 - 校验只产出警告，不修改任何数据；
-- tier / status 保持旧系统语义，本阶段不做档位迁移（属于 P1-1）。
+- v1.1 语义：status = 生命周期，evidence_stage = 证据成熟度档位（tier 保留兼容读取）。
 
 当前允许/保留字段清单（避免误报）：
 top: updated, total_assets, cash, daily_return, holding_return, cumulative_return,
@@ -56,6 +56,8 @@ HOLDING_NUMERIC = [
 
 HOLDING_ENUM = {
     "evidence_stage": {"explore", "watch", "verify", "core", ""},
+    "status": {"active", "sell_pending", "sold", "non_investment", "observe", ""},
+    "tier": {"explore", "watch", "verify", "core", "sold", "non_investment", ""},
 }
 
 
