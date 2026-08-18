@@ -2056,7 +2056,7 @@ def _build_action_plan(pf, dash_cache, action_result):
             "conclusion": a.get("conclusion", "—"),
             "emoji": a.get("emoji", ""),
             "fundamental": fs["level"],
-            "fundamental_msg": fs["msg"],
+            "fundamental_msg": fs["message"],
             "action": action,
             "reason": reason,
             "needs_confirm": needs_confirm,

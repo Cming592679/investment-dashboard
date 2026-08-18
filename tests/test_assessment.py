@@ -86,5 +86,55 @@ class TestDecisionTree(unittest.TestCase):
         self.assertEqual(a["conclusion"], "忍着不动")
 
 
+class TestActionPlanBuild(unittest.TestCase):
+    """回归：_build_action_plan 必须产出完整字段（防止 fundamental_state 字段改名后漏改）。"""
+
+    def test_build_action_plan_has_all_fields(self):
+        pf = {
+            "total_assets": 100000,
+            "holdings": [
+                {
+                    "fund_code": "019633",
+                    "dashboard_id": "019633",
+                    "fund_name": "国泰半导体设备ETF联接C",
+                    "sector": "半导体",
+                    "amount": 10000,
+                    "evidence_stage": "verify",
+                }
+            ],
+        }
+        dash_cache = {
+            "019633": {
+                "data": {
+                    "assessment": {"conclusion": "安心持有", "emoji": "🟢"},
+                    "leading_indicators": {},
+                    "fund_return_pct": 0.5,
+                }
+            }
+        }
+        action_result = {
+            "buy_signals": [],
+            "sell_profit": [],
+            "sell_stop": [],
+            "conflicts_resolved": [],
+        }
+        plan = app._build_action_plan(pf, dash_cache, action_result)
+        self.assertEqual(len(plan), 1)
+        p = plan[0]
+        for key in (
+            "fund_id",
+            "fundamental",
+            "fundamental_msg",
+            "action",
+            "divergence",
+            "tier_cap_pct",
+            "needs_confirm",
+        ):
+            self.assertIn(key, p)
+        self.assertEqual(p["action"], "hold")
+        self.assertEqual(p["fundamental"], "ok")
+        self.assertEqual(p["divergence"], "—")
+
+
 if __name__ == "__main__":
     unittest.main()
