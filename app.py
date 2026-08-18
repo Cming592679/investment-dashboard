@@ -15,7 +15,7 @@ from config import (
     CYCLE_COUNTER_HYPOTHESIS, DIVERGENCE_DOWNGRADE_WEEKS,
     DYNAMIC_THRESHOLD_COEFFICIENT, DYNAMIC_THRESHOLD_LOOKBACK_DAYS,
     MIN_SAMPLE_SIZE_WARNING, CONTROL_BENCHMARKS,
-    DATA_DIR,
+    DATA_DIR, BOARD_FUND_MAP,
 )
 from data_fetcher import get_index_snapshot, get_stock_snapshot
 from fund_nav_fetcher import update_portfolio_nav, backfill_portfolio_history
@@ -1175,6 +1175,76 @@ def api_history_date(date_str):
     with open(snap_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return jsonify(_sanitize_json(data))
+
+
+_CONCLUSION_EMOJI = {
+    "安心持有": "🟢",
+    "继续持有": "🟢",
+    "关注加仓": "🟢",
+    "关注反弹": "🟢",
+    "忍着不动": "🟡",
+    "超卖观望": "🟡",
+    "高位警惕": "🔴",
+    "考虑跑路": "🔴",
+}
+
+
+def _timeline_fund_short(fid):
+    """dashboard id → 板块短名（CPO/STORAGE 等非基金 id 单独映射）。"""
+    code = BOARD_FUND_MAP.get(fid, fid)
+    return FUNDS.get(code, {}).get("short", fid)
+
+
+@app.route("/api/timeline")
+def api_timeline():
+    """历史时间线：板块结论变化 + 操作记录（只读合并，最近 60 条）。"""
+    events = []
+
+    # 1) 板块结论变化（来自每日快照索引）
+    if os.path.exists(HISTORY_INDEX_PATH):
+        with open(HISTORY_INDEX_PATH, "r", encoding="utf-8") as f:
+            index = json.load(f)
+        prev = {}
+        for snap in index:
+            date_str = snap.get("date")
+            for fid, info in (snap.get("funds") or {}).items():
+                concl = info.get("conclusion")
+                if not concl:
+                    continue
+                if prev.get(fid) != concl:
+                    emoji = _CONCLUSION_EMOJI.get(concl, "⚪")
+                    ret = info.get("return_pct")
+                    ret_str = f"（当日 {ret:+.1f}%）" if isinstance(ret, (int, float)) else ""
+                    old = prev.get(fid)
+                    if old:
+                        old_emoji = _CONCLUSION_EMOJI.get(old, "⚪")
+                        title = f"{_timeline_fund_short(fid)} {old_emoji}{old} → {emoji}{concl}"
+                    else:
+                        title = f"{_timeline_fund_short(fid)} {emoji}{concl}"
+                    events.append({
+                        "date": date_str,
+                        "type": "conclusion",
+                        "title": title,
+                        "detail": ret_str,
+                    })
+                prev[fid] = concl
+
+    # 2) 操作记录（portfolio.json action_log）
+    pf = _load_portfolio()
+    if pf:
+        for a in pf.get("action_log") or []:
+            detail = a.get("reason") or ""
+            if a.get("amount"):
+                detail = f"{detail} {a['amount']}".strip()
+            events.append({
+                "date": a.get("date", ""),
+                "type": "action",
+                "title": a.get("action", ""),
+                "detail": detail,
+            })
+
+    events.sort(key=lambda e: (e.get("date") or ""), reverse=True)
+    return jsonify({"timeline": events[:60]})
 
 
 # ══════════════════════════════════════════════════════════

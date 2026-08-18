@@ -127,6 +127,9 @@
   .log-date { color: var(--text2); font-size: 12px; white-space: nowrap; min-width: 80px; }
   .log-action { font-weight: 600; min-width: 80px; }
   .log-reason { color: var(--text2); }
+  .tl-tag { font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-right: 6px; vertical-align: 1px; }
+  .tl-tag.tl-concl { background: rgba(163,117,247,0.15); color: var(--purple); }
+  .tl-tag.tl-action { background: rgba(88,166,255,0.15); color: var(--blue); }
 
   /* ═══ 底部 ═══ */
   .footer-bar {
@@ -368,6 +371,10 @@ function render(data) {
     <div class="section-title">📝 操作日志</div>
     <ul class="log-list">${logHTML || '<li class="log-item"><span class="log-reason">暂无记录</span></li>'}</ul>
 
+    <!-- 历史时间线 -->
+    <div class="section-title">🕐 历史时间线 <span class="legend-limits">（板块结论变化 + 操作记录，最近 60 条）</span></div>
+    <ul class="log-list" id="timeline-list"><li class="log-item"><span class="log-reason">⏳ 加载中...</span></li></ul>
+
     <!-- 底部 -->
     <div class="footer-bar">
       <span>数据源: portfolio.json + Dashboard 实时缓存</span>
@@ -380,6 +387,28 @@ function render(data) {
 load();
 loadActions();
 loadIntraday();
+loadTimeline();
+
+async function loadTimeline() {
+  const el = document.getElementById('timeline-list');
+  try {
+    const r = await fetch('/api/timeline');
+    const d = await r.json();
+    const items = d.timeline || [];
+    el.innerHTML = items.length ? items.map(e => {
+      const tag = e.type === 'conclusion'
+        ? '<span class="tl-tag tl-concl">结论</span>'
+        : '<span class="tl-tag tl-action">操作</span>';
+      return `<li class="log-item">
+        <span class="log-date">${e.date}</span>
+        <span class="log-action">${tag}${e.title}</span>
+        <span class="log-reason">${e.detail || ''}</span>
+      </li>`;
+    }).join('') : '<li class="log-item"><span class="log-reason">暂无记录</span></li>';
+  } catch(e) {
+    el.innerHTML = '<li class="log-item"><span class="log-reason">⚠ 时间线数据暂不可用</span></li>';
+  }
+}
 
 async function loadIntraday() {
   try {
