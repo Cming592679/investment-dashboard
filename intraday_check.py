@@ -7,6 +7,7 @@
 import urllib.request, json, sys, os, time
 from datetime import date, datetime
 from collections import defaultdict
+from divergence import fundamental_state, fundamental_context
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 API = 'http://localhost:5000/api'
@@ -89,36 +90,6 @@ MODULE_DASHBOARD = {
 }
 
 
-def _fundamental_state(dash_data):
-    """基本面解释框架（v1.1）：结论 + 领先指标方向。
-
-    Returns: {"level": "ok"|"warning"|"weak", "message": ...}
-    """
-    d = dash_data or {}
-    a = d.get('assessment') or {}
-    conclusion = a.get('conclusion', '')
-    leading = d.get('leading_indicators') or {}
-    ups = sum(1 for v in leading.values() if v.get('trend') == 'up')
-    downs = sum(1 for v in leading.values() if v.get('trend') == 'down')
-    flats = len(leading) - ups - downs
-    lead_str = f"，领先 {ups}↑{flats}→{downs}↓" if leading else ""
-    if conclusion in ("考虑跑路", "高位警惕"):
-        return {"level": "weak", "message": f"基本面走弱（结论：{conclusion}{lead_str}）"}
-    if downs > 0:
-        return {"level": "warning", "message": f"基本面现转弱信号（结论：{conclusion}{lead_str}）"}
-    return {"level": "ok", "message": f"基本面正常（结论：{conclusion}{lead_str}）"}
-
-
-def _fundamental_context(dash_data):
-    """根据基本面状态生成展示上下文（弱 → 离场处理提示）。"""
-    st = _fundamental_state(dash_data)
-    if st["level"] == "weak":
-        return f"⚠ {st['message']} → 应按离场计划处理，不应等回调再进；请人工复核该计划"
-    if st["level"] == "warning":
-        return f"⚠ {st['message']} → 回调再进逻辑需复核，接近离场条件则改为减仓"
-    return st["message"]
-
-
 def check_plan(plan, portfolio):
     """检查一条 plan 是否触发。返回状态字符串。"""
     module = plan.get('module', '')
@@ -132,7 +103,7 @@ def check_plan(plan, portfolio):
     did = MODULE_DASHBOARD.get(module)
     if did:
         dash_data = get_dashboard_data(did)
-        fund_state = _fundamental_state(dash_data)
+        fund_state = fundamental_state(dash_data)
 
     # 买入计划 + 基本面走弱 → 计划失效并反转为离场观察（逻辑层，不是仅提醒）
     if direction == 'buy' and fund_state and fund_state['level'] == 'weak':
@@ -144,7 +115,7 @@ def check_plan(plan, portfolio):
         stocks = (dash_data or {}).get('stocks', {})
         wrsi, covered, total = _weighted_rsi('CPO', stocks)
         if wrsi is not None:
-            ctx = _fundamental_context(dash_data) if fund_state else ""
+            ctx = fundamental_context(dash_data) if fund_state else ""
             if wrsi < 50:
                 return f"✅ 触发！加权RSI={wrsi:.1f}<50 → {plan['action_if_triggered']} | {ctx}"
             return f"❌ 未触发 加权RSI={wrsi:.1f}≥50 → {plan['action_if_not']} | {ctx}"

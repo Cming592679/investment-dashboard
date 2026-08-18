@@ -23,6 +23,7 @@ from trading_rules import evaluate_daily_actions
 from storage import write_json
 from backup import backup_personal_data, last_backup_info
 from portfolio_schema import validate_file, validate_portfolio
+from divergence import fundamental_state, classify_divergence
 
 # ══════════════════════════════════════════════════════════
 # 数据健康检测 — 指标过期 & 缺失事件
@@ -1908,23 +1909,6 @@ def _compute_exposure(pf):
     }
 
 
-def _fundamental_state_local(dash_data):
-    """基本面解释框架（与 intraday_check 一致，供统一评估使用）。"""
-    d = dash_data or {}
-    a = d.get("assessment") or {}
-    conclusion = a.get("conclusion", "")
-    leading = d.get("leading_indicators") or {}
-    ups = sum(1 for v in leading.values() if v.get("trend") == "up")
-    downs = sum(1 for v in leading.values() if v.get("trend") == "down")
-    flats = len(leading) - ups - downs
-    lead_str = f"，领先 {ups}↑{flats}→{downs}↓" if leading else ""
-    if conclusion in ("考虑跑路", "高位警惕"):
-        return {"level": "weak", "conclusion": conclusion, "msg": f"基本面走弱（结论：{conclusion}{lead_str}）"}
-    if downs > 0:
-        return {"level": "warning", "conclusion": conclusion, "msg": f"基本面转弱信号（结论：{conclusion}{lead_str}）"}
-    return {"level": "ok", "conclusion": conclusion, "msg": f"基本面正常（结论：{conclusion}{lead_str}）"}
-
-
 def _build_action_plan(pf, dash_cache, action_result):
     """统一评估入口：合并决策树结论 + 基本面状态 + 叠层信号 + 档位/敞口，输出一份行动计划。"""
     from rules import load_rules
@@ -1956,15 +1940,15 @@ def _build_action_plan(pf, dash_cache, action_result):
         entry = dash_cache.get(fid) if fid else None
         dash = entry.get("data", {}) if entry else {}
         a = dash.get("assessment") or {}
-        fs = _fundamental_state_local(dash)
+        fs = fundamental_state(dash)
         day_ret = dash.get("fund_return_pct")
 
         action = "hold"
-        reason = fs["msg"]
+        reason = fs["message"]
         needs_confirm = False
         if fs["level"] == "weak":
             action = "exit"
-            reason = f"{fs['msg']} → 达到离场条件应减仓/清仓"
+            reason = f"{fs['message']} → 达到离场条件应减仓/清仓"
         elif fid in sells:
             action = "reduce"
             reason = sells[fid].get("reason", reason)
@@ -1987,14 +1971,8 @@ def _build_action_plan(pf, dash_cache, action_result):
                 reason += " | ⚠ 超参考线（加仓需记录理由）"
                 needs_confirm = True
 
-        divergence = "—"
-        if fs["level"] != "weak" and day_ret is not None:
-            if day_ret <= -3:
-                divergence = "价格回调+基本面完好 → 逆向吸入候选（人工确认）"
-            elif day_ret >= 3:
-                divergence = "今日大涨+基本面未变 → 观察不追高"
-        elif fs["level"] == "weak":
-            divergence = "基本面走弱 → 离场/减仓优先"
+        dvg = classify_divergence(fundamental=fs, day_return_pct=day_ret)
+        divergence = dvg["label"]
 
         plan.append({
             "fund_id": fid,
