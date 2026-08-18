@@ -16,7 +16,7 @@
 - 核心理念：**领先于价格，不追随价格**。盯的是"瓶颈在收紧还是缓解"（设备订单、CapEx、产能利用率、合约价等），不是股价涨跌。
 - 板块范围：7 个监控板块——半导体设备、CPO 光模块、电子材料、军工电子、电网设备、机器人、存储芯片。
 - 关键约束：基金视角而非股票视角——日涨跌几乎不触发操作；C 类份额 <7 天有 1.5% 惩罚费；份额（shares）是持仓的源头真相。
-- 仓库：GitHub `Cming592679/investment-dashboard`，分支 `main`，2026-07-07 上线，7 个 commit。
+- 仓库：GitHub `Cming592679/investment-dashboard`，分支 `main`，2026-07-07 上线，52 个 commit。
 - 个人数据分离：真实持仓/历史/预测/复盘存在外部 `PERSONAL_DATA_DIR`（由 `.env.local` 指定，指向个人数据目录），**绝不进入 Git**。
 
 ---
@@ -127,8 +127,8 @@
 
 ```
 investment-dashboard/
-├── app.py              # Flask 主入口：路由/API/缓存/决策树/健康检测/复盘生成/调度器（~1850行）
-├── config.py           # 全部配置：基金/领先指标/周期/事件/瓶颈破坏/交易规则参数（~1365行）
+├── app.py              # Flask 主入口：路由/API/缓存/决策树/健康检测/复盘生成/调度器/待办聚合（~2300行）
+├── config.py           # 全部配置：基金/领先指标/周期/事件/瓶颈破坏/交易规则参数（~1150行）
 ├── data_fetcher.py     # yfinance 封装：股价/RSI/MACD/KDJ/布林/均线/量能（retry+NaN防护）
 ├── fund_nav_fetcher.py # 新浪(收盘净值)+东方财富(历史)+apizero(盘中估值)：份额驱动更新
 ├── trading_rules.py    # 叠层信号规则引擎：Regime/L1-L4/止盈止损/冲突消解（~980行）
@@ -137,7 +137,7 @@ investment-dashboard/
 ├── record_trade.py     # 统一交易记录入口（buy/sell/plan）
 ├── templates/          # index.html(基金监控) + portfolio.html(仓位总览)
 ├── static/style.css
-├── fund_weights.json   # 部分板块成分股权重（用于加权 RSI）
+├── logging_utils.py    # 统一日志：控制台+滚动文件+错误计数（health 展示）
 ├── optimize/topics.json# 优化专题清单
 ├── run.sh / .env.local # 启动与环境变量（PERSONAL_DATA_DIR）
 └── .claude/skills/     # serenity-bottleneck-hunter + technical-check.md
@@ -156,10 +156,10 @@ investment-dashboard/
 
 - **缓存**：板块数据内存缓存 + 启动后台预热；`?refresh=1` 强制刷新。
 - **调度器**：`_scheduler_loop`（18:00 快照、20:00 净值、整点缓存刷新）。
-- **健康检测**：领先指标按 update_cycle 分级判过期 + 关键事件遗漏检测（`/api/health`）。
+- **健康检测**：领先指标按 update_cycle 分级判过期 + 关键事件遗漏检测（`/api/health`）；`/api/todo` 聚合待办（过期指标/遗漏事件/待执行计划/数据源错误/备份/配额/日志计数），首页展示"今日行动计划 + 待办清单"。
 - **决策树**：8 分支判定（量能分支、联动降级、瓶颈破坏、背离降级等），结论字符串驱动前端颜色（分数已弃用作判定）。
 - **复盘生成**：Tier-1 门禁（≥90 天）+ Tier-2 动态阈值 + 置信度校准 + 对照组超额收益。
-- **API**：`/api/funds`、`/api/fund/<id>`、`/api/refresh`、`/api/portfolio`、`/api/action`、`/api/intraday`、`/api/history`、`/api/health`、`/api/review[/generate]`、`/api/bottleneck-exposure`、`/api/optimize/topics`。
+- **API**：`/api/funds`、`/api/fund/<id>`、`/api/refresh`、`/api/portfolio`、`/api/action`、`/api/action-plan`、`/api/intraday`、`/api/history`、`/api/health`、`/api/todo`、`/api/review[/generate]`、`/api/bottleneck-exposure`、`/api/optimize/topics`。
 
 ### 5.4 数据源
 
@@ -169,7 +169,7 @@ investment-dashboard/
 ### 5.5 已知架构特征（可改进点）
 
 - `app.py` + `config.py` 两个大文件承担过多职责，模块边界靠注释维持。
-- 无用户认证（仅 localhost，单用户场景可接受）。
+- 无用户认证（仅 localhost，单用户场景可接受）；日志写入个人数据目录 `logs/app.log`（滚动 1MB×5，错误计数进 `/api/health`）。
 - 测试：`tests/`（unittest，决策树/规则/divergence/验证闭环）+ GitHub Actions CI；验证同时靠 `/api/health`。
 - 前端无构建步骤（原生 JS），无类型检查。
 
@@ -194,7 +194,7 @@ investment-dashboard/
 
 ### 6.3 数据维护负担
 
-- 领先指标依赖手动更新（`config.py`），忘记更新会导致基于过期数据的结论；健康检测只能"提醒"不能"更新"。
+- 领先指标依赖手动更新（`config.py`），忘记更新会导致基于过期数据的结论；健康检测 + `/api/todo` 已能"聚合提醒"（过期指标/遗漏事件/待执行计划），但不会自动更新数据。
 - 北向资金、两市成交额、融资融券、宏观层（PMI/社融/LPR/CNY）、基本面估值（PE/PB/ROE）均未接入。
 - yfinance 对 A 股数据偶发失败；akshare 备用源被推迟（optimize topic #2 已 done，但未真正接入）。
 
@@ -205,7 +205,7 @@ investment-dashboard/
 - 轨道 C（时间止盈）因持仓缺买入日期而不完整。
 - L4 事件面用关键词匹配结果，可能误判（如"营收超预期但利润 miss"）。
 - 瓶颈破坏信号可能过度敏感（如 CXMT HBM3 触发 AI 硬件 Structural，但技术差距仍有 2-3 年）。
-- 无用户认证、无测试、无 CI（单用户可接受，但重构风险高）。
+- 无用户认证（单用户可接受）；测试（unittest，52 项）与 GitHub Actions CI 已建立，仍需持续扩充覆盖。
 
 ### 6.5 优化专题队列（optimize/topics.json）
 
