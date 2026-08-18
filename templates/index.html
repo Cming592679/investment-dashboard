@@ -27,6 +27,12 @@
     </div>
   </header>
 
+  <!-- ═══ 全局错误态 ═══ -->
+  <div id="global-error" class="global-error" style="display:none">
+    <span id="global-error-msg"></span>
+    <button id="global-error-retry" class="global-error-retry">重试</button>
+  </div>
+
   <!-- ═══ 标签页导航 ═══ -->
   <nav class="tab-nav">
     {% for fid, f in funds.items() %}
@@ -45,6 +51,22 @@
 
   <!-- ═══ P0-任务1：共享瓶颈敞口警告 ═══ -->
   <section id="bottleneck-warnings" class="bottleneck-warnings" style="display:none"></section>
+
+  <!-- ═══ 今日行动计划（首页入口，完整版在仓位页） ═══ -->
+  <section id="home-plan" class="home-plan" style="display:none">
+    <div class="home-plan-head">
+      <h2>🎯 今日行动计划</h2>
+      <a href="/portfolio" class="home-plan-link">查看完整计划 →</a>
+    </div>
+    <div id="home-plan-summary" class="home-plan-summary"></div>
+    <div id="home-plan-rows" class="home-plan-rows"></div>
+  </section>
+
+  <!-- ═══ 待办清单（聚合：指标/事件/计划/数据源/备份/配额） ═══ -->
+  <section id="todo-panel" class="todo-panel" style="display:none">
+    <h2>📋 待办清单</h2>
+    <div id="todo-grid" class="todo-grid"></div>
+  </section>
 
   <!-- ═══ 当前判定横幅 ═══ -->
   <section id="exit-banner" class="exit-banner exit-unknown">
@@ -280,6 +302,7 @@ async function loadFund(fid) {
 
   try {
     const resp = await fetch('/api/fund/' + fid);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     fundData = await resp.json();
     // 更新缓存
     const a = fundData.assessment || {};
@@ -290,9 +313,11 @@ async function loadFund(fid) {
     const activeBtn = $('.tab-btn.active');
     if (activeBtn) updateTabDot(activeBtn, summaryCache[fid]);
     renderAll(fundData);
+    hideGlobalError();
   } catch(e) {
     console.error(e);
     $('#fund-name').textContent = '加载失败';
+    showGlobalError('基金数据加载失败: ' + fid + ' — ' + (e.message || e));
   }
 }
 
@@ -592,6 +617,109 @@ function renderExitDetail(a) {
 // ── DOM 工具 ──────────────────────────────
 function $$(sel, p) { return [...(p||document).querySelectorAll(sel)]; }
 
+// ── 全局错误态 ─────────────────────────────
+function showGlobalError(msg) {
+  const el = $('#global-error');
+  if (!el) return;
+  $('#global-error-msg').textContent = msg || '未知错误';
+  el.style.display = 'flex';
+}
+function hideGlobalError() {
+  const el = $('#global-error');
+  if (el) el.style.display = 'none';
+}
+async function apiFetch(url, opts) {
+  try {
+    const resp = await fetch(url, opts);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    hideGlobalError();
+    return await resp.json();
+  } catch(e) {
+    showGlobalError('请求失败 ' + url + ' — ' + (e.message || e));
+    throw e;
+  }
+}
+
+// ── 首页：今日行动计划（聚合入口） ─────────
+const HOME_ACTION_MAP = {
+  exit: ['退出', 'var(--red)'],
+  reduce: ['减仓', 'var(--red)'],
+  buy: ['买入候选', 'var(--green)'],
+  inhale: ['逆向吸入', 'var(--yellow)'],
+  hold: ['持有', 'var(--text-dim)'],
+};
+
+async function loadHomePlan() {
+  const panel = $('#home-plan');
+  if (!panel) return;
+  try {
+    const data = await apiFetch('/api/action-plan');
+    if (!data || !data.plan) { panel.style.display = 'none'; return; }
+    panel.style.display = '';
+    const s = data.summary || {};
+    const cashOk = data.cash_floor_ok
+      ? `✅ 现金 ${data.cash_pct}% ≥ 10%（硬约束通过）`
+      : `🔴 现金 ${data.cash_pct}% < 10%（硬约束）`;
+    $('#home-plan-summary').innerHTML =
+      `<span>${cashOk}</span><span>退出 ${s.exit||0}</span><span>减仓 ${s.reduce||0}</span>
+       <span>买入候选 ${s.buy||0}</span><span>逆向吸入 ${s.inhale||0}</span><span>持有 ${s.hold||0}</span>`;
+    const rows = (data.plan || []).slice(0, 8).map(x => {
+      const [al, ac] = HOME_ACTION_MAP[x.action] || ['—', 'var(--text2)'];
+      const confirmTag = x.needs_confirm ? ' <span class="home-confirm">需确认</span>' : '';
+      return `<div class="home-plan-row">
+        <span class="home-plan-name">${x.emoji||''} ${x.sector}</span>
+        <span class="home-plan-fund">${x.fund_name||''}</span>
+        <span class="home-plan-msg">${x.fundamental_msg||x.reason||''}</span>
+        <span class="home-plan-action" style="color:${ac}">${al}${confirmTag}</span>
+      </div>`;
+    }).join('');
+    $('#home-plan-rows').innerHTML = rows || '<div class="opt-empty">暂无持仓</div>';
+  } catch(e) { /* apiFetch 已显示全局错误态 */ }
+}
+
+// ── 首页：待办清单（聚合视图） ─────────────
+async function loadTodo() {
+  const panel = $('#todo-panel');
+  if (!panel) return;
+  try {
+    const d = await apiFetch('/api/todo');
+    panel.style.display = '';
+    const stale = d.stale_indicators || [];
+    const missing = d.missing_events || [];
+    const plans = d.pending_plans || [];
+    const errTotal = (d.data_errors || {}).total || 0;
+    const apz = d.apizero || { used: 0, limit: 50 };
+    const logs = d.log_counts || {};
+    const logErr = Object.values(logs).reduce((s, v) => s + (v.error || 0), 0);
+    const backup = d.backup || {};
+    const backupVal = backup.status === 'ok'
+      ? (backup.backed_up_at || '今日已备份').slice(11)
+      : backup.status === 'never' ? '从未备份' : '异常';
+    const apzPct = Math.min(100, Math.round(apz.used / (apz.limit || 50) * 100));
+
+    const cards = [
+      { icon: '⏳', label: '过期指标', value: stale.length, cls: stale.length ? 'warn' : 'ok',
+        click: "document.getElementById('leading-panel').scrollIntoView({behavior:'smooth'})" },
+      { icon: '📅', label: '遗漏事件', value: missing.length, cls: missing.length ? 'warn' : 'ok' },
+      { icon: '📌', label: '待执行计划', value: plans.length, cls: plans.length ? 'warn' : 'ok', link: '/portfolio' },
+      { icon: '⚠️', label: '数据源错误', value: errTotal, cls: errTotal ? 'bad' : 'ok' },
+      { icon: '🗄', label: '备份', value: backupVal, cls: backup.status === 'ok' ? 'ok' : 'warn' },
+      { icon: '🔌', label: 'apizero 配额', value: `${apz.used}/${apz.limit}`, cls: apzPct >= 80 ? 'warn' : 'ok', sub: '盘中估值源' },
+      { icon: '🧾', label: '日志错误', value: logErr, cls: logErr ? 'bad' : 'ok' },
+    ];
+    $('#todo-grid').innerHTML = cards.map(c => {
+      const cls = c.cls === 'bad' ? 'todo-bad' : c.cls === 'warn' ? 'todo-warn' : 'todo-ok';
+      const inner = `<span class="todo-icon">${c.icon}</span>
+        <span class="todo-label">${c.label}</span>
+        <span class="todo-value">${c.value}</span>
+        ${c.sub ? `<span class="todo-sub">${c.sub}</span>` : ''}`;
+      return c.link
+        ? `<a class="todo-card ${cls}" href="${c.link}">${inner}</a>`
+        : `<div class="todo-card ${cls}" ${c.click ? `onclick="${c.click}"` : ''}>${inner}</div>`;
+    }).join('');
+  } catch(e) { /* apiFetch 已显示全局错误态 */ }
+}
+
 // ── 优化面板 ──────────────────────────────
 async function loadOptimize() {
   // 加载优化专题
@@ -739,6 +867,7 @@ $('#refresh-btn').addEventListener('click', async () => {
     }
     // 更新所有标签圆点
     await preloadSummaries();
+    await Promise.all([loadHomePlan(), loadTodo()]);
   } catch(e) {
     console.error(e);
   } finally {
@@ -746,6 +875,13 @@ $('#refresh-btn').addEventListener('click', async () => {
     btn.textContent = '🔄';
     $('#loading-indicator').style.display = 'none';
   }
+});
+
+// ── 全局错误重试 ──────────────────────────
+$('#global-error-retry').addEventListener('click', async () => {
+  hideGlobalError();
+  if (currentFund) await loadFund(currentFund);
+  await Promise.all([loadHomePlan(), loadTodo(), loadBottleneckExposure()]);
 });
 
 // ── 数据健康指示器 ──────────────────────────
@@ -796,7 +932,12 @@ function renderBottleneckWarnings(warnings) {
 
 // ── 启动：先点亮标签，再加载第一只基金 ──────
 (async () => {
-  await Promise.all([preloadSummaries(), loadBottleneckExposure()]);
+  await Promise.all([
+    preloadSummaries(),
+    loadBottleneckExposure(),
+    loadHomePlan(),
+    loadTodo(),
+  ]);
   const firstBtn = $('.tab-btn');
   if (firstBtn) firstBtn.click();
 })();

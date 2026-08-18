@@ -1150,6 +1150,29 @@ def api_health():
     })
 
 
+@app.route("/api/todo")
+def api_todo():
+    """待办聚合视图：过期指标 + 遗漏事件 + 待执行计划 + 数据错误 + 备份 + 配额 + 日志计数。"""
+    staleness = check_indicator_staleness()
+    missing_events = detect_missing_events()
+    pf = _load_portfolio() or {}
+    pending_plans = [
+        p for p in (pf.get("pending_plans") or [])
+        if p.get("status") == "pending"
+    ]
+    data_errors = _count_data_errors()
+    return jsonify({
+        "stale_indicators": staleness,
+        "missing_events": missing_events,
+        "pending_plans": pending_plans,
+        "data_errors": data_errors,
+        "backup": last_backup_info() or {"status": "never"},
+        "apizero": md_service.apizero_usage(),
+        "log_counts": error_counts(),
+        "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    })
+
+
 # ══════════════════════════════════════════════════════════
 # 历史快照 API
 # ══════════════════════════════════════════════════════════

@@ -162,6 +162,8 @@ QDII_FUND_CODES = {
     "016665",  # 天弘全球高端制造(QDII)C
 }
 
+APIZERO_DAILY_LIMIT = 50  # apizero 免费匿名额度（次/天）
+
 
 def is_qdii(code: str) -> bool:
     return code in QDII_FUND_CODES
@@ -197,6 +199,8 @@ class MarketDataService:
         self._now = now or (lambda: datetime.now())
         self._intraday_cache: Dict[str, Tuple[IntradayQuote, float]] = {}
         self._nav_cache: Dict[str, Tuple[OfficialNAV, float]] = {}
+        self._apizero_usage_date: Optional[str] = None
+        self._apizero_used = 0
         self._intraday_ttl = intraday_ttl
         self._nav_ttl = nav_ttl
 
@@ -343,6 +347,12 @@ class MarketDataService:
     # ─────────────────────────────
 
     def fetch_intraday_apizero(self, code: str) -> IntradayQuote:
+        today = self._now().date().isoformat()
+        if self._apizero_usage_date != today:
+            self._apizero_usage_date = today
+            self._apizero_used = 0
+        self._apizero_used += 1
+
         url = f"https://v1.apizero.cn/api/fund?action=estimate&code={code}"
         ok, body = self._http(url, headers={"User-Agent": "Mozilla/5.0"})
         now_iso = _iso_now(self._now())
@@ -441,6 +451,17 @@ class MarketDataService:
             logger.warning("盘中数据不可用 fund_id=%s status=%s msg=%s",
                            fund_id, result.status, result.message)
         return result
+
+    def apizero_usage(self) -> Dict[str, object]:
+        """当日 apizero 配额使用情况（used / limit / date）。"""
+        today = self._now().date().isoformat()
+        if self._apizero_usage_date != today:
+            return {"date": today, "used": 0, "limit": APIZERO_DAILY_LIMIT}
+        return {
+            "date": self._apizero_usage_date,
+            "used": self._apizero_used,
+            "limit": APIZERO_DAILY_LIMIT,
+        }
 
     def refresh_intraday(
         self,

@@ -1,6 +1,7 @@
 """MarketDataService 测试（P0-0 修复专项，13 项验收场景）。"""
 
 import unittest
+import json
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -31,6 +32,13 @@ def em_nav_body(nav="3.0815", nav_date="2026-08-17", chg="4.86"):
         '{"Datas":[{"FCODE":"019633","PDATE":"%s","NAV":"%s","NAVCHGRT":"%s"}],'
         '"ErrCode":0,"Success":true}' % (nav_date, nav, chg)
     )
+
+
+def apizero_ok_body(chg="1.20", est="3.0"):
+    return json.dumps({
+        "code": 0,
+        "data": {"change_rate": chg, "estimate": est, "update_time": "2026-08-18T10:00:00"},
+    })
 
 
 def sina_quote_body(cur="1.262", prev="1.263", quote_date="2026-08-18", quote_time="10:15:00"):
@@ -215,6 +223,27 @@ class TestRestart(unittest.TestCase):
         self.assertIsNotNone(q2.quote_time)
         self.assertEqual(q1.quote_time, q2.quote_time)
 
+
+class TestApizeroQuota(unittest.TestCase):
+    def test_usage_increments_and_rolls_over_by_day(self):
+        current = datetime(2026, 8, 18, 10, 0, 0)
+        svc = MarketDataService(
+            http_get=fake_http(lambda u: (True, apizero_ok_body())),
+            now=lambda: current,
+            intraday_ttl=0.0,
+        )
+        svc.get_intraday("019633", market="a", force=True)
+        svc.get_intraday("019633", market="a", force=True)
+        usage = svc.apizero_usage()
+        self.assertEqual(usage["used"], 2)
+        self.assertEqual(usage["limit"], 50)
+        self.assertEqual(usage["date"], "2026-08-18")
+
+        current = datetime(2026, 8, 19, 10, 0, 0)
+        svc.get_intraday("019633", market="a", force=True)
+        usage2 = svc.apizero_usage()
+        self.assertEqual(usage2["used"], 1)
+        self.assertEqual(usage2["date"], "2026-08-19")
 
 if __name__ == "__main__":
     unittest.main()
