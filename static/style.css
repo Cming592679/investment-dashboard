@@ -205,7 +205,7 @@ body {
 
 .note-hint { font-size: 10px; color: var(--yellow); font-style: italic; margin-left: auto; }
 
-/* ── 逃跑信号横幅 ──────────────────────────── */
+/* ── 当前判定横幅 ──────────────────────────── */
 
 .exit-banner {
   display: flex; flex-direction: column; gap: 8px;
@@ -229,16 +229,16 @@ body {
 .exit-run   .exit-action { color: var(--red); }
 .exit-desc  { font-size: 12px; color: var(--text-dim); }
 
-.exit-score-box {
+.exit-judgement-box {
   display: flex; flex-direction: column; align-items: center;
   padding: 6px 14px; background: var(--bg); border-radius: 7px;
   min-width: 70px;
 }
-.exit-score-num { font-size: 22px; font-weight: 700; }
-.exit-safe .exit-score-num, .exit-watch .exit-score-num { color: var(--green); }
-.exit-warn .exit-score-num { color: var(--yellow); }
-.exit-run  .exit-score-num { color: var(--red); }
-.exit-score-label { font-size: 10px; color: var(--text-dim); letter-spacing: .5px; }
+.exit-judgement-num { font-size: 22px; font-weight: 700; }
+.exit-safe .exit-judgement-num, .exit-watch .exit-judgement-num { color: var(--green); }
+.exit-warn .exit-judgement-num { color: var(--yellow); }
+.exit-run  .exit-judgement-num { color: var(--red); }
+.exit-judgement-label { font-size: 10px; color: var(--text-dim); letter-spacing: .5px; }
 
 .exit-tags { display: flex; flex-wrap: wrap; gap: 5px; }
 .exit-tag { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 600; }
@@ -246,7 +246,7 @@ body {
 .tag-yellow { background: rgba(210,153,34,.15); color: var(--yellow); }
 .tag-green  { background: rgba(63,185,80,.12);  color: var(--green); }
 
-/* ── 逃跑信号拆解 ──────────────────────────── */
+/* ── 当前判定拆解 ──────────────────────────── */
 
 .exit-detail-list { display: flex; flex-direction: column; }
 

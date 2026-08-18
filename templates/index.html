@@ -46,7 +46,7 @@
   <!-- ═══ P0-任务1：共享瓶颈敞口警告 ═══ -->
   <section id="bottleneck-warnings" class="bottleneck-warnings" style="display:none"></section>
 
-  <!-- ═══ 逃跑信号横幅 ═══ -->
+  <!-- ═══ 当前判定横幅 ═══ -->
   <section id="exit-banner" class="exit-banner exit-unknown">
     <div class="exit-main">
       <span class="exit-emoji">⏳</span>
@@ -54,9 +54,9 @@
         <span class="exit-action">选择基金</span>
         <span class="exit-desc">点击上方标签加载基金数据</span>
       </div>
-      <div class="exit-score-box">
-        <span class="exit-score-num">--</span>
-        <span class="exit-score-label">当前判定</span>
+      <div class="exit-judgement-box">
+        <span class="exit-judgement-num">--</span>
+        <span class="exit-judgement-label">当前判定</span>
       </div>
     </div>
     <div id="exit-tags" class="exit-tags"></div>
@@ -91,7 +91,7 @@
       </div>
     </section>
 
-    <!-- 右 — 关键事件 + 逃跑信号 + 说明 -->
+    <!-- 右 — 关键事件 + 当前判定 + 说明 -->
     <section class="panel right-panel">
       <div class="sub-panel">
         <h2>📅 关键事件</h2>
@@ -208,7 +208,7 @@ function indicatorBadges(ind) {
 // ── 状态 ──────────────────────────────────
 let currentFund = null;
 let fundData = null;
-const summaryCache = {};  // { fid: {score, max_score, action_emoji, action} }
+const summaryCache = {};  // { fid: {emoji, action, ok} }
 
 // ── 预加载所有基金概要（并行）───────────────
 async function preloadSummaries() {
@@ -221,13 +221,12 @@ async function preloadSummaries() {
       const d = await resp.json();
       const a = d.assessment || {};
       summaryCache[fid] = {
-        score: a.score,
-        max_score: a.max_score || 10,
         emoji: a.emoji || '⚪',
         action: a.conclusion || '?',
+        ok: true,
       };
     } catch(e) {
-      summaryCache[fid] = { score: '?', max_score: '?', emoji: '⚪', action: 'err' };
+      summaryCache[fid] = { emoji: '⚪', action: 'err', ok: false };
     }
     updateTabDot(btn, summaryCache[fid]);
   });
@@ -237,21 +236,17 @@ async function preloadSummaries() {
 function updateTabDot(btn, s) {
   const dot = btn.querySelector('.tab-dot');
   if (!dot) return;
-  if (s.score === '?') { dot.className = 'tab-dot dot-unknown'; return; }
-  // 用结论判断颜色（而非裸分），确保联动降级/背离/破坏触发后的🟡也正确显示
+  if (s.ok === false) { dot.className = 'tab-dot dot-unknown'; dot.title = '加载失败'; return; }
+  // 用结论判断颜色（决策树时代无线性分数），联动降级/背离/破坏触发后的🟡也正确显示
   const action = s.action || s.conclusion || '';
-  if (action.includes('安心') || action.includes('持有') && !action.includes('忍着'))
+  if (action.includes('安心') || (action.includes('持有') && !action.includes('忍着')))
     dot.className = 'tab-dot dot-green';
-  else if (action.includes('忍着') || action.includes('警惕'))
+  else if (action.includes('忍着') || action.includes('警惕') || action.includes('观望'))
     dot.className = 'tab-dot dot-yellow';
   else if (action.includes('跑路') || action.includes('减仓'))
     dot.className = 'tab-dot dot-red';
-  else if (s.score >= 6)
-    dot.className = 'tab-dot dot-green';
-  else if (s.score >= 3)
-    dot.className = 'tab-dot dot-yellow';
   else
-    dot.className = 'tab-dot dot-red';
+    dot.className = 'tab-dot dot-unknown';
   dot.title = `${s.emoji} ${s.action}`;
 }
 
@@ -289,8 +284,8 @@ async function loadFund(fid) {
     // 更新缓存
     const a = fundData.assessment || {};
     summaryCache[fid] = {
-      score: a.score, max_score: a.max_score || 10,
       emoji: a.emoji || '⚪', action: a.conclusion || '?',
+      ok: true,
     };
     const activeBtn = $('.tab-btn.active');
     if (activeBtn) updateTabDot(activeBtn, summaryCache[fid]);
@@ -536,7 +531,7 @@ function renderPrediction(p) {
   `;
 }
 
-// ── 逃跑横幅 ──────────────────────────────
+// ── 当前判定横幅 ──────────────────────────
 function setExitBanner(mode) {
   const banner = $('#exit-banner');
   if (mode==='loading') {
@@ -544,7 +539,7 @@ function setExitBanner(mode) {
     banner.querySelector('.exit-emoji').textContent = '⏳';
     banner.querySelector('.exit-action').textContent = '加载中...';
     banner.querySelector('.exit-desc').textContent = '';
-    banner.querySelector('.exit-score-num').textContent = '--';
+    banner.querySelector('.exit-judgement-num').textContent = '--';
     $('#exit-tags').innerHTML = '';
   }
 }
@@ -552,7 +547,7 @@ function setExitBanner(mode) {
 function renderExitBanner(a) {
   if (!a) return;
   const banner = $('#exit-banner');
-  // 用结论字符串判定（决策树模式下 score 恒为 0，不可用）
+  // 用结论字符串判定（决策树模式，无线性分数）
   const c = a.conclusion || '';
   const isGreen = c.includes('安心') || c.includes('持有') || c.includes('加仓');
   const isRed = c.includes('跑路') || c.includes('减仓') || c.includes('高位');
@@ -561,8 +556,8 @@ function renderExitBanner(a) {
   banner.querySelector('.exit-emoji').textContent = a.emoji;
   banner.querySelector('.exit-action').textContent = a.conclusion;
   banner.querySelector('.exit-desc').textContent = a.desc;
-  // 分数已弃用，显示决策树判定
-  banner.querySelector('.exit-score-num').textContent = a.emoji || '--';
+  // 决策树判定（无线性分数）
+  banner.querySelector('.exit-judgement-num').textContent = a.emoji || '--';
 
   // 标签：用结论字符串判定
   const tagLabel = isGreen ? '✅ 安心持有' : isRed ? '⚠ 考虑跑路' : '⏸ 忍着不动';

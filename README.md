@@ -79,7 +79,7 @@ investment-dashboard/
 ├── fund_nav_fetcher.py # 基金净值：新浪API(收盘) + 东方财富API(历史+持仓) / 份额驱动更新
 │
 ├── templates/
-│   ├── index.html      # 基金监控主页：标签页 / 逃跑信号横幅 / 三栏面板
+│   ├── index.html      # 基金监控主页：标签页 / 当前判定横幅 / 三栏面板
 │   └── portfolio.html  # 仓位总览：总览卡片 / 板块分配柱 / 持仓明细 / 操作日志
 │
 ├── history/            # 📸 每日快照（18:00 自动保存）
