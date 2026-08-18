@@ -187,6 +187,9 @@ async function load() {
     if (data.error) { document.getElementById('app').innerHTML = `<div class="loading">❌ ${data.error}</div>`; return; }
     render(data);
     loadActionPlan();
+    loadActions();
+    loadIntraday();
+    loadTimeline();
   } catch(e) {
     document.getElementById('app').innerHTML = `<div class="loading">❌ 加载失败: ${e.message}</div>`;
   }
@@ -385,9 +388,6 @@ function render(data) {
 }
 
 load();
-loadActions();
-loadIntraday();
-loadTimeline();
 
 async function loadTimeline() {
   const el = document.getElementById('timeline-list');
