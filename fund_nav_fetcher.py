@@ -181,51 +181,60 @@ def compute_shares(amount: float, nav: float) -> Optional[float]:
     return round(amount / nav, 2)
 
 
-def update_portfolio_nav(portfolio: dict) -> dict:
-    """更新持仓净值和日收益。返回更新后的 portfolio dict。
+def update_portfolio_nav(portfolio: dict, nav_service=None) -> dict:
+    """更新持仓官方净值（统一走 MarketDataService，P0-0 修复）。
 
-    原则（修复双写冲突）：
-    - amount/cost_basis 不做任何计算——截图是唯一 ground truth
-    - 只更新 nav、nav_date、day_return_pct、daily_return
-    - holding_return = amount - cost_basis（amount已由截图更新）
-    - daily_return = amount × day_return_pct / 100（估算）
+    数据语义：
+    - 每只基金保存 nav / nav_date / nav_return / nav_source / nav_fetched_at / nav_status；
+    - daily_return = amount × nav_return/100，日期语义为「该基金自己的 nav_date」；
+    - 组合官方收益只对同一 nav_date 的持仓合计（official_return），禁止混合不同日期；
+    - 抓取失败的持仓保留旧值但显式标记 nav_status=stale，不静默冒充新鲜。
     """
+    from market_data import market_data as default_md
+
+    md = nav_service or default_md
     codes = get_portfolio_codes(portfolio)
     if not codes:
         return portfolio
 
-    navs = get_all_fund_navs(codes)
+    navs = md.get_official_navs(codes, force=True)
     if not navs:
         print("  ⚠ 未获取到任何净值数据")
         return portfolio
 
     updated_count = 0
+    stale_codes = []
+    unavailable_codes = []
     for h in portfolio.get("holdings", []):
         code = h.get("fund_code", "")
-        if code not in navs:
-            continue
-
         status = h.get("status", "")
         if status == "sold" or h.get("amount", 0) <= 0:
             continue
 
-        nav_data = navs[code]
-        new_nav = nav_data.get("nav")
-        prev_nav = nav_data.get("prev_nav")
-        nav_date = nav_data.get("date")
-
-        if not new_nav:
+        nav_data = navs.get(code)
+        if not nav_data or nav_data.status != "official" or not nav_data.nav:
+            # 失败：保留旧值，显式标记 stale（有旧数据）或 unavailable（无旧数据）
+            has_old = h.get("nav_date") and h.get("nav")
+            h["nav_status"] = "stale" if has_old else "unavailable"
+            if not has_old:
+                unavailable_codes.append(code)
+            else:
+                stale_codes.append(code)
             continue
 
-        # 只更新净值相关字段，不动 amount/cost_basis
-        h["nav"] = new_nav
-        h["nav_date"] = nav_date
-
-        if prev_nav and prev_nav > 0:
-            day_return_pct = round((new_nav - prev_nav) / prev_nav * 100, 2)
-            h["day_return_pct"] = day_return_pct
-            # 估算日收益
-            h["daily_return"] = round(h.get("amount", 0) * day_return_pct / 100, 2)
+        # 官方净值成功
+        h["nav"] = nav_data.nav
+        h["nav_date"] = nav_data.nav_date
+        h["nav_return"] = nav_data.nav_return
+        h["day_return_pct"] = nav_data.nav_return  # 兼容旧字段，语义=官方净值收益率
+        h["nav_source"] = nav_data.source
+        h["nav_fetched_at"] = nav_data.fetched_at
+        h["nav_status"] = "official"
+        updated_count += 1
+        if nav_data.nav_return is not None:
+            h["daily_return"] = round(h.get("amount", 0) * nav_data.nav_return / 100, 2)
+        else:
+            h["daily_return"] = None
 
         # holding_return 从 amount - cost_basis 重算
         cost = h.get("cost_basis", 0)
@@ -234,12 +243,10 @@ def update_portfolio_nav(portfolio: dict) -> dict:
             h["holding_return"] = round(amt - cost, 2)
             h["holding_return_pct"] = round((amt - cost) / cost * 100, 2)
 
-        updated_count += 1
-
-    # ── 重算持仓级别汇总 ──
+    # ── 组合官方收益：只对同一 nav_date 合计（禁止混合不同日期） ──
     total_amount = 0
-    total_daily_return = 0
     total_holding_return = 0
+    official_active = []
     for h in portfolio.get("holdings", []):
         cost = h.get("cost_basis", 0)
         amt = h.get("amount", 0)
@@ -249,11 +256,41 @@ def update_portfolio_nav(portfolio: dict) -> dict:
         # sell_pending 的金额也计入汇总（份额还在账户）
         if h.get("status") != "sold":
             total_amount += amt
-            total_daily_return += h.get("daily_return", 0)
             total_holding_return += h.get("holding_return", 0)
+        if (h.get("status") != "sold" and amt > 0
+                and h.get("nav_status") == "official" and h.get("nav_date")):
+            official_active.append(h)
+
+    latest_nav_date = None
+    same_date_holdings = []
+    if official_active:
+        latest_nav_date = max(h["nav_date"] for h in official_active)
+        same_date_holdings = [h for h in official_active if h["nav_date"] == latest_nav_date]
+        # 已成功抓取但净值日期早于最新日期 → stale（不算失败，但不可同日合计）
+        for h in official_active:
+            if h["nav_date"] != latest_nav_date and h.get("fund_code") not in stale_codes:
+                stale_codes.append(h.get("fund_code"))
+
+    same_date_amt = 0.0
+    same_date_return_pct = None
+    if same_date_holdings:
+        same_date_amt = round(sum(h.get("daily_return") or 0 for h in same_date_holdings), 2)
+        denom = sum(h.get("amount", 0) for h in same_date_holdings)
+        if denom > 0:
+            weighted = sum((h.get("amount", 0) * (h.get("nav_return") or 0)) for h in same_date_holdings)
+            same_date_return_pct = round(weighted / denom, 2)
+
+    portfolio["daily_return"] = same_date_amt  # 仅同一 nav_date 的官方收益合计
+    portfolio["official_return"] = {
+        "nav_date": latest_nav_date,
+        "return_pct": same_date_return_pct,
+        "coverage": f"{len(same_date_holdings)}/{len(official_active) or 0}" if official_active else "0/0",
+        "covered_codes": [h.get("fund_code") for h in same_date_holdings],
+        "stale_holdings": stale_codes,
+        "unavailable_holdings": unavailable_codes,
+    }
 
     portfolio["total_assets"] = round(portfolio.get("cash", 0) + total_amount, 2)
-    portfolio["daily_return"] = round(total_daily_return, 2)
     portfolio["holding_return"] = round(total_holding_return, 2)
 
     # ── 重算板块分配 ──
@@ -274,7 +311,9 @@ def update_portfolio_nav(portfolio: dict) -> dict:
 
     portfolio["nav_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     active_codes = len([h for h in portfolio.get("holdings", []) if h.get("status") != "sold" and h.get("amount", 0) > 0])
-    print(f"  ✅ 净值更新: {updated_count}/{len(codes)} 只基金, {active_codes} 只活跃, 总资产 ¥{portfolio['total_assets']:,.0f}, 日收益 ¥{portfolio['daily_return']:+,.0f}")
+    print(f"  ✅ 净值更新: {updated_count}/{len(codes)} 只基金, {active_codes} 只活跃, "
+          f"官方收益(NAV {latest_nav_date}) ¥{portfolio['daily_return']:+,.0f}, "
+          f"stale={stale_codes}, unavailable={unavailable_codes}")
     return portfolio
 
 

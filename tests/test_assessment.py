@@ -90,6 +90,7 @@ class TestActionPlanBuild(unittest.TestCase):
     """回归：_build_action_plan 必须产出完整字段（防止 fundamental_state 字段改名后漏改）。"""
 
     def test_build_action_plan_has_all_fields(self):
+        from market_data import IntradayQuote, STATUS_ESTIMATED
         pf = {
             "total_assets": 100000,
             "holdings": [
@@ -118,7 +119,12 @@ class TestActionPlanBuild(unittest.TestCase):
             "sell_stop": [],
             "conflicts_resolved": [],
         }
-        plan = app._build_action_plan(pf, dash_cache, action_result)
+        fresh_quote = IntradayQuote(
+            intraday_change_pct=0.5, quote_time="2026-08-18T10:15:00",
+            status=STATUS_ESTIMATED, freshness="fresh",
+        )
+        with patch.object(app.md_service, "get_intraday", return_value=fresh_quote):
+            plan = app._build_action_plan(pf, dash_cache, action_result)
         self.assertEqual(len(plan), 1)
         p = plan[0]
         for key in (

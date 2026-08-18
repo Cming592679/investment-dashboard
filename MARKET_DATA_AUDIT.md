@@ -179,3 +179,19 @@ portfolio.json 的 nav / nav_date / day_return_pct / daily_return
 - A股：`nav_date` 应为最近交易日；超过 1 个交易日 → stale。
 - QDII/美股：允许 T+2 窗口；超过 → stale。
 - stale 数据：UI 标注「数据截至 YYYY-MM-DD」，禁止作为 Price–Fundamental Divergence / RSI / Trend / 涨幅透支 / Daily 自动分类的输入参与决策。
+
+---
+
+## 11. 修复实施记录（2026-08-18）
+
+按本审计结论已完成实现（`market_data.py` + 调用链集成）：
+
+- **MarketDataService**：Official NAV（新浪主源 → 东财回退）、Intraday（apizero → 新浪指数/ETF 代理）、状态机（official/estimated/stale/unavailable/error）、freshness、缓存（NAV 30min / 盘中 5min）。
+- **盘中数据源实测结论**：fundgz、新浪估值、腾讯估值、东财移动估值接口均已失效；唯一可靠可用的是新浪实时指数/ETF 行情，作为 `method=proxy_index` 的显式代理估算；QDII 在 A股交易时段无盘中数据 → unavailable。
+- **禁止语义混用**：`live_return_pct` 只承载盘中估算；官方净值收益走 `official_nav` / `nav_return`；数据不可用时显示「盘中数据不可用」。
+- **组合收益**：`official_return` 只对同一 nav_date 合计，输出 nav_date/coverage/stale/unavailable。
+- **晚披露补拉**：调度器在 20:00 / 20:30 / 21:00 / 21:30 共 4 个槽位执行净值更新。
+- **盘中刷新**：A股交易时段（9:30-11:30 / 13:00-15:00）每 5 分钟刷新。
+- **Data Integrity Gate**：`_build_action_plan` 在盘中数据 unavailable/stale 时阻断 Price-based divergence，输出 `price_signal_blocked`，Fundamental/Thesis 不受影响。
+- **UI**：仓位页拆分「官方净值收益（NAV 日期+覆盖率）」与「盘中估算（行情时间）」，QDII 显示「盘中不可用」。
+- **测试**：`tests/test_market_data.py` 覆盖官方净值/晚披露重试/主备源回退/无伪造/QDII/缓存过期/同日合计/闸门阻断与恢复/重启 等 13 类场景（合计 47 项测试全部通过）。

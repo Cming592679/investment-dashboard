@@ -24,6 +24,13 @@ from storage import write_json
 from backup import backup_personal_data, last_backup_info
 from portfolio_schema import validate_file, validate_portfolio
 from divergence import fundamental_state, classify_divergence
+from market_data import (
+    market_data as md_service,
+    INTRADAY_PROXY_MAP,
+    is_qdii,
+    STATUS_ESTIMATED,
+    STATUS_OFFICIAL,
+)
 
 # ══════════════════════════════════════════════════════════
 # 数据健康检测 — 指标过期 & 缺失事件
@@ -302,6 +309,9 @@ _cache_lock = threading.Lock()
 _fetching = False
 _last_auto_refresh_date = None  # 记录上次自动刷新的日期
 _last_backup_date = None        # 记录上次自动备份的日期
+_last_intraday_refresh = None   # 盘中数据最后刷新时间
+_nav_retry_done = {}            # {date: set(slot)} 晚披露补拉记录
+NAV_RETRY_SLOTS = [(20, 0), (20, 30), (21, 0), (21, 30)]  # 净值更新 + 晚披露补拉
 
 
 def _count_data_errors():
@@ -388,65 +398,23 @@ def _fetch_one_fund(fund_id, fund):
                         "note": cond.get("note", ""),
                     }
 
-    # 拉基金真实净值涨跌 + 盘中估算
-    fund_return_pct = None
-    fund_nav_date = None
-    try:
-        import urllib.request, re
-        url = f'http://fund.eastmoney.com/pingzhongdata/{fund_id}.js'
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'Referer': 'http://fund.eastmoney.com/'})
-        resp = urllib.request.urlopen(req, timeout=5).read().decode('utf-8')
-        nav_match = re.search(r'Data_netWorthTrend\s*=\s*(\[.*?\])', resp, re.DOTALL)
-        if nav_match:
-            nav_data = json.loads(nav_match.group(1))
-            if len(nav_data) >= 2:
-                latest = nav_data[-1]
-                fund_return_pct = latest.get('equityReturn', None)
-                from datetime import datetime
-                fund_nav_date = datetime.fromtimestamp(latest['x']/1000).strftime('%m/%d')
-    except Exception:
-        pass
-
-    # 盘中估值：三级 fallback — apizero真实估值 → 代理股票加权 → 基准ETF
-    fund_return_est = None
-    est_source = None
-    today_str = date.today().strftime('%m/%d')
-    is_today_nav = (fund_nav_date == today_str)
-
-    # 只有净值已更新到今日时，才直接用净值，不再估算
-    if not is_today_nav:
-        # 一级：apizero 基金实时估值
-        try:
-            from fund_nav_fetcher import get_fund_estimate_apizero
-            apz = get_fund_estimate_apizero(fund_id)
-            if apz and apz.get('change_rate') is not None:
-                fund_return_est = float(apz['change_rate'])
-                est_source = 'apizero'
-        except: pass
-
-        # 二级：代理股票加权（真实持仓权重，无条件计算）
-        if fund_return_est is None:
-            est, src = _weighted_proxy_estimate(fund_id, stocks)
-            if est is not None:
-                fund_return_est = est
-                est_source = src
-
-        # 三级：基准ETF
-        if fund_return_est is None:
-            bm_ticker = fund.get("benchmark", "")
-            if bm_ticker:
-                for src in [stocks, indices, specials]:
-                    if bm_ticker in src and not src[bm_ticker].get("error"):
-                        fund_return_est = src[bm_ticker].get("day_change_pct")
-                        est_source = 'benchmark'
-                        break
-                if fund_return_est is None:
-                    try:
-                        bm_snap = get_stock_snapshot(bm_ticker)
-                        if not bm_snap.get("error"):
-                            fund_return_est = bm_snap.get("day_change_pct")
-                            est_source = 'benchmark'
-                    except: pass
+    # ── MarketData（统一服务）：官方净值 + 盘中数据（P0-0 修复） ──
+    board_code = BOARD_FUND_MAP.get(fund_id, fund_id)  # CPO→011370 / STORAGE→025209
+    official = md_service.get_official_nav(board_code)
+    intraday = md_service.get_intraday(
+        fund_id,
+        market=fund.get("market", "a"),
+        proxy_symbol=INTRADAY_PROXY_MAP.get(fund_id),
+    )
+    # 兼容字段：语义明确——fund_return_pct 仅官方净值收益；fund_return_est 仅盘中估算
+    fund_return_pct = official.nav_return if official.status == STATUS_OFFICIAL else None
+    fund_nav_date = official.nav_date
+    fund_return_est = (
+        intraday.intraday_change_pct
+        if intraday.status == STATUS_ESTIMATED
+        else None
+    )
+    est_source = intraday.method if intraday.status == STATUS_ESTIMATED else None
 
     return {
         "fund_id": fund_id,
@@ -466,6 +434,8 @@ def _fetch_one_fund(fund_id, fund):
         "fund_nav_date": fund_nav_date,
         "fund_return_est": fund_return_est,
         "est_source": est_source,
+        "official_nav": official.to_dict(),
+        "intraday": intraday.to_dict(),
     }
 
 
@@ -717,11 +687,12 @@ def _attach_meta(data, fetched_at, is_fetching):
 
 def _scheduler_loop():
     """后台线程：每日 18:00 刷新快照"""
-    global _last_auto_refresh_date
+    global _last_auto_refresh_date, _last_intraday_refresh, _nav_retry_done
     while True:
         _time.sleep(30)
         now = datetime.now()
         today = now.date()
+        hm = (now.hour, now.minute)
 
         # 每日 18:00-18:02 刷新
         if now.hour == 18 and now.minute <= 2:
@@ -729,19 +700,41 @@ def _scheduler_loop():
                 print(f"⏰ 定时刷新触发 {now.strftime('%H:%M:%S')}")
                 _refresh_all()
 
-        # 每日 20:00-20:02 更新基金净值
-        if now.hour == 20 and now.minute <= 2:
-            try:
-                pf = _load_portfolio()
-                if pf:
-                    pf = update_portfolio_nav(pf)
-                    _save_portfolio(pf)
-                    # 保存当日快照
-                    hist_dir = os.path.join(DATA_DIR, "portfolio_history")
-                    backfill_portfolio_history(pf, hist_dir, days=3)
-                    print(f"📊 净值更新完成 {now.strftime('%H:%M:%S')}")
-            except Exception as e:
-                print(f"  ⚠ 净值更新失败: {e}")
+        # 净值更新 + 晚披露补拉（20:00 / 20:30 / 21:00 / 21:30）
+        for slot_h, slot_m in NAV_RETRY_SLOTS:
+            if hm == (slot_h, slot_m):
+                if len(_nav_retry_done) > 10:
+                    _nav_retry_done.clear()
+                done_slots = _nav_retry_done.setdefault(today, set())
+                if (slot_h, slot_m) not in done_slots:
+                    done_slots.add((slot_h, slot_m))
+                    try:
+                        pf = _load_portfolio()
+                        if pf:
+                            pf = update_portfolio_nav(pf)
+                            _save_portfolio(pf)
+                            hist_dir = os.path.join(DATA_DIR, "portfolio_history")
+                            backfill_portfolio_history(pf, hist_dir, days=3)
+                            print(f"📊 净值更新完成 {now.strftime('%H:%M:%S')} (slot {slot_h}:{slot_m:02d})")
+                    except Exception as e:
+                        print(f"  ⚠ 净值更新失败: {e}")
+                break
+
+        # 盘中数据刷新：A股交易时段（9:30-11:30 / 13:00-15:00）每 5 分钟
+        in_am = (now.hour == 9 and now.minute >= 30) or now.hour == 10 or (now.hour == 11 and now.minute <= 30)
+        in_pm = (13 <= now.hour < 15) or (now.hour == 15 and now.minute == 0)
+        if today.weekday() < 5 and (in_am or in_pm):
+            if _last_intraday_refresh is None or (now - _last_intraday_refresh).total_seconds() >= 300:
+                try:
+                    md_service.refresh_intraday(
+                        list(FUNDS.keys()),
+                        fund_market={fid: fund.get("market", "a") for fid, fund in FUNDS.items()},
+                        proxy_map=INTRADAY_PROXY_MAP,
+                    )
+                    _last_intraday_refresh = now
+                    print(f"🔄 盘中数据刷新 {now.strftime('%H:%M:%S')}")
+                except Exception as e:
+                    print(f"  ⚠ 盘中刷新失败: {e}")
 
         # 每日 20:05-20:06 个人数据备份（净值更新完成后，数据最完整）
         if now.hour == 20 and now.minute in (5, 6):
@@ -2011,7 +2004,24 @@ def _build_action_plan(pf, dash_cache, action_result):
         dash = entry.get("data", {}) if entry else {}
         a = dash.get("assessment") or {}
         fs = fundamental_state(dash)
-        day_ret = dash.get("fund_return_pct")
+
+        # ── Market Data 状态（P0-0 Data Integrity Gate） ──
+        # Price 信号必须来自盘中数据，官方净值收益不得冒充今日价格
+        q = None
+        price_ok = False
+        if fid:
+            if is_qdii(h.get("fund_code", "")):
+                q = md_service.get_intraday(fid, market="us")
+            else:
+                q = md_service.get_intraday(
+                    fid,
+                    market=FUNDS.get(fid, {}).get("market", "a"),
+                    proxy_symbol=INTRADAY_PROXY_MAP.get(fid),
+                )
+            if q and q.status == STATUS_ESTIMATED:
+                q.freshness = md_service.intraday_freshness(q)
+                price_ok = q.freshness == "fresh"
+        day_ret = q.intraday_change_pct if price_ok else None
 
         action = "hold"
         reason = fs["message"]
@@ -2041,8 +2051,15 @@ def _build_action_plan(pf, dash_cache, action_result):
                 reason += " | ⚠ 超参考线（加仓需记录理由）"
                 needs_confirm = True
 
-        dvg = classify_divergence(fundamental=fs, day_return_pct=day_ret)
-        divergence = dvg["label"]
+        if price_ok:
+            dvg = classify_divergence(fundamental=fs, day_return_pct=day_ret)
+            divergence = dvg["label"]
+        else:
+            divergence = "⚠ 盘中市场数据不可用，无法判断价格-基本面背离"
+            # 价格数据不可用 → 不生成基于价格的 Add/Reduce 候选
+            if action in ("buy", "inhale"):
+                action = "hold"
+                reason = f"{reason} | ⚠ 盘中数据不可用，不生成基于价格的候选"
 
         plan.append({
             "fund_id": fid,
@@ -2061,6 +2078,14 @@ def _build_action_plan(pf, dash_cache, action_result):
             "reason": reason,
             "needs_confirm": needs_confirm,
             "divergence": divergence,
+            "official_nav_return": dash.get("fund_return_pct"),
+            "official_nav_date": dash.get("fund_nav_date"),
+            "intraday_change_pct": q.intraday_change_pct if q else None,
+            "intraday_status": q.status if q else None,
+            "intraday_freshness": q.freshness if q else None,
+            "quote_time": q.quote_time if q else None,
+            "intraday_method": q.method if q else None,
+            "price_signal_blocked": not price_ok,
         })
     return plan
 
@@ -2093,7 +2118,6 @@ def api_portfolio():
                     "conclusion": a["conclusion"],
                     "emoji": a["emoji"],
                     "desc": a.get("desc", ""),
-                    "return_pct": entry["data"].get("fund_return_pct"),
                 })
         if conclusions:
             # 取最差的判定
@@ -2104,7 +2128,18 @@ def api_portfolio():
             }.get(c["conclusion"], 2))
             enriched["live_conclusion"] = worst["conclusion"]
             enriched["live_emoji"] = worst["emoji"]
-            enriched["live_return_pct"] = worst["return_pct"]
+            # 板块级盘中涨跌：用该板块代理估算（有则显示，无则不可用），绝不显示官方净值（P0-0）
+            sector_est = None
+            for did in dash_ids:
+                q = md_service.get_intraday(
+                    did,
+                    market=FUNDS.get(did, {}).get("market", "a"),
+                    proxy_symbol=INTRADAY_PROXY_MAP.get(did),
+                )
+                if q.status == STATUS_ESTIMATED:
+                    sector_est = q.intraday_change_pct
+                    break
+            enriched["live_return_pct"] = sector_est
         enriched_sectors[sector] = enriched
 
     pf["sector_allocation_live"] = enriched_sectors
@@ -2113,19 +2148,37 @@ def api_portfolio():
     for h in pf.get("holdings", []):
         did = h.get("dashboard_id")
         if did:
+            # 盘中数据：按基金类型处理（QDII → unavailable），绝不回退官方净值（P0-0）
+            if is_qdii(h.get("fund_code", "")):
+                q = md_service.get_intraday(did, market="us")
+            else:
+                q = md_service.get_intraday(
+                    did,
+                    market=FUNDS.get(did, {}).get("market", "a"),
+                    proxy_symbol=INTRADAY_PROXY_MAP.get(did),
+                )
+            h["intraday_change_pct"] = q.intraday_change_pct
+            h["intraday_status"] = q.status
+            h["intraday_freshness"] = q.freshness
+            h["quote_time"] = q.quote_time
+            h["intraday_method"] = q.method
+            h["live_return_pct"] = (
+                q.intraday_change_pct if q.status == STATUS_ESTIMATED else None
+            )
+            h["official_nav"] = {
+                "nav": h.get("nav"),
+                "nav_date": h.get("nav_date"),
+                "nav_return": h.get("nav_return"),
+                "source": h.get("nav_source", ""),
+                "fetched_at": h.get("nav_fetched_at", ""),
+                "status": h.get("nav_status", ""),
+            }
             with _cache_lock:
                 entry = _cache.get(did)
             if entry and "assessment" in entry["data"]:
                 a = entry["data"]["assessment"]
                 h["live_conclusion"] = a["conclusion"]
                 h["live_emoji"] = a["emoji"]
-                # 优先用盘中估算，次用最新净值涨跌
-                est = entry["data"].get("fund_return_est")
-                nav_ret = entry["data"].get("fund_return_pct")
-                nav_date = entry["data"].get("fund_nav_date", "")
-                src = entry["data"].get("est_source", "")
-                h["live_return_pct"] = est if est is not None else nav_ret
-                h["live_return_date"] = nav_date if est is None else ("真实估值" if src == "apizero" else "代理估算" if src == "proxy" else "基准估算")
                 h["live_prediction"] = entry["data"].get("prediction", {}).get("label", "")
 
     pf["exposure"] = _compute_exposure(pf)

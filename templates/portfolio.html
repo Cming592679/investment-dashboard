@@ -197,6 +197,7 @@ async function load() {
 
 function fmt(n) { return n != null ? '¥' + Number(n).toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2}) : '--'; }
 function fmtPct(n) { return n != null ? (n > 0 ? '+' : '') + Number(n).toFixed(2) + '%' : '--'; }
+function fmtTime(iso) { const m = String(iso || '').match(/(\d{2}:\d{2})/); return m ? '截至' + m[1] : ''; }
 function clr(n) { return n == null ? '' : (n >= 0 ? 'val-green' : 'val-red'); }
 
 function render(data) {
@@ -276,8 +277,8 @@ function render(data) {
       <td>${fmt(h.amount)}</td>
       <td class="${clr(h.holding_return_pct)}">${fmtPct(h.holding_return_pct)}</td>
       <td class="${clr(h.holding_return)}">${fmt(h.holding_return)}</td>
-      <td class="${clr(dailyRet)}">${dailyRet != null ? fmt(dailyRet) : '--'}</td>
-      <td class="${clr(liveRet)}">${liveRet != null ? fmtPct(liveRet) : '--'}</td>
+      <td class="${clr(dailyRet)}" title="官方净值 ${h.nav_date||'--'} 收益 ${h.nav_return!=null?h.nav_return+'%':''}">${dailyRet != null ? fmt(dailyRet) : '--'}${h.nav_date ? `<span style="font-size:10px;color:var(--text2);margin-left:3px">${h.nav_date.slice(5)}</span>` : ''}</td>
+      <td class="${clr(liveRet)}" title="${h.quote_time ? '行情时间 ' + h.quote_time : ''}">${liveRet != null ? fmtPct(liveRet) + '<span style="font-size:10px;color:var(--text2);margin-left:3px">' + fmtTime(h.quote_time) + '</span>' : '<span style="color:var(--text2);font-size:12px">盘中不可用</span>'}</td>
       <td>${liveConc || '--'} ${livePred ? '· '+livePred : ''}</td>
       <td class="note" title="${h.notes||''}">${h.notes||'--'}</td>
     </tr>`;
@@ -319,10 +320,10 @@ function render(data) {
         <div class="value">${holdings.length} <span style="font-size:14px;color:var(--text2)">只</span></div>
         <div class="sub">${holdings.filter(h => h.amount > 0 && h.amount < 2000).length} 只微量仓位</div>
       </div>
-      <div class="stat-card" title="上一个交易日所有持仓的日收益总和。盘中显示为实时估算值">
-        <div class="label">昨日收益</div>
+      <div class="stat-card" title="仅同一官方净值日（NAV date）的持仓日收益合计，禁止混合不同日期">
+        <div class="label">官方净值收益</div>
         <div class="value ${clr(data.daily_return)}">${fmt(data.daily_return)}</div>
-        <div class="sub">${data.daily_return != null && totalAmount > 0 ? fmtPct(data.daily_return/(totalAmount - data.daily_return)*100) : '--'} 日涨跌</div>
+        <div class="sub">NAV ${data.official_return?.nav_date || '--'} · 覆盖 ${data.official_return?.coverage || '--'}${data.official_return?.stale_holdings?.length ? ' · <span style="color:var(--yellow)">stale ' + data.official_return.stale_holdings.length + '</span>' : ''}</div>
       </div>
     </div>
 
@@ -352,8 +353,8 @@ function render(data) {
           <th title="当前持有市值（份额 × 最新净值）">持有金额</th>
           <th title="自买入以来的累计收益率">持有收益率</th>
           <th title="自买入以来的累计盈亏金额">持有收益</th>
-          <th title="上一个交易日的收益金额（盘后更新）">昨日收益</th>
-          <th title="今日盘中实时估算涨跌（收盘前为估算值）">今日涨跌</th>
+          <th title="该基金官方净值日的正式收益金额（盘后更新）">官方收益</th>
+          <th title="A股为指数/ETF代理估算（非官方）；QDII无盘中数据">盘中估算</th>
           <th title="Dashboard 决策树对所属板块的实时判定">实时判定</th>
           <th title="备注信息">备注</th>
         </tr>
@@ -509,6 +510,7 @@ function renderActionPlan(panel, data) {
       <div style="font-size:12px;color:var(--text2);margin-top:4px">仓位 ${x.pct}%${capInfo} · 档位 ${x.evidence_stage||'—'} · 结论 ${x.conclusion}</div>
       <div style="font-size:12px;color:var(--text2);margin-top:2px">${x.fundamental_msg}</div>
       ${x.reason !== x.fundamental_msg ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">${x.reason}</div>` : ''}
+      <div style="font-size:11px;color:var(--text2);margin-top:2px">官方净值 ${x.official_nav_date||'--'} ${x.official_nav_return!=null?x.official_nav_return+'%':''} · 盘中 ${x.intraday_status==='estimated' ? (x.intraday_change_pct+'% '+(fmtTime(x.quote_time)||'')) : '不可用'}</div>
       ${x.divergence !== '—' ? `<div style="font-size:12px;color:var(--yellow);margin-top:2px">${x.divergence}</div>` : ''}
     </div>`;
   }).join('');
