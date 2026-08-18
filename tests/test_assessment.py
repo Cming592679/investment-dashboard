@@ -1,6 +1,7 @@
 """决策树分支测试：用合成行情数据验证各分支结论（P0-2 漏判修复回归）。"""
 
 import unittest
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import app
@@ -120,7 +121,8 @@ class TestActionPlanBuild(unittest.TestCase):
             "conflicts_resolved": [],
         }
         fresh_quote = IntradayQuote(
-            intraday_change_pct=0.5, quote_time="2026-08-18T10:15:00",
+            intraday_change_pct=0.5,
+            quote_time=(datetime.now() - timedelta(seconds=30)).isoformat(timespec="seconds"),
             status=STATUS_ESTIMATED, freshness="fresh",
         )
         with patch.object(app.md_service, "get_intraday", return_value=fresh_quote):

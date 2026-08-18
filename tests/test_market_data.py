@@ -1,7 +1,7 @@
 """MarketDataService 测试（P0-0 修复专项，13 项验收场景）。"""
 
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from market_data import (
@@ -192,7 +192,8 @@ class TestDataIntegrityGate(unittest.TestCase):
 
     def test_11_recovery_restores_signal(self):
         plan = self._plan(IntradayQuote(
-            intraday_change_pct=-4.0, quote_time="2026-08-18T10:15:00",
+            intraday_change_pct=-4.0,
+            quote_time=(datetime.now() - timedelta(seconds=30)).isoformat(timespec="seconds"),
             status=STATUS_ESTIMATED, freshness="fresh",
         ))
         p = plan[0]
