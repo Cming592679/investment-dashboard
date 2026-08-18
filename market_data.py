@@ -21,6 +21,10 @@ import urllib.request
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, date, timedelta
 from typing import Callable, Dict, List, Optional, Tuple
+from logging_utils import get_logger
+
+
+logger = get_logger("market_data")
 
 
 # ══════════════════════════════════════════════════════════
@@ -327,6 +331,7 @@ class MarketDataService:
             status=status,
             message=nav.message or nav2.message or "无可用官方净值",
         )
+        logger.warning("官方净值不可用 code=%s status=%s msg=%s", code, status, result.message)
         self._nav_cache[code] = (result, self._now().timestamp())
         return result
 
@@ -432,6 +437,9 @@ class MarketDataService:
                 )
 
         self._intraday_cache[cache_key] = (result, self._now().timestamp())
+        if market in ("a", "mixed") and result.status in (STATUS_UNAVAILABLE, STATUS_ERROR):
+            logger.warning("盘中数据不可用 fund_id=%s status=%s msg=%s",
+                           fund_id, result.status, result.message)
         return result
 
     def refresh_intraday(

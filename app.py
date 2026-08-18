@@ -23,6 +23,7 @@ from trading_rules import evaluate_daily_actions
 from storage import write_json
 from backup import backup_personal_data, last_backup_info
 from portfolio_schema import validate_file, validate_portfolio
+from logging_utils import setup_logging, get_logger, error_counts
 from divergence import fundamental_state, classify_divergence
 from market_data import (
     market_data as md_service,
@@ -697,7 +698,7 @@ def _scheduler_loop():
         # 每日 18:00-18:02 刷新
         if now.hour == 18 and now.minute <= 2:
             if _last_auto_refresh_date != today:
-                print(f"⏰ 定时刷新触发 {now.strftime('%H:%M:%S')}")
+                logger.info("⏰ 定时刷新触发 %s", now.strftime("%H:%M:%S"))
                 _refresh_all()
 
         # 净值更新 + 晚披露补拉（20:00 / 20:30 / 21:00 / 21:30）
@@ -715,9 +716,10 @@ def _scheduler_loop():
                             _save_portfolio(pf)
                             hist_dir = os.path.join(DATA_DIR, "portfolio_history")
                             backfill_portfolio_history(pf, hist_dir, days=3)
-                            print(f"📊 净值更新完成 {now.strftime('%H:%M:%S')} (slot {slot_h}:{slot_m:02d})")
+                            logger.info("📊 净值更新完成 %s (slot %s:%02d)",
+                                         now.strftime("%H:%M:%S"), slot_h, slot_m)
                     except Exception as e:
-                        print(f"  ⚠ 净值更新失败: {e}")
+                        logger.warning("⚠ 净值更新失败: %s", e, exc_info=True)
                 break
 
         # 盘中数据刷新：A股交易时段（9:30-11:30 / 13:00-15:00）每 5 分钟
@@ -732,9 +734,9 @@ def _scheduler_loop():
                         proxy_map=INTRADAY_PROXY_MAP,
                     )
                     _last_intraday_refresh = now
-                    print(f"🔄 盘中数据刷新 {now.strftime('%H:%M:%S')}")
+                    logger.info("🔄 盘中数据刷新 %s", now.strftime("%H:%M:%S"))
                 except Exception as e:
-                    print(f"  ⚠ 盘中刷新失败: {e}")
+                    logger.warning("⚠ 盘中刷新失败: %s", e, exc_info=True)
 
         # 每日 20:05-20:06 个人数据备份（净值更新完成后，数据最完整）
         if now.hour == 20 and now.minute in (5, 6):
@@ -742,9 +744,10 @@ def _scheduler_loop():
             if _last_backup_date != today:
                 result = backup_personal_data()
                 if result.get("status") == "ok":
-                    print(f"🗄 每日备份完成 → {result.get('target')}（{result.get('copied')} 项）")
+                    logger.info("🗄 每日备份完成 → %s（%s 项）",
+                                result.get("target"), result.get("copied"))
                 else:
-                    print(f"  ⚠ 备份警告: {result.get('error')}")
+                    logger.warning("⚠ 备份警告: %s", result.get("error"))
                 _last_backup_date = today
 
 
@@ -1141,6 +1144,7 @@ def api_health():
             "items": recently_passed,
         },
         "data_errors": data_errors,
+        "log_counts": error_counts(),
         "schema_warnings": validate_file(PORTFOLIO_PATH),
         "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     })
@@ -1884,6 +1888,8 @@ def api_action():
 
 PORTFOLIO_PATH = os.path.join(DATA_DIR, "portfolio.json")
 
+logger = get_logger("app")
+
 
 def _load_portfolio():
     if not os.path.exists(PORTFOLIO_PATH):
@@ -2264,13 +2270,14 @@ def api_portfolio_add_action():
 def _warmup_cache():
     """后台预热：启动后自动拉取全部板块数据"""
     _time.sleep(2)  # 等 Flask 完全启动
-    print("🔥 缓存预热中...")
+    logger.info("🔥 缓存预热中...")
     _refresh_all()
-    print("✅ 缓存预热完成")
+    logger.info("✅ 缓存预热完成")
 
 
 if __name__ == "__main__":
     import os as _os
+    setup_logging()
     _start_scheduler()
 
     # Flask debug reloader fork 两个进程，只在子进程预热
@@ -2278,11 +2285,11 @@ if __name__ == "__main__":
         warmup_thread = threading.Thread(target=_warmup_cache, daemon=True)
         warmup_thread.start()
 
-    print("⏰ 定时刷新已启动（每日 18:00）")
-    print("📊 Investment Dashboard 基金监控仪表盘")
-    print(f"   已配置 {len(FUNDS)} 只基金")
+    logger.info("⏰ 定时刷新已启动（每日 18:00）")
+    logger.info("📊 Investment Dashboard 基金监控仪表盘")
+    logger.info("   已配置 %s 只基金", len(FUNDS))
     for w in validate_file(PORTFOLIO_PATH):
-        print(f"⚠ portfolio schema: {w}")
-    print("   打开 http://localhost:5000")
+        logger.warning("⚠ portfolio schema: %s", w)
+    logger.info("   打开 http://localhost:5000")
 
     app.run(debug=False, host="127.0.0.1", port=5000)
