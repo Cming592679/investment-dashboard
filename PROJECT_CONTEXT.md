@@ -170,7 +170,7 @@ investment-dashboard/
 
 - `app.py` + `config.py` 两个大文件承担过多职责，模块边界靠注释维持。
 - 无用户认证（仅 localhost，单用户场景可接受）。
-- 无测试框架、无 CI；验证靠人工 + `/api/health`。
+- 测试：`tests/`（unittest，决策树/规则/divergence/验证闭环）+ GitHub Actions CI；验证同时靠 `/api/health`。
 - 前端无构建步骤（原生 JS），无类型检查。
 
 ---
