@@ -29,6 +29,7 @@ from backup import backup_personal_data, last_backup_info
 from portfolio_schema import validate_file, validate_portfolio
 from logging_utils import setup_logging, get_logger, error_counts
 from divergence import fundamental_state, classify_divergence
+from sell_monitor import build_sell_monitor
 from market_data import (
     market_data as md_service,
     INTRADAY_PROXY_MAP,
@@ -1165,11 +1166,18 @@ def api_todo():
         if p.get("status") == "pending"
     ]
     data_errors = _count_data_errors()
+    sell_summary = {}
+    if pf:
+        with _cache_lock:
+            dash_cache = {fid: entry for fid, entry in _cache.items()}
+        action_result = evaluate_daily_actions(pf, dash_cache)
+        sell_summary = build_sell_monitor(pf, action_result, _compute_exposure(pf))["summary"]
     return jsonify({
         "stale_indicators": staleness,
         "missing_events": missing_events,
         "pending_plans": pending_plans,
         "data_errors": data_errors,
+        "sell_monitor": sell_summary,
         "backup": last_backup_info() or {"status": "never"},
         "apizero": md_service.apizero_usage(),
         "log_counts": error_counts(),
@@ -2245,6 +2253,19 @@ def api_action_plan():
         },
         "signals": action_result,
     })
+
+
+@app.route("/api/sell-monitor")
+def api_sell_monitor():
+    """卖出监控：每只持仓的 A/B/D/再平衡四轨状态（何时该卖）。"""
+    pf = _load_portfolio()
+    if not pf:
+        return jsonify({"error": "portfolio.json not found"}), 404
+    with _cache_lock:
+        dash_cache = {fid: entry for fid, entry in _cache.items()}
+    action_result = evaluate_daily_actions(pf, dash_cache)
+    exposure = _compute_exposure(pf)
+    return jsonify(build_sell_monitor(pf, action_result, exposure))
 
 
 @app.route("/api/portfolio/update", methods=["POST"])

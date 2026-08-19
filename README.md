@@ -124,6 +124,7 @@ investment-dashboard/
 | `/api/portfolio/action` | POST | 追加操作日志 |
 | `/api/action` | GET | 今日交易建议（叠层信号系统） |
 | `/api/action-plan` | GET | 统一今日行动计划（决策树+基本面+信号+档位+敞口） |
+| `/api/sell-monitor` | GET | 卖出监控（A止盈/B过热/D逻辑止损/再平衡 四轨状态） |
 | `/api/bottleneck-exposure` | GET | 共享瓶颈敞口分析 |
 | `/api/optimize/topics` | GET/POST | 优化专题管理 |
 | `/api/review` | GET | 复盘报告列表 |

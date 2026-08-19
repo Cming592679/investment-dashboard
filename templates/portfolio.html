@@ -187,6 +187,7 @@ async function load() {
     if (data.error) { document.getElementById('app').innerHTML = `<div class="loading">❌ ${data.error}</div>`; return; }
     render(data);
     loadActionPlan();
+    loadSellMonitor();
     loadActions();
     loadIntraday();
     loadTimeline();
@@ -333,6 +334,10 @@ function render(data) {
     <!-- 今日行动计划（统一评估） -->
     <div class="section-title">🎯 今日行动计划 <span class="legend-limits">（决策树 + 基本面 + 信号 + 档位 + 敞口 统一）</span></div>
     <div id="plan-panel" style="margin-bottom:16px">⏳ 加载中...</div>
+
+    <!-- 卖出监控（何时该卖） -->
+    <div class="section-title">🛡 卖出监控 <span class="legend-limits">（A 止盈 / B 过热 / D 逻辑止损 / 再平衡）</span></div>
+    <div id="sell-monitor-panel" style="margin-bottom:16px;font-size:13px">⏳ 加载中...</div>
 
     <!-- 今日操作建议（叠层信号详情） -->
     <div id="action-section"></div>
@@ -485,6 +490,60 @@ async function loadActionPlan() {
   } catch(e) {
     panel.innerHTML = '<div class="opt-empty">行动计划加载失败</div>';
   }
+}
+
+// ── 卖出监控（A/B/D/再平衡 四轨状态） ──
+async function loadSellMonitor() {
+  const panel = document.getElementById('sell-monitor-panel');
+  if (!panel) return;
+  try {
+    const r = await fetch('/api/sell-monitor');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    renderSellMonitor(panel, d);
+  } catch(e) {
+    panel.innerHTML = '<div class="opt-empty">卖出监控加载失败</div>';
+  }
+}
+
+function renderSellMonitor(panel, d) {
+  const s = d.summary || {};
+  const clusters = (d.cluster_over || [])
+    .map(c => `${c.label} ${c.pct}%>${c.limit}%`)
+    .join('、');
+  const chips =
+    `A触发 ${s.a_triggered||0} · B过热 ${s.b_triggered||0} · D止损 ${s.d_triggered||0} · ` +
+    `超参考线 ${s.over_reference||0} · 距一档≤15% ${s.near_first_tier||0} · A轨够不着 ${s.unreachable_a||0}`;
+  const rows = (d.holdings || []).map(h => {
+    const bHtml = h.b_active
+      ? `<span style="color:var(--red)">${h.b_status}</span>`
+      : '未触发';
+    const dHtml = h.d_active
+      ? `<span style="color:var(--red)">${h.d_status}</span>`
+      : '未触发';
+    const over = h.over_lines.length
+      ? h.over_lines.map(o => `<div style="font-size:11px;color:var(--yellow)">⚠ ${o}</div>`).join('')
+      : '';
+    const note = h.note
+      ? `<div style="font-size:11px;color:var(--yellow);margin-top:2px">${h.note}</div>`
+      : '';
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span><b>${h.sector||''}</b> <span style="font-size:11px;color:var(--text2)">${h.fund_name||''}</span></span>
+        <span class="${clr(h.holding_return_pct)}">收益 ${fmtPct(h.holding_return_pct)}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">
+        A: <span style="color:${h.a_active ? 'var(--green)' : 'var(--yellow)'}">${h.a_status}</span> ·
+        B: ${bHtml} · D: ${dHtml}
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">周期 ${h.stage} · 仓位 ${h.pct}% · 退出路径：${h.exit_paths.join(' / ')}</div>
+      ${over}${note}
+    </div>`;
+  }).join('');
+  panel.innerHTML =
+    `<div style="font-size:12px;color:var(--text2);margin-bottom:8px">${chips}` +
+    (clusters ? ` · <span style="color:var(--red)">集群超线：${clusters}</span>` : '') +
+    `</div>` + (rows || '<div class="opt-empty">暂无持仓</div>');
 }
 
 function renderActionPlan(panel, data) {

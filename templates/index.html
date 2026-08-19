@@ -691,6 +691,7 @@ async function loadTodo() {
     const apz = d.apizero || { used: 0, limit: 50 };
     const logs = d.log_counts || {};
     const logErr = Object.values(logs).reduce((s, v) => s + (v.error || 0), 0);
+    const sm = d.sell_monitor || {};
     const backup = d.backup || {};
     const backupVal = backup.status === 'ok'
       ? (backup.backed_up_at || '今日已备份').slice(11)
@@ -703,6 +704,7 @@ async function loadTodo() {
       { icon: '📅', label: '遗漏事件', value: missing.length, cls: missing.length ? 'warn' : 'ok' },
       { icon: '📌', label: '待执行计划', value: plans.length, cls: plans.length ? 'warn' : 'ok', link: '/portfolio' },
       { icon: '⚠️', label: '数据源错误', value: errTotal, cls: errTotal ? 'bad' : 'ok' },
+      { icon: '🛡', label: '卖出监控', value: `超线${sm.over_reference||0} · 近档${sm.near_first_tier||0}`, cls: (sm.d_triggered || sm.over_reference) ? 'warn' : 'ok', sub: `D止损${sm.d_triggered||0}`, link: '/portfolio' },
       { icon: '🗄', label: '备份', value: backupVal, cls: backup.status === 'ok' ? 'ok' : 'warn' },
       { icon: '🔌', label: 'apizero 配额', value: `${apz.used}/${apz.limit}`, cls: apzPct >= 80 ? 'warn' : 'ok', sub: '盘中估值源' },
       { icon: '🧾', label: '日志错误', value: logErr, cls: logErr ? 'bad' : 'ok' },

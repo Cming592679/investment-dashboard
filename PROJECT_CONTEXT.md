@@ -159,7 +159,7 @@ investment-dashboard/
 - **健康检测**：领先指标按 update_cycle 分级判过期 + 关键事件遗漏检测（`/api/health`）；`/api/todo` 聚合待办（过期指标/遗漏事件/待执行计划/数据源错误/备份/配额/日志计数），首页展示"今日行动计划 + 待办清单"。
 - **决策树**：8 分支判定（量能分支、联动降级、瓶颈破坏、背离降级等），结论字符串驱动前端颜色（分数已弃用作判定）。
 - **复盘生成**：Tier-1 门禁（≥90 天）+ Tier-2 动态阈值 + 置信度校准 + 对照组超额收益。
-- **API**：`/api/funds`、`/api/fund/<id>`、`/api/refresh`、`/api/portfolio`、`/api/action`、`/api/action-plan`、`/api/intraday`、`/api/history`、`/api/health`、`/api/todo`、`/api/review[/generate]`、`/api/bottleneck-exposure`、`/api/optimize/topics`。
+- **API**：`/api/funds`、`/api/fund/<id>`、`/api/refresh`、`/api/portfolio`、`/api/action`、`/api/action-plan`、`/api/sell-monitor`、`/api/intraday`、`/api/history`、`/api/health`、`/api/todo`、`/api/review[/generate]`、`/api/bottleneck-exposure`、`/api/optimize/topics`。
 
 ### 5.4 数据源
 
