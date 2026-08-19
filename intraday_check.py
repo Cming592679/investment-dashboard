@@ -89,6 +89,18 @@ MODULE_DASHBOARD = {
 }
 
 
+def _smic_q2_result():
+    """读取 KEY_DATES 中 8/15 中芯国际 Q2 的结果；无结果或未录入返回空串。"""
+    try:
+        from config import KEY_DATES
+    except ImportError:
+        return ""
+    for e in KEY_DATES.get("019633", []):
+        if e.get("date") == date(2026, 8, 15) and "中芯国际" in e.get("event", ""):
+            return e.get("result") or ""
+    return ""
+
+
 def check_plan(plan, portfolio):
     """检查一条 plan 是否触发。返回状态字符串。"""
     module = plan.get('module', '')
@@ -129,6 +141,10 @@ def check_plan(plan, portfolio):
         elif days_left == 0:
             return f"⚡ 今天！中芯国际Q2 → {plan['action_if_triggered']}"
         else:
+            result = _smic_q2_result()
+            if result:
+                snippet = result if len(result) <= 48 else result[:48] + "…"
+                return f"✅ 已跟进 中芯国际Q2（8/15）：{snippet} → {plan['action_if_triggered']}"
             return f"📋 已过期 {abs(days_left)} 天，请跟进结果"
 
     # === 军工电子: 领先指标转down 或 持有收益 > -15% ===
@@ -259,7 +275,7 @@ if __name__ == '__main__':
     else:
         print("=== 📋 待执行计划 ===")
         for p in result['plans']:
-            icon = '✅' if '触发' in p['status'] else '👀' if '等' in p['status'] else '❌'
+            icon = '✅' if ('触发' in p['status'] or '已跟进' in p['status']) else '👀' if '等' in p['status'] else '❌'
             print(f"  {icon} [{p['module']}] {p['status']}")
 
         if result['alerts']:
