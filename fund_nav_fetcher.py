@@ -314,7 +314,50 @@ def update_portfolio_nav(portfolio: dict, nav_service=None) -> dict:
     print(f"  ✅ 净值更新: {updated_count}/{len(codes)} 只基金, {active_codes} 只活跃, "
           f"官方收益(NAV {latest_nav_date}) ¥{portfolio['daily_return']:+,.0f}, "
           f"stale={stale_codes}, unavailable={unavailable_codes}")
+    portfolio["latest_return"] = summarize_latest_return(portfolio)
     return portfolio
+
+
+def summarize_latest_return(portfolio: dict) -> dict:
+    """全持仓「最新披露净值」日收益合计（按各自 nav_date，混合日期时显式标注）。
+
+    与 official_return（仅同日合计，禁止混日期）互补：
+    - official_return：只统计最新净值日当天的持仓，保证口径纯净；
+    - latest_return：统计所有活跃持仓按其最新披露净值的日收益，便于与券商/账本对账
+      （QDII 等 T+2 基金会用自己较旧的 nav_date，但收益本身是官方值）。
+    过滤语义与 official_return 一致：status != sold、amount > 0、nav_status == official。
+    """
+    active = [
+        h for h in portfolio.get("holdings", [])
+        if h.get("status") != "sold"
+        and (h.get("amount") or 0) > 0
+        and h.get("nav_status") == "official"
+        and h.get("nav_date")
+        and h.get("daily_return") is not None
+    ]
+    total = round(sum(h.get("daily_return") or 0 for h in active), 2)
+    denom = sum(h.get("amount", 0) for h in active)
+    pct = None
+    if denom > 0:
+        weighted = sum((h.get("amount", 0) * (h.get("nav_return") or 0)) for h in active)
+        pct = round(weighted / denom, 2)
+    dates = sorted({h["nav_date"] for h in active})
+    return {
+        "return": total,
+        "return_pct": pct,
+        "nav_dates": dates,
+        "mixed_dates": len(dates) > 1,
+        "holdings": [
+            {
+                "fund_code": h.get("fund_code"),
+                "fund_name": h.get("fund_name", ""),
+                "nav_date": h.get("nav_date"),
+                "nav_return": h.get("nav_return"),
+                "daily_return": h.get("daily_return"),
+            }
+            for h in sorted(active, key=lambda x: x.get("fund_code") or "")
+        ],
+    }
 
 
 # ══════════════════════════════════════════════════════════

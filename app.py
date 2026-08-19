@@ -18,7 +18,11 @@ from config import (
     DATA_DIR, BOARD_FUND_MAP,
 )
 from data_fetcher import get_index_snapshot, get_stock_snapshot
-from fund_nav_fetcher import update_portfolio_nav, backfill_portfolio_history
+from fund_nav_fetcher import (
+    update_portfolio_nav,
+    backfill_portfolio_history,
+    summarize_latest_return,
+)
 from trading_rules import evaluate_daily_actions
 from storage import write_json
 from backup import backup_personal_data, last_backup_info
@@ -2211,6 +2215,7 @@ def api_portfolio():
                 h["live_prediction"] = entry["data"].get("prediction", {}).get("label", "")
 
     pf["exposure"] = _compute_exposure(pf)
+    pf["latest_return"] = summarize_latest_return(pf)
     return jsonify(pf)
 
 

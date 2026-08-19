@@ -170,6 +170,31 @@ class TestPortfolioReturn(unittest.TestCase):
         # 组合日收益只含 8/17 那一只：10000 × 4.86%
         self.assertAlmostEqual(pf["daily_return"], 486.0, places=1)
 
+    def test_13_latest_return_includes_all_active_with_own_dates(self):
+        """最新披露合计按各自净值日加总（QDII 延迟不影响对账），同日合计保持不变。"""
+        def responder(url):
+            if "hq.sinajs.cn" in url:
+                return True, sina_batch_body([
+                    ("019633", "3.0815", "2.9386", "2026-08-17"),
+                    ("100055", "5.4292", "5.37", "2026-08-14"),
+                ])
+            return False, None
+        svc = MarketDataService(http_get=fake_http(responder))
+        pf = {"cash": 10000, "holdings": [
+            {"fund_code": "019633", "amount": 10000, "status": "active", "sector": "S"},
+            {"fund_code": "100055", "amount": 10000, "status": "active", "sector": "S"},
+        ]}
+        pf = update_portfolio_nav(pf, nav_service=svc)
+
+        lr = pf["latest_return"]
+        # 8/17 +486.0，8/14 +110.0（10000 × 1.10%）
+        self.assertAlmostEqual(lr["return"], 596.0, places=1)
+        self.assertTrue(lr["mixed_dates"])
+        self.assertEqual(lr["nav_dates"], ["2026-08-14", "2026-08-17"])
+        self.assertEqual({h["fund_code"] for h in lr["holdings"]}, {"019633", "100055"})
+        # 同日合计不受影响
+        self.assertAlmostEqual(pf["daily_return"], 486.0, places=1)
+
 
 class TestDataIntegrityGate(unittest.TestCase):
     def _plan(self, intraday_q):
