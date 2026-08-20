@@ -195,6 +195,26 @@ class TestPortfolioReturn(unittest.TestCase):
         # 同日合计不受影响
         self.assertAlmostEqual(pf["daily_return"], 486.0, places=1)
 
+    def test_14_amount_recomputed_from_new_nav(self):
+        """净值更新后 amount 必须按 shares × 新 NAV 重算（shares 是源头真相）。"""
+        def responder(url):
+            if "hq.sinajs.cn" in url:
+                return True, sina_batch_body([("019633", "3.1431", "3.0815", "2026-08-18")])
+            return False, None
+        svc = MarketDataService(http_get=fake_http(responder))
+        pf = {"cash": 10000, "holdings": [
+            {"fund_code": "019633", "amount": 10000, "shares": 3245.0,
+             "cost_basis": 9800.0, "status": "active", "sector": "S",
+             "nav": 3.0815, "nav_date": "2026-08-17"},
+        ]}
+        pf = update_portfolio_nav(pf, nav_service=svc)
+        h = pf["holdings"][0]
+        expected_amount = round(3245.0 * 3.1431, 2)
+        self.assertAlmostEqual(h["amount"], expected_amount, places=2)
+        self.assertAlmostEqual(h["holding_return"], expected_amount - 9800.0, places=2)
+        # 当日收益仍按旧金额计算（= 份额 × 净值差，正确）
+        self.assertAlmostEqual(h["daily_return"], 200.0, places=1)
+
 
 class TestDataIntegrityGate(unittest.TestCase):
     def _plan(self, intraday_q):
