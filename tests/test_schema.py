@@ -55,6 +55,30 @@ class TestPortfolioSchema(unittest.TestCase):
         }])
         self.assertEqual(validate_portfolio(pf), [])
 
+    def test_stale_cost_basis_after_sell_is_flagged(self):
+        """卖出后成本未按剩余份额折算 → 每股成本远高于净值，应告警。"""
+        pf = _pf(holdings=[{
+            "fund_code": "020608",
+            "amount": 10.08,
+            "status": "active",
+            "shares": 7.46,
+            "cost_basis": 1702.16,  # 卖出后未折算，每股成本 ≈ 228 元
+            "nav": 1.3508,
+        }])
+        w = validate_portfolio(pf)
+        self.assertTrue(any("每股成本" in x for x in w), w)
+
+    def test_normal_cost_basis_not_flagged(self):
+        pf = _pf(holdings=[{
+            "fund_code": "015789",
+            "amount": 15863.76,
+            "status": "active",
+            "shares": 14132.53,
+            "cost_basis": 20268.60,
+            "nav": 1.1225,
+        }])
+        self.assertEqual(validate_portfolio(pf), [])
+
 
 if __name__ == "__main__":
     unittest.main()

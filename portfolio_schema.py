@@ -124,6 +124,18 @@ def validate_portfolio(pf):
                         f"holdings[{i}].{key} 取值不在允许集合 {sorted(allowed)}: {h[key]!r}"
                     )
 
+            # 每股成本 vs 净值：卖出后成本未按剩余份额折算会异常（如 020608 168.9×）
+            shares = h.get("shares")
+            nav = h.get("nav")
+            cost = h.get("cost_basis")
+            if shares and nav and cost is not None and shares > 0 and nav > 0:
+                per_share_cost = cost / shares
+                if per_share_cost / nav > 5:
+                    warnings.append(
+                        f"holdings[{i}].cost_basis 疑似卖出后未折算：每股成本 {per_share_cost:.2f} 元 "
+                        f"vs 净值 {nav}（{per_share_cost / nav:.1f}×），检查 shares/cost_basis"
+                    )
+
     # 重复项检查（只报告，不自动删除）
     seen = set()
     for i, a in enumerate(pf.get("action_log") or []):
