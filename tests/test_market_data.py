@@ -144,7 +144,7 @@ class TestIntraday(unittest.TestCase):
 
     def test_9_qdii_unavailable(self):
         svc = MarketDataService(http_get=fake_http(lambda u: (True, sina_quote_body())))
-        q = svc.get_intraday("100055", market="us", force=True)
+        q = svc.get_intraday("022184", market="us", force=True)
         self.assertEqual(q.status, STATUS_UNAVAILABLE)
         self.assertIn("QDII", q.message)
 
@@ -155,18 +155,18 @@ class TestPortfolioReturn(unittest.TestCase):
             if "hq.sinajs.cn" in url:
                 return True, sina_batch_body([
                     ("019633", "3.0815", "2.9386", "2026-08-17"),   # 新
-                    ("100055", "5.4292", "5.37", "2026-08-14"),     # 旧（QDII 延迟）
+                    ("022184", "5.4292", "5.37", "2026-08-14"),     # 旧（QDII 延迟）
                 ])
             return False, None
         svc = MarketDataService(http_get=fake_http(responder))
         pf = {"cash": 10000, "holdings": [
             {"fund_code": "019633", "amount": 10000, "status": "active", "sector": "S"},
-            {"fund_code": "100055", "amount": 10000, "status": "active", "sector": "S"},
+            {"fund_code": "022184", "amount": 10000, "status": "active", "sector": "S"},
         ]}
         pf = update_portfolio_nav(pf, nav_service=svc)
         self.assertEqual(pf["official_return"]["nav_date"], "2026-08-17")
         self.assertEqual(pf["official_return"]["coverage"], "1/2")
-        self.assertIn("100055", pf["official_return"]["stale_holdings"])
+        self.assertIn("022184", pf["official_return"]["stale_holdings"])
         # 组合日收益只含 8/17 那一只：10000 × 4.86%
         self.assertAlmostEqual(pf["daily_return"], 486.0, places=1)
 
@@ -176,13 +176,13 @@ class TestPortfolioReturn(unittest.TestCase):
             if "hq.sinajs.cn" in url:
                 return True, sina_batch_body([
                     ("019633", "3.0815", "2.9386", "2026-08-17"),
-                    ("100055", "5.4292", "5.37", "2026-08-14"),
+                    ("022184", "5.4292", "5.37", "2026-08-14"),
                 ])
             return False, None
         svc = MarketDataService(http_get=fake_http(responder))
         pf = {"cash": 10000, "holdings": [
             {"fund_code": "019633", "amount": 10000, "status": "active", "sector": "S"},
-            {"fund_code": "100055", "amount": 10000, "status": "active", "sector": "S"},
+            {"fund_code": "022184", "amount": 10000, "status": "active", "sector": "S"},
         ]}
         pf = update_portfolio_nav(pf, nav_service=svc)
 
@@ -191,7 +191,7 @@ class TestPortfolioReturn(unittest.TestCase):
         self.assertAlmostEqual(lr["return"], 596.0, places=1)
         self.assertTrue(lr["mixed_dates"])
         self.assertEqual(lr["nav_dates"], ["2026-08-14", "2026-08-17"])
-        self.assertEqual({h["fund_code"] for h in lr["holdings"]}, {"019633", "100055"})
+        self.assertEqual({h["fund_code"] for h in lr["holdings"]}, {"019633", "022184"})
         # 同日合计不受影响
         self.assertAlmostEqual(pf["daily_return"], 486.0, places=1)
 

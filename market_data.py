@@ -157,7 +157,7 @@ def _parse_sina_quote(body: str) -> Optional[dict]:
 
 # QDII / 海外资产基金：无官方盘中估值，A股交易时段内底层海外市场已收盘
 QDII_FUND_CODES = {
-    "100055",  # 富国全球科技互联网(QDII)C
+    "022184",  # 富国全球科技互联网股票(QDII)C（原误用 100055）
     "006479",  # 广发纳斯达克100ETF联接(QDII)C
     "016665",  # 天弘全球高端制造(QDII)C
 }

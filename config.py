@@ -191,7 +191,7 @@ FUNDS = {
             "300223.SZ": "北京君正",
         },
         "specials": {
-            "SNDK": {"name": "SanDisk(闪迪)", "note": "NAND Flash原厂，Q4被WDC收购中。100055真实重仓"},
+            "SNDK": {"name": "SanDisk(闪迪)", "note": "NAND Flash原厂，Q4被WDC收购中。022184真实重仓"},
         },
         "indices": {
             "SMH": "VanEck半导体ETF",
