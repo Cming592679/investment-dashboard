@@ -79,6 +79,19 @@ class TestPortfolioSchema(unittest.TestCase):
         }])
         self.assertEqual(validate_portfolio(pf), [])
 
+    def test_missing_cost_basis_with_shares_is_flagged(self):
+        """有剩余份额却无成本 → 无法计算持有收益，必须告警（防止更新持仓时带入脏数据）。"""
+        pf = _pf(holdings=[{
+            "fund_code": "020608",
+            "amount": 10.08,
+            "status": "active",
+            "shares": 7.46,
+            "nav": 1.3508,
+            # 缺 cost_basis
+        }])
+        w = validate_portfolio(pf)
+        self.assertTrue(any("cost_basis" in x and "缺少" in x for x in w), w)
+
 
 if __name__ == "__main__":
     unittest.main()

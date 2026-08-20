@@ -135,6 +135,11 @@ def validate_portfolio(pf):
                         f"holdings[{i}].cost_basis 疑似卖出后未折算：每股成本 {per_share_cost:.2f} 元 "
                         f"vs 净值 {nav}（{per_share_cost / nav:.1f}×），检查 shares/cost_basis"
                     )
+            if (h.get("shares") or 0) > 0 and h.get("cost_basis") in (None, ""):
+                warnings.append(
+                    f"holdings[{i}] 缺少 cost_basis：剩余份额 {h.get('shares')} > 0 但无成本，"
+                    f"无法计算持有收益"
+                )
 
     # 重复项检查（只报告，不自动删除）
     seen = set()
