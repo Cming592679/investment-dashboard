@@ -476,7 +476,7 @@ KEY_DATES = {
          "result": "Q2营收$30.06亿(+36.1% YoY/+20% QoQ)首破30亿，归母净利$4.79亿(+261.7%)，毛利率25.3%，产能利用率93.7%。Q3指引营收+2~4% QoQ、毛利率26~28%超预期。AI配套芯片需求强劲→国内Fab稼动率与扩产延续，设备订单确定性强化"},
         {"date": date(2026, 8, 15), "event": "中国集成电路 7月产量", "importance": "high",
          "result": "7月产量530亿块(+20.7% YoY)，高于6月517亿块；1-7月累计3342亿块(+23.1%)。集成电路制造行业增加值+109.3%。高端算力/存储需求驱动稼动率与扩产，利好上游设备"},
-        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(CapEx风向标)", "importance": "critical"},
+        {"date": date(2026, 8, 26), "event": "NVDA Q2 财报(CapEx风向标)", "importance": "critical"},
         {"date": date(2026, 8, 21), "event": "SEMI 7月 Billings", "importance": "critical"},
         {"date": date(2026, 8, 25), "event": "中微公司 Q2 财报(预计)", "importance": "high"},
         {"date": date(2026, 8, 26), "event": "北方华创 Q2 财报(预计) ⚠", "importance": "critical"},
@@ -495,7 +495,7 @@ KEY_DATES = {
         {"date": date(2026, 8, 11), "event": "Lumentum Q4 FY2026 财报(光芯片)", "importance": "high",
          "result": "今日盘后发布。市场预期营收$987M(+105% YoY)，EPS $2.97。关键看点：1.6T光模块CW激光器出货量、EML供需缺口(>30%)。前季EPS $2.37超预期$0.10"},
 
-        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报", "importance": "critical"},
+        {"date": date(2026, 8, 26), "event": "NVDA Q2 财报", "importance": "critical"},
         {"date": date(2026, 8, 24), "event": "中际旭创 半年报(预计) ⚠", "importance": "critical"},
         {"date": date(2026, 8, 25), "event": "新易盛 Q2 财报(预计)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "天孚通信 Q2 财报(预计)", "importance": "high"},
@@ -506,7 +506,7 @@ KEY_DATES = {
     "021528": [
         {"date": date(2026, 7, 20), "event": "深南电路 H1 业绩预告(预计)", "importance": "critical",
          "result": "归母净利21-23亿(+54-69% YoY)，扣非+64-80%。AI算力+存储双驱动。无锡AI算力PCB项目(投资45亿)预计2027H1量产"},
-        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(服务器需求)", "importance": "high"},
+        {"date": date(2026, 8, 26), "event": "NVDA Q2 财报(服务器需求)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "沪电股份 Q2 财报(预计)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "深南电路 半年报(预计)", "importance": "critical"},
         {"date": date(2026, 8, 25), "event": "东山精密 Q2 财报(预计)", "importance": "high"},
@@ -559,7 +559,7 @@ KEY_DATES = {
          "result": "7月产量98677套(+30.2% YoY)，1-7月累计635056套(+28.5%)；机器人减速器产量+22.7%。高技术制造业增加值+16.9%(较6月加快2.8pct)。自动化持续高景气"},
         {"date": date(2026, 8, 19), "event": "世界机器人大会(北京) ⚠", "importance": "critical",
          "result": "8/19在北京亦庄北人亦创国际会展中心开幕（展期8/19-23），主题\"人机共生，产需共融\"。参展企业300余家（同比扩大），展品2000+件（央视口径超3000件）、首发新品150+款（央视口径300余款）；人形机器人整机厂商集中亮相，设4大展区并首次推出\"机器人消费街\"；同期世界机器人大赛26国17802名选手参赛，8/22第二届世界人形机器人运动会（16国666队2056台）紧随其后。产业面：1-5月国内机器人规上企业营收突破900亿元(+26.9% YoY)。判定：符合预期且偏正面——人形机器人进入\"型号大爆炸+消费端落地\"阶段，产业催化明确；大会至8/23，订单与量产细节需持续跟踪"},
-        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(机器人平台)", "importance": "high"},
+        {"date": date(2026, 8, 26), "event": "NVDA Q2 财报(机器人平台)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "恒立液压 Q2 财报(丝杠进度)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "绿的谐波 Q2 财报 ⚠", "importance": "critical"},
         {"date": date(2026, 8, 25), "event": "金力永磁 Q2 财报(磁材出货)", "importance": "high"},
@@ -576,7 +576,7 @@ KEY_DATES = {
         {"date": date(2026, 8, 10), "event": "TrendForce 7月DRAM合约价 ⚠", "importance": "critical",
          "result": "Q3服务器DRAM合约价+13~18% QoQ(较Q2的~50%显著放缓)。消费端需求疲软，买方抵触涨价。HBM产能挤压仍在持续→供给偏紧。关键信号：涨幅从加速→匀速，周期进入mid阶段"},
 
-        {"date": date(2026, 8, 20), "event": "NVDA Q2 财报(HBM需求)", "importance": "critical"},
+        {"date": date(2026, 8, 26), "event": "NVDA Q2 财报(HBM需求)", "importance": "critical"},
         {"date": date(2026, 8, 25), "event": "兆易创新 Q2 财报(预计)", "importance": "high"},
         {"date": date(2026, 8, 25), "event": "北京君正 Q2 财报(预计)", "importance": "high"},
         {"date": date(2026, 9, 10), "event": "TrendForce 8月DRAM合约价", "importance": "high"},
@@ -629,7 +629,7 @@ CYCLE_ASSESSMENTS = {
     "STORAGE": {
         "stage": "early",
         "label": "存储周期上行早期（HBM扩张+DRAM涨价双轮驱动）",
-        "note": "【Bottleneck双瓶颈】②HBM三寡头+③产能售罄。2024年底DRAM走出周期底部→2025-2026涨价加速→HBM更是独立于DRAM周期的超级赛道(每代GPU配更多HBM→需求不可逆增长)。当前DRAM涨幅从'加速'进入'匀速'(+18%→+12%)表明仍在上行但斜率放缓→early而非mid。真正的mid信号:涨幅连续2季<5%。关键变量:①NVDA Rubin架构HBM配置量(8/20 Q2) ②三家HBM扩产是否如期 ③DRAM合约价月度变化",
+        "note": "【Bottleneck双瓶颈】②HBM三寡头+③产能售罄。2024年底DRAM走出周期底部→2025-2026涨价加速→HBM更是独立于DRAM周期的超级赛道(每代GPU配更多HBM→需求不可逆增长)。当前DRAM涨幅从'加速'进入'匀速'(+18%→+12%)表明仍在上行但斜率放缓→early而非mid。真正的mid信号:涨幅连续2季<5%。关键变量:①NVDA Rubin架构HBM配置量(8/26 Q2) ②三家HBM扩产是否如期 ③DRAM合约价月度变化",
         "risk": "green",
     },
 }
