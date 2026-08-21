@@ -45,6 +45,27 @@ class TestRecordTradeSell(unittest.TestCase):
         self.assertAlmostEqual(h["shares"], 0.0, places=2)
         self.assertAlmostEqual(h["cost_basis"], 0.0, places=2)
 
+    def test_legacy_plan_without_fund_code_does_not_crash(self):
+        """历史待办（仅 fund 字段、无 fund_code）不应让 record_trade 崩溃。"""
+        pf = _pf()
+        pf["pending_plans"] = [
+            {
+                "fund": "华商均衡成长C (011370)",
+                "direction": "buy",
+                "target": 2000,
+                "executed": 500,
+                "remaining": 1500,
+                "status": "pending",
+            }
+        ]
+        pf = record_trade(pf, "sell", "020608", 965.7, "机器人减仓", unit="shares", nav=1.42)
+        h = pf["holdings"][0]
+        self.assertAlmostEqual(h["shares"], 7.46, places=2)
+        # 旧格式计划不匹配 fund_code，保持原样
+        self.assertEqual(pf["pending_plans"][0]["executed"], 500)
+        self.assertEqual(pf["pending_plans"][0]["remaining"], 1500)
+        self.assertEqual(pf["pending_plans"][0]["status"], "pending")
+
 
 if __name__ == "__main__":
     unittest.main()

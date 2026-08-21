@@ -139,7 +139,7 @@ def record_trade(pf, action, fund_code, amount_or_shares, note="", **kwargs):
 
     # 更新待执行计划
     for p in pf.get('pending_plans', []):
-        if p['fund_code'] == fund_code and p['status'] == 'pending':
+        if p.get('fund_code') == fund_code and p['status'] == 'pending':
             p['executed'] = round(p['executed'] + amount_or_shares, 2)
             p['remaining'] = round(p['target'] - p['executed'], 2)
             if p['remaining'] <= 0:
