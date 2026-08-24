@@ -224,6 +224,7 @@ def update_portfolio_nav(portfolio: dict, nav_service=None) -> dict:
 
         # 官方净值成功
         prev_amount = h.get("amount", 0)
+        prev_nav_date = h.get("nav_date")
         h["nav"] = nav_data.nav
         h["nav_date"] = nav_data.nav_date
         h["nav_return"] = nav_data.nav_return
@@ -232,11 +233,13 @@ def update_portfolio_nav(portfolio: dict, nav_service=None) -> dict:
         h["nav_fetched_at"] = nav_data.fetched_at
         h["nav_status"] = "official"
         updated_count += 1
-        if nav_data.nav_return is not None:
-            # 当日收益 = 旧金额 × 收益率（= 份额 × 净值差，口径正确）
-            h["daily_return"] = round(prev_amount * nav_data.nav_return / 100, 2)
-        else:
-            h["daily_return"] = None
+        # 当日收益 = 旧金额 × 收益率（= 份额 × 净值差，口径正确）。
+        # 仅在净值日变化时更新：同一净值重复拉取不得按更新后金额二次计收益。
+        if nav_data.nav_date != prev_nav_date:
+            if nav_data.nav_return is not None:
+                h["daily_return"] = round(prev_amount * nav_data.nav_return / 100, 2)
+            else:
+                h["daily_return"] = None
 
         # 金额按 份额 × 新净值 重算（shares 是源头真相）；无份额时按收益率外推
         shares = h.get("shares")
