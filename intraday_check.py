@@ -147,7 +147,7 @@ def check_plan(plan, portfolio):
                 return f"✅ 已跟进 中芯国际Q2（8/15）：{snippet} → {plan['action_if_triggered']}"
             return f"📋 已过期 {abs(days_left)} 天，请跟进结果"
 
-    # === 军工电子: 领先指标转down 或 持有收益 > -15% ===
+    # === 军工电子: 网格卖出侧（A类 015789 只减不加） ===
     if module == '军工电子':
         ctx = f" | {fund_state['message']}" if fund_state else ""
         if fund_state and fund_state['level'] != 'ok':
@@ -155,11 +155,18 @@ def check_plan(plan, portfolio):
         for h in portfolio['holdings']:
             if h.get('fund_code') == '015789':
                 ret = h.get('holding_return_pct', -99)
-                if ret > -15:
-                    return f"✅ 触发！持有收益 {ret:+.1f}% > -15% → {plan['action_if_triggered']}{ctx}"
-                else:
-                    gap = -15 - ret
-                    return f"❌ 未触发 持有收益 {ret:+.1f}% 还需涨 {gap:.1f}% → {plan['action_if_not']}{ctx}"
+                amt = h.get('amount', 0)
+                cap = 12900.0  # 板块上限 20% × 总资产基准（网格卖出侧目标市值）
+                over_cap = amt > cap * 1.03
+                if ret > -20 and over_cap:
+                    return (f"✅ 触发！持有收益 {ret:+.1f}% > -20% 且市值 > ¥12,900×1.03"
+                            f" → {plan['action_if_triggered']}{ctx}")
+                parts = []
+                parts.append(f"持有收益 {ret:+.1f}%"
+                             + (f" 已达标" if ret > -20 else f" 还需涨 {-20 - ret:.1f}%"))
+                if not over_cap:
+                    parts.append("市值未超¥12,900×1.03（20%上限）")
+                return f"❌ 未触发 {'、'.join(parts)} → {plan['action_if_not']}{ctx}"
         return "? 无持仓数据"
 
     # === 产业机遇: 季度报告 ===
