@@ -5,6 +5,10 @@
   python3 record_trade.py sell 020608 965.70 shares "机器人减仓"
   python3 record_trade.py plan 011370 buy 2000 "明天不大涨" "CPO加仓计划"
 
+成交约定：用户操作默认 T 日 15:00 前下单，按 T 日净值成交。
+记录买入时若成交日净值未发布，暂用最新已知净值估算份额，
+待成交日净值落地后按当日净值校准份额（见 PROJECT_CONTEXT.md）。
+
 也可以在代码中调用 record_trade()。
 """
 import json, os, sys
