@@ -8,6 +8,19 @@
 
 ## 快速开始
 
+### 方式一：systemd 服务（推荐，自动重启 + 开机自启 + journal 日志）
+
+```bash
+systemctl --user status investment-dashboard   # 查看状态
+systemctl --user restart investment-dashboard  # 重启
+journalctl --user -u investment-dashboard -f   # 实时日志
+```
+
+服务单元：`~/.config/systemd/user/investment-dashboard.service`
+（`Restart=always` 崩溃 10 秒内自动拉起；已 `loginctl enable-linger`，开机无需登录自动启动）
+
+### 方式二：前台运行（调试）
+
 ```bash
 cd /home/cc/AI-project/investment-dashboard
 python3 app.py

@@ -61,6 +61,7 @@
 ### 日常使用流程
 
 1. **自动运行**：18:00 保存当日板块快照；20:00 拉取收盘净值更新持仓金额；盘中（通过 apizero API）估算涨跌与告警。
+   - 部署：systemd 用户服务 `investment-dashboard`（`~/.config/systemd/user/investment-dashboard.service`），`Restart=always` 崩溃自动拉起、linger 开机自启、journal 持久日志。排查：`journalctl --user -u investment-dashboard -f`。
 2. **每周 1-2 次**：打开仪表盘看板块结论（🟢/🟡/🔴）、领先指标是否过期（健康圆点）、关键事件倒计时。
 3. **想问"能不能买/该不该加仓"**：走 `.claude/skills/technical-check.md` 的五项入场检查（MACD / 布林 / KDJ / RSI / MA50），必须带统计数据。
 4. **交易后**：用 `record_trade.py` 记录（buy/sell/plan），保持 shares/cost/pending_plans 同步。
