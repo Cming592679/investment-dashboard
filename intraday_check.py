@@ -4,10 +4,12 @@
   python3 intraday_check.py           # 输出当前状态
   python3 intraday_check.py --json    # JSON输出（供前端）
 """
+import re
 import urllib.request, json, sys, os, time
 from datetime import date, datetime
 from collections import defaultdict
 from divergence import fundamental_state, fundamental_context
+from market_data import apizero_acquire, APIZERO_DAILY_LIMIT
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 API = 'http://localhost:5000/api'
@@ -21,11 +23,13 @@ _ESTIMATE_CACHE_SECONDS = 60
 
 
 def get_estimate(code):
-    """获取单只基金盘中估值（60s 缓存，避免页面刷新耗尽 apizero 免费配额）"""
+    """获取单只基金盘中估值（60s 缓存；apizero 日配额用尽后不再请求，返回 None 由调用方降级）"""
     now = time.time()
     cached = _estimate_cache.get(code)
     if cached and now - cached[0] < _ESTIMATE_CACHE_SECONDS:
         return cached[1]
+    if not apizero_acquire(date.today().isoformat()):
+        return None
     try:
         url = f"https://v1.apizero.cn/api/fund?action=estimate&code={code}"
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -36,6 +40,43 @@ def get_estimate(code):
             return data['data']
     except: pass
     return None
+
+
+def _get_proxy_estimate(fund_code):
+    """apizero 配额用尽后的新浪指数/ETF 代理估值（降级显示，无 apizero 时保证盘中估值可见）"""
+    try:
+        from config import BOARD_FUND_MAP
+        from market_data import INTRADAY_PROXY_MAP
+        fid = next((k for k, v in BOARD_FUND_MAP.items() if v == fund_code), None)
+        symbol = INTRADAY_PROXY_MAP.get(fid)
+        if not symbol:
+            return None
+        url = f"https://hq.sinajs.cn/list={symbol}"
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn"},
+        )
+        resp = urllib.request.urlopen(req, timeout=8).read().decode("gbk", errors="ignore")
+        m = re.search(r'="(.*)"', resp)
+        if not m:
+            return None
+        parts = m.group(1).split(",")
+        if len(parts) < 32:
+            return None
+        cur = float(parts[3])
+        prev = float(parts[2])
+        if cur <= 0 or prev <= 0:
+            return None
+        return {
+            "fund_name": parts[0],
+            "change_rate": round((cur - prev) / prev * 100, 2),
+            "estimate": None,
+            "net_value": cur,
+            "update_time": f"{parts[30]}T{parts[31]}",
+            "source": f"proxy:{symbol}",
+        }
+    except Exception:
+        return None
 
 def get_dashboard_data(fund_id):
     """获取板块实时技术指标"""
@@ -236,6 +277,8 @@ def run(portfolio):
         if h.get('amount', 0) <= 0 or h.get('status') in ('sold', 'non_investment', 'sell_pending'):
             continue
         est = get_estimate(code)
+        if not est:
+            est = _get_proxy_estimate(code)
         if est:
             estimates[code] = {
                 'name': est.get('fund_name', ''),
@@ -243,6 +286,7 @@ def run(portfolio):
                 'estimate': est.get('estimate'),
                 'net_value': est.get('net_value'),
                 'update_time': est.get('update_time', ''),
+                'source': est.get('source', ''),
             }
 
     # Plan 检查

@@ -290,5 +290,28 @@ class TestApizeroQuota(unittest.TestCase):
         self.assertEqual(usage2["used"], 1)
         self.assertEqual(usage2["date"], "2026-08-19")
 
+    def test_usage_caps_at_limit_and_stops_requests(self):
+        """配额用尽后不再发请求：used 封顶 50，HTTP 调用数封顶 50，状态降级为 UNAVAILABLE。"""
+        calls = {"n": 0}
+
+        def responder(url):
+            calls["n"] += 1
+            return True, apizero_ok_body()
+
+        current = datetime(2026, 8, 20, 10, 0, 0)
+        svc = MarketDataService(
+            http_get=fake_http(responder),
+            now=lambda: current,
+            intraday_ttl=0.0,
+        )
+        last = None
+        for _ in range(55):
+            last = svc.get_intraday("019633", market="a", force=True)
+        usage = svc.apizero_usage()
+        self.assertEqual(usage["used"], 50)
+        self.assertEqual(calls["n"], 50)
+        self.assertEqual(last.status, STATUS_UNAVAILABLE)
+        self.assertIn("配额已用尽", last.message)
+
 if __name__ == "__main__":
     unittest.main()

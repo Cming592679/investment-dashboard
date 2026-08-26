@@ -16,6 +16,7 @@
 
 import json
 import re
+import threading
 import time as _time
 import urllib.request
 from dataclasses import dataclass, field, asdict
@@ -164,6 +165,34 @@ QDII_FUND_CODES = {
 
 APIZERO_DAILY_LIMIT = 50  # apizero 免费匿名额度（次/天）
 
+# apizero 配额守卫（进程内共享）：所有调用路径统一计数，超限后不再发请求
+_apizero_lock = threading.Lock()
+_apizero_state = {"date": None, "used": 0}
+
+
+def apizero_acquire(today: str) -> bool:
+    """尝试占用一次 apizero 配额。超限返回 False，调用方应切换代理源且不再请求。"""
+    with _apizero_lock:
+        if _apizero_state["date"] != today:
+            _apizero_state["date"] = today
+            _apizero_state["used"] = 0
+        if _apizero_state["used"] >= APIZERO_DAILY_LIMIT:
+            return False
+        _apizero_state["used"] += 1
+        return True
+
+
+def apizero_usage_snapshot(today: str) -> Dict[str, object]:
+    """当日 apizero 配额使用情况（used / limit / date）。"""
+    with _apizero_lock:
+        if _apizero_state["date"] != today:
+            return {"date": today, "used": 0, "limit": APIZERO_DAILY_LIMIT}
+        return {
+            "date": _apizero_state["date"],
+            "used": _apizero_state["used"],
+            "limit": APIZERO_DAILY_LIMIT,
+        }
+
 
 def is_qdii(code: str) -> bool:
     return code in QDII_FUND_CODES
@@ -199,8 +228,6 @@ class MarketDataService:
         self._now = now or (lambda: datetime.now())
         self._intraday_cache: Dict[str, Tuple[IntradayQuote, float]] = {}
         self._nav_cache: Dict[str, Tuple[OfficialNAV, float]] = {}
-        self._apizero_usage_date: Optional[str] = None
-        self._apizero_used = 0
         self._intraday_ttl = intraday_ttl
         self._nav_ttl = nav_ttl
 
@@ -348,10 +375,12 @@ class MarketDataService:
 
     def fetch_intraday_apizero(self, code: str) -> IntradayQuote:
         today = self._now().date().isoformat()
-        if self._apizero_usage_date != today:
-            self._apizero_usage_date = today
-            self._apizero_used = 0
-        self._apizero_used += 1
+        if not apizero_acquire(today):
+            return IntradayQuote(
+                source="apizero", fetched_at=_iso_now(self._now()), method="apizero",
+                status=STATUS_UNAVAILABLE,
+                message=f"apizero 当日配额已用尽（{APIZERO_DAILY_LIMIT}/{APIZERO_DAILY_LIMIT}），已切换代理源",
+            )
 
         url = f"https://v1.apizero.cn/api/fund?action=estimate&code={code}"
         ok, body = self._http(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -432,6 +461,7 @@ class MarketDataService:
         else:
             # 一级：apizero 真实估值（若恢复）
             apz = self.fetch_intraday_apizero(fund_id)
+            quota_exhausted = apz.status == STATUS_UNAVAILABLE and "配额已用尽" in (apz.message or "")
             if apz.status == STATUS_ESTIMATED and apz.intraday_change_pct is not None:
                 result = apz
             elif proxy_symbol:
@@ -439,6 +469,8 @@ class MarketDataService:
                 prox = self.fetch_intraday_proxy(proxy_symbol)
                 if prox.status == STATUS_ESTIMATED:
                     result = prox
+            if result is None and quota_exhausted:
+                result = apz  # 保留配额用尽原因，便于前端展示
             if result is None:
                 result = IntradayQuote(
                     source="none", fetched_at=_iso_now(self._now()),
@@ -454,14 +486,7 @@ class MarketDataService:
 
     def apizero_usage(self) -> Dict[str, object]:
         """当日 apizero 配额使用情况（used / limit / date）。"""
-        today = self._now().date().isoformat()
-        if self._apizero_usage_date != today:
-            return {"date": today, "used": 0, "limit": APIZERO_DAILY_LIMIT}
-        return {
-            "date": self._apizero_usage_date,
-            "used": self._apizero_used,
-            "limit": APIZERO_DAILY_LIMIT,
-        }
+        return apizero_usage_snapshot(self._now().date().isoformat())
 
     def refresh_intraday(
         self,
