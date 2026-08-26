@@ -2,7 +2,9 @@
 技术指标：RSI / MACD / 布林带 / KDJ / 多周期均线"""
 
 import math
+import re
 import time as _time
+import urllib.request
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -38,6 +40,40 @@ def _safe_download(ticker: str, period: str = "6mo") -> Optional[pd.DataFrame]:
         if attempt < RETRY_COUNT - 1:
             _time.sleep(RETRY_DELAY * (2 ** attempt))  # 1.5s, 3s, 6s
     return None
+
+
+# 最近一次成功的指数快照（进程内缓存，用于行情源瞬时失败时兜底）
+_INDEX_SNAPSHOT_CACHE: dict = {}
+
+
+def _fetch_sina_index_quote(symbol: str) -> Optional[dict]:
+    """新浪行情兜底（A股指数/ETF）：返回 {price, prev_close} 或 None。"""
+    code, _, suffix = symbol.partition(".")
+    if not code or suffix.upper() not in ("SZ", "SS", "SH"):
+        return None
+    prefix = "sz" if suffix.upper() == "SZ" else "sh"
+    sina_symbol = prefix + code
+    url = f"https://hq.sinajs.cn/list={sina_symbol}"
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            body = resp.read().decode("gbk", errors="ignore")
+        m = re.search(r'="(.*)"', body)
+        if not m:
+            return None
+        parts = m.group(1).split(",")
+        if len(parts) < 32:
+            return None
+        current = float(parts[3])
+        prev = float(parts[2])
+        if current <= 0 or prev <= 0:
+            return None
+        return {"price": current, "prev_close": prev}
+    except Exception:
+        return None
 
 
 # ══════════════════════════════════════════════════════════
@@ -381,9 +417,37 @@ def get_stock_snapshot(ticker: str) -> dict:
 
 
 def get_index_snapshot(ticker: str) -> dict:
-    """获取指数快照"""
+    """获取指数快照（yfinance 主源；失败时用进程内缓存/新浪兜底，避免瞬时报错污染健康状态）"""
     hist = _safe_download(ticker, period="6mo")
     if hist is None or hist.empty:
+        cached = _INDEX_SNAPSHOT_CACHE.get(ticker)
+        if cached:
+            return {
+                **cached,
+                "stale": True,
+                "message": "行情源瞬时失败，使用上次成功快照",
+            }
+        sina = _fetch_sina_index_quote(ticker)
+        if sina:
+            prev = sina.get("prev_close") or 0
+            day_change_pct = ((sina["price"] - prev) / prev) * 100 if prev else 0
+            snap = {
+                "ticker": ticker,
+                "price": round(sina["price"], 2),
+                "day_change_pct": round(day_change_pct, 2),
+                "ytd_change_pct": None,
+                "ma20": None,
+                "ma50": None,
+                "ma60": None,
+                "above_ma20": None,
+                "above_ma50": None,
+                "above_ma60": None,
+                "error": False,
+                "source": "sina_fallback",
+                "message": "新浪兜底行情（无技术指标）",
+            }
+            _INDEX_SNAPSHOT_CACHE[ticker] = snap
+            return snap
         return {"ticker": ticker, "error": True}
 
     try:
@@ -410,7 +474,7 @@ def get_index_snapshot(ticker: str) -> dict:
         above_ma50 = (current > ma50) if (ma50 is not None and current is not None) else None
         above_ma60 = (current > ma60) if (ma60 is not None and current is not None) else None
 
-        return {
+        snap = {
             "ticker": ticker,
             "price": round(current, 2) if current is not None else None,
             "day_change_pct": round(day_change_pct, 2) if day_change_pct is not None else 0,
@@ -423,5 +487,7 @@ def get_index_snapshot(ticker: str) -> dict:
             "above_ma60": above_ma60,
             "error": False,
         }
+        _INDEX_SNAPSHOT_CACHE[ticker] = snap
+        return snap
     except Exception:
         return {"ticker": ticker, "error": True}
