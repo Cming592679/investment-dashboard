@@ -1126,7 +1126,7 @@ def api_health():
     health_score -= len(critical_stale) * 10
     health_score -= len([s for s in staleness if s["severity"] == "warning"]) * 3
     health_score -= len(missing_events) * 5
-    health_score -= len(recently_passed) * 2
+    health_score -= len([r for r in recently_passed if not r["has_analysis"]]) * 2
     health_score -= min(data_errors["total"] * 2, 20)
     health_score = max(0, health_score)
 
