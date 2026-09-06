@@ -454,6 +454,39 @@ def get_index_snapshot(ticker: str) -> dict:
         closes = hist["Close"].squeeze()
         if not isinstance(closes, pd.Series):
             closes = pd.Series(closes, index=hist.index)
+        # 清洗尾部/中间 nan（yfinance 偶发最后一根 K 线 Close 为 nan），
+        # 避免 _safe_float 返回 None 后算涨跌幅抛异常被误判为数据源失败
+        closes = closes.dropna()
+        if closes.empty:
+            cached = _INDEX_SNAPSHOT_CACHE.get(ticker)
+            if cached:
+                return {
+                    **cached,
+                    "stale": True,
+                    "message": "行情源数据全为 nan，使用上次成功快照",
+                }
+            sina = _fetch_sina_index_quote(ticker)
+            if sina:
+                prev = sina.get("prev_close") or 0
+                day_change_pct = ((sina["price"] - prev) / prev) * 100 if prev else 0
+                snap = {
+                    "ticker": ticker,
+                    "price": round(sina["price"], 2),
+                    "day_change_pct": round(day_change_pct, 2),
+                    "ytd_change_pct": None,
+                    "ma20": None,
+                    "ma50": None,
+                    "ma60": None,
+                    "above_ma20": None,
+                    "above_ma50": None,
+                    "above_ma60": None,
+                    "error": False,
+                    "source": "sina_fallback",
+                    "message": "新浪兜底行情（无技术指标）",
+                }
+                _INDEX_SNAPSHOT_CACHE[ticker] = snap
+                return snap
+            return {"ticker": ticker, "error": True}
 
         current = _safe_float(closes.iloc[-1])
         prev = _safe_float(closes.iloc[-2]) if len(closes) >= 2 else current
