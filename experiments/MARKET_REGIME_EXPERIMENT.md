@@ -49,6 +49,12 @@ Thesis → Core Position
 关键缺口：7/31 现金与完整持仓缺失；action_log 早段不全；8/17 前无完整账；
 净值错位 bug 使备份总资产曲线不可直接当真实收益；样本仅 2 个月，覆盖不了 Regime A–F。
 
+> 更新（2026-09-08）：**E01-panel-v0.1 已落盘** 至 `PERSONAL_DATA_DIR/experiments/market_data/`
+> （klines.json / fund_navs.json / manifest.json，均不入 Git）。范围：6 个宽基指数 + 7 只板块/海外代理 ETF
+> 2022-06→今（MA200 预热），18 只相关基金净值（部分 C 类份额成立晚，2023 段需用代理 ETF）。
+> 缺口：全市场涨跌家数/新高新低无现成长历史源；021169 仅 2026-04 起。
+> 明细数据状态见个人数据目录 `DATA_INCIDENT_LOG.md`。
+
 ## 5. 假设登记（示例）
 
 - `OBSERVED` 2026-07-31→09-04 零费回测：持有 +2.65% / ±5% +6.00% / 80-20 +3.09% / ±3% +6.40%（有 LOOK-AHEAD RISK 与零费假设，见 STRATEGY_REPLAY_RESULTS.md E00）。
