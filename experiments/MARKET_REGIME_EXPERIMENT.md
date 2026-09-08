@@ -63,6 +63,10 @@ Thesis → Core Position
 - `UNKNOWN` 全局 Regime 与主题 Regime 的分工（E05）。
 - `UNKNOWN` Risk Budget 离散 vs 连续（E06）。
 
+> E02 v0.1 更新（2026-09-08）：对未来收益，候选指标均无显著预测力；
+> 对未来 20D 最大回撤，波动率类信号最一致（rho −0.23~−0.29，弱到中等）；
+> 趋势/广度/RSI 高度冗余。详见 INDICATOR_SCREEN_RESULTS.md。
+
 ## 6. 实验队列
 
 - E00 归档零费回测（有缺陷样本）— done
