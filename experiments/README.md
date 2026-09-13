@@ -31,4 +31,7 @@
   恒定较低暴露列为 CANDIDATE（详见 RISK_BUDGET_RESULTS.md）。
 - E05 v0.1 Global vs Theme 完成：全局条件化被 REJECT；主题级波动率预算 + 最短持有 30 天
   成为当前最强 CANDIDATE（Calmar 0.86，待 walk-forward 验证，详见 RISK_BUDGET_GLOBAL_VS_THEME.md）。
+- E07 v0.1 walk-forward 完成：主题级波动率预算 + 最短持有通过样本外检验
+  （OOS Calmar 1.95 vs BH100 1.45），参数重选无增量 → 采用固定默认参数
+  （详见 WALKFORWARD_RESULTS.md）。
 - 待用户：提供 7/31→9/7 完整交易流水（截图/导出）；确认分析执行时段。
