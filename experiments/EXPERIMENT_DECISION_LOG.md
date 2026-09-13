@@ -14,5 +14,6 @@
 | 2026-09-08 | E02 v0.1 完成：简单指标对未来收益无预测力；波动率对 fwdDD 有弱-中信号 | 数据 2023-01→2026-09，修正 look-ahead 后 | ✅ 结果入个人数据 + 仓库 |
 | 2026-09-13 | E04/E06 v0.1：波动率→总暴露的独立择时层 REJECT（未跑赢满仓/恒定80%，费用敏感） | 3.6 年、费用 0/0.5/1.5%、换手控制对照 | ✅ RISK_BUDGET_RESULTS.md |
 | 2026-09-13 | 恒定 70-80% 暴露列为 CANDIDATE 纪律基线；状态条件化预算留 UNKNOWN | 恒定前沿 Calmar≈0.65 平坦 | ✅ 待 E05 |
+| 2026-09-13 | E05 v0.1：全局/条件化 Regime 降暴露 REJECT；主题级波动率预算+30天最短持有 CANDIDATE（Calmar 0.86） | 跨年度一致，但参数为 DESIGN ASSUMPTION | ✅ 待 walk-forward |
 
 规则：任何参数/结论写入 v2 前，必须先在此表登记“来源=empirical / design assumption / user preference”。
