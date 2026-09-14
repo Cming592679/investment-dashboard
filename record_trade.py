@@ -17,6 +17,40 @@ from datetime import date
 from collections import defaultdict
 from storage import write_json
 
+try:  # 分层现金储备（v1.2）：模块缺失时降级为固定下限
+    import cash_reserve as _cr
+except ImportError:  # pragma: no cover
+    _cr = None
+
+
+def fetch_reserve_state(tier_result=None):
+    """读取当前储备层级（判定由仪表盘 /api/cash-reserve 提供；不可用时回退 L0）。
+
+    返回 tier_result dict（floor_pct 为允许的现金下限，%）；
+    任何异常都回退到常规层，保证"拿不到数据时不放松约束"。
+    """
+    if _cr is None:
+        return {
+            "tier": "L0", "floor_pct": TRADING_CONFIG["position"]["min_cash_pct"],
+            "label": "分层储备模块不可用，使用固定下限", "matched": [],
+            "checks": [], "data_ok": False, "deployment_allowed": False,
+        }
+    try:
+        import urllib.request
+        with urllib.request.urlopen("http://127.0.0.1:5000/api/cash-reserve", timeout=8) as r:
+            data = json.load(r)
+        if isinstance(data, dict) and "floor_pct" in data:
+            return data
+    except Exception:
+        pass
+    # 服务不可用 → 保守回退（不放松约束），提示用户手动判定
+    return {
+        "tier": "L0",
+        "floor_pct": TRADING_CONFIG["position"]["min_cash_pct"],
+        "label": "仪表盘不可用，按常规下限保守处理（如需动用储备请先启动仪表盘）",
+        "matched": [], "checks": [], "data_ok": False, "deployment_allowed": False,
+    }
+
 def record_trade(pf, action, fund_code, amount_or_shares, note="", **kwargs):
     """记录一笔交易并更新所有关联数据。
 
@@ -59,13 +93,50 @@ def record_trade(pf, action, fund_code, amount_or_shares, note="", **kwargs):
                 nav = kwargs.get('nav') or h.get('nav', 1)
                 total_assets = pf.get('total_assets', pf['cash'])
 
-                # ── 硬约束：现金下限（v1.1 唯一仓位硬约束）──
-                min_cash_pct = TRADING_CONFIG["position"]["min_cash_pct"]
+                # ── 硬约束：现金下限（v1.2 分层现金储备）──
+                # 下限随"市场极端程度"分层放宽：L0 10% / L1 7% / L2 4% / L3 0%
+                # 判定由 cash_reserve 提供（数据不可得时保守回退 L0）。
+                base_floor_pct = TRADING_CONFIG["position"]["min_cash_pct"]
+                if kwargs.get('cash_floor_pct') is not None:
+                    min_cash_pct = float(kwargs['cash_floor_pct'])
+                    reserve_state = None
+                else:
+                    reserve_state = fetch_reserve_state()
+                    min_cash_pct = float(reserve_state.get("floor_pct", base_floor_pct))
                 min_cash = total_assets * min_cash_pct / 100
                 if pf['cash'] - amount < min_cash:
+                    hint = ""
+                    if reserve_state is not None and _cr is not None:
+                        if reserve_state.get("deployment_allowed"):
+                            hint = (f"（当前 {reserve_state.get('tier')}："
+                                    f"{reserve_state.get('label')}）")
+                        else:
+                            nxt = _cr.next_tier_hint(reserve_state)
+                            hint = f"（当前 {reserve_state.get('tier')}，{nxt}）" if nxt else ""
                     raise ValueError(
-                        f"买入 ¥{amount:,.0f} 将使现金低于 {min_cash_pct:.0%} 下限（唯一硬约束）"
+                        f"买入 ¥{amount:,.0f} 将使现金低于 {min_cash_pct:g}% 下限"
+                        f"（v1.2 分层储备硬约束）{hint}"
                     )
+                # 动用储备（买入后现金低于常规下限）→ 登记储备状态，供归还检查用
+                cash_after = pf['cash'] - amount
+                if min_cash_pct < base_floor_pct and cash_after < total_assets * base_floor_pct / 100:
+                    rs = pf.setdefault('cash_reserve', {})
+                    cur = rs.get('deployed_amount', 0.0) or 0.0
+                    rs.update({
+                        'tier': (reserve_state or {}).get('tier', rs.get('tier', 'L1')),
+                        'floor_pct': min_cash_pct,
+                        'deployed_amount': round(cur + amount, 2),
+                        'returned_amount': rs.get('returned_amount', 0.0),
+                        'returned': False,
+                    })
+                    pf['action_log'].insert(0, {
+                        "date": today,
+                        "action": f"🔓 动用储备 ¥{amount:,.0f}",
+                        "fund": f"{h.get('fund_name','')} ({fund_code})",
+                        "reason": (f"{rs['tier']} 级动用（现金下限放宽至 {min_cash_pct:g}%）；"
+                                   f"{'；'.join((reserve_state or {}).get('matched', []))}；"
+                                   f"退出触发区间即归还（不看盈亏）"),
+                    })
 
                 # ── 参考线：板块/主题超线必须填写理由（v1.1）──
                 over_lines = []

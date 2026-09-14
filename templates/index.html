@@ -693,12 +693,30 @@ async function loadTodo() {
     const logErr = Object.values(logs).reduce((s, v) => s + (v.error || 0), 0);
     const sm = d.sell_monitor || {};
     const backup = d.backup || {};
+    const cr = d.cash_reserve || {};
     const backupVal = backup.status === 'ok'
       ? (backup.backed_up_at || '今日已备份').slice(11)
       : backup.status === 'never' ? '从未备份' : '异常';
     const apzPct = Math.min(100, Math.round(apz.used / (apz.limit || 50) * 100));
 
+    // 现金储备卡片（v1.2 分层储备：L0 10% / L1 7% / L2 4% / L3 0%）
+    const crTier = cr.tier || 'L0';
+    const crFloor = cr.floor_pct != null ? `${cr.floor_pct}%` : '10%';
+    const crSub = cr.deployment_allowed
+      ? `动用中 · ${cr.todos && cr.todos.length ? cr.todos[0].type === 'reserve_return' ? '需归还' : '在场' : ''}`
+      : (cr.next_tier_hint ? '未触发（见提示）' : '最深档');
+    const crCard = {
+      icon: '💵',
+      label: '现金储备',
+      value: `${crTier} · 下限${crFloor}`,
+      cls: (cr.todos || []).some(t => t.type === 'reserve_return') ? 'bad'
+           : cr.deployment_allowed ? 'warn' : 'ok',
+      sub: crSub,
+      title: [cr.label || '', cr.next_tier_hint || '',
+              ...((cr.todos || []).map(t => t.message || ''))].filter(Boolean).join(' | '),
+    };
     const cards = [
+      crCard,
       { icon: '⏳', label: '过期指标', value: stale.length, cls: stale.length ? 'warn' : 'ok',
         click: "document.getElementById('leading-panel').scrollIntoView({behavior:'smooth'})" },
       { icon: '📅', label: '遗漏事件', value: missing.length, cls: missing.length ? 'warn' : 'ok' },
@@ -717,7 +735,7 @@ async function loadTodo() {
         ${c.sub ? `<span class="todo-sub">${c.sub}</span>` : ''}`;
       return c.link
         ? `<a class="todo-card ${cls}" href="${c.link}">${inner}</a>`
-        : `<div class="todo-card ${cls}" ${c.click ? `onclick="${c.click}"` : ''}>${inner}</div>`;
+        : `<div class="todo-card ${cls}" ${c.click ? `onclick="${c.click}"` : ''} ${c.title ? `title="${c.title.replace(/"/g, '&quot;')}"` : ''}>${inner}</div>`;
     }).join('');
   } catch(e) { /* apiFetch 已显示全局错误态 */ }
 }

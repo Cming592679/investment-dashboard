@@ -16,6 +16,7 @@ from config import (
     DYNAMIC_THRESHOLD_COEFFICIENT, DYNAMIC_THRESHOLD_LOOKBACK_DAYS,
     MIN_SAMPLE_SIZE_WARNING, CONTROL_BENCHMARKS,
     DATA_DIR, BOARD_FUND_MAP,
+    CASH_RESERVE,
 )
 from data_fetcher import get_index_snapshot, get_stock_snapshot
 from fund_nav_fetcher import (
@@ -30,6 +31,7 @@ from portfolio_schema import validate_file, validate_portfolio
 from logging_utils import setup_logging, get_logger, error_counts
 from divergence import fundamental_state, classify_divergence
 from sell_monitor import build_sell_monitor
+from cash_reserve import evaluate_tier, next_tier_hint, check_return
 from market_data import (
     market_data as md_service,
     INTRADAY_PROXY_MAP,
@@ -342,6 +344,106 @@ def _count_data_errors():
         "total": stock_err + index_err,
         "affected_funds": affected,
     }
+
+
+# ══════════════════════════════════════════════════════════
+# 分层现金储备快照（v1.2）
+# ══════════════════════════════════════════════════════════
+
+_RESERVE_SNAPSHOT_CACHE = {"ts": 0.0, "data": None}
+_RESERVE_SNAPSHOT_TTL = 600  # 秒；10 分钟内复用，避免每次请求都拉大盘历史
+
+
+def _hs300_drop_20d():
+    """沪深300 近 20 个交易日涨跌幅（%）；取不到返回 None。"""
+    try:
+        from data_fetcher import _safe_download
+        hist = _safe_download(CASH_RESERVE.get("index_code", "000300.SS"), period="3mo")
+        if hist is None or hist.empty:
+            return None
+        closes = hist["Close"]
+        if hasattr(closes, "columns"):  # MultiIndex 保护
+            closes = closes.iloc[:, 0]
+        closes = closes.dropna()
+        if len(closes) < 21:
+            return None
+        cur, base = float(closes.iloc[-1]), float(closes.iloc[-21])
+        if base <= 0:
+            return None
+        return round((cur / base - 1) * 100, 2)
+    except Exception:
+        return None
+
+
+def _build_reserve_snapshot(force=False):
+    """构造储备判定所需快照：各板块 RSI、各板块偏离 MA50、大盘 20 日跌幅。
+
+    板块指标取成分股均值（与历史回测口径量级一致）；缓存 10 分钟。
+    """
+    now = _time.time()
+    cached = _RESERVE_SNAPSHOT_CACHE.get("data")
+    if cached and not force and now - _RESERVE_SNAPSHOT_CACHE.get("ts", 0) < _RESERVE_SNAPSHOT_TTL:
+        return cached
+
+    sector_rsi, sector_dev = {}, {}
+    with _cache_lock:
+        snapshot = {fid: (entry or {}).get("data", {}) for fid, entry in _cache.items()}
+
+    for fid, data in snapshot.items():
+        name = FUNDS.get(fid, {}).get("short", fid)
+        stocks = data.get("stocks") or {}
+        rsis, devs = [], []
+        for s in stocks.values():
+            if not isinstance(s, dict) or s.get("error"):
+                continue
+            if s.get("rsi") is not None:
+                rsis.append(float(s["rsi"]))
+            if s.get("ma50_pct") is not None:
+                devs.append(float(s["ma50_pct"]))
+        if rsis:
+            sector_rsi[name] = round(sum(rsis) / len(rsis), 1)
+        if devs:
+            sector_dev[name] = round(sum(devs) / len(devs), 1)
+
+    result = {
+        "sector_rsi": sector_rsi,
+        "sector_dev_ma50": sector_dev,
+        "index_drop_20d": _hs300_drop_20d(),
+        "built_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    _RESERVE_SNAPSHOT_CACHE["data"] = result
+    # 板块数据不完整（如启动预热中）→ 缩短缓存，60 秒后重算，避免缓存住残缺快照
+    expected = len(FUNDS)
+    _RESERVE_SNAPSHOT_CACHE["ts"] = (
+        now if len(sector_rsi) >= expected else now - _RESERVE_SNAPSHOT_TTL + 60
+    )
+    return result
+
+
+def build_cash_reserve_view(force=False):
+    """储备视图：当前层级 + 下限 + 距下一档提示 + 归还检查（供 API/首页/待办复用）。"""
+    snap = _build_reserve_snapshot(force=force)
+    tier = evaluate_tier(
+        sector_rsi=snap.get("sector_rsi"),
+        sector_dev_ma50=snap.get("sector_dev_ma50"),
+        index_drop_20d=snap.get("index_drop_20d"),
+    )
+    tier["next_tier_hint"] = next_tier_hint(
+        tier,
+        sector_rsi=snap.get("sector_rsi"),
+        sector_dev_ma50=snap.get("sector_dev_ma50"),
+        index_drop_20d=snap.get("index_drop_20d"),
+    )
+    tier["metrics"] = snap
+    tier["base_floor_pct"] = CASH_RESERVE.get("base_floor_pct", 10.0)
+    tier["deadline_days"] = (CASH_RESERVE.get("return") or {}).get("deadline_trading_days", 20)
+
+    pf = _load_portfolio() or {}
+    state = pf.get("cash_reserve")
+    if state:
+        tier["return_check"] = check_return(state, tier)
+        tier["deployment"] = state
+    return tier
 
 
 def _fetch_one_fund(fund_id, fund):
@@ -1167,6 +1269,23 @@ def api_todo():
     ]
     data_errors = _count_data_errors()
     sell_summary = {}
+    reserve = build_cash_reserve_view()
+    reserve_todos = []
+    rc = reserve.get("return_check") or {}
+    if rc.get("needed"):
+        reserve_todos.append({
+            "type": "reserve_return",
+            "reason": rc.get("reason"),
+            "amount": rc.get("outstanding"),
+            "message": rc.get("message"),
+        })
+    if pf.get("cash_reserve") and not rc.get("needed"):
+        reserve_todos.append({
+            "type": "reserve_open",
+            "reason": "in-range",
+            "amount": rc.get("outstanding"),
+            "message": rc.get("message"),
+        })
     if pf:
         with _cache_lock:
             dash_cache = {fid: entry for fid, entry in _cache.items()}
@@ -1177,12 +1296,34 @@ def api_todo():
         "missing_events": missing_events,
         "pending_plans": pending_plans,
         "data_errors": data_errors,
+        "cash_reserve": {
+            "tier": reserve.get("tier"),
+            "floor_pct": reserve.get("floor_pct"),
+            "base_floor_pct": reserve.get("base_floor_pct"),
+            "label": reserve.get("label"),
+            "deployment_allowed": reserve.get("deployment_allowed"),
+            "next_tier_hint": reserve.get("next_tier_hint"),
+            "data_ok": reserve.get("data_ok"),
+            "todos": reserve_todos,
+        },
         "sell_monitor": sell_summary,
         "backup": last_backup_info() or {"status": "never"},
         "apizero": md_service.apizero_usage(),
         "log_counts": error_counts(),
         "checked_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     })
+
+
+@app.route("/api/cash-reserve")
+def api_cash_reserve():
+    """分层现金储备：当前层级、允许的现金下限、距下一档条件、归还检查。
+
+    v1.2（2026-09-14 用户决策）：把现金下限从固定 10% 改为分层可动用储备
+    （L0 10% / L1 7% / L2 4% / L3 0%），阈值由 2020-2026 历史回测频率反推。
+    买入前查询本接口，即可知道当前能否动用储备、以及还差什么条件。
+    """
+    force = request.args.get("refresh") == "1"
+    return jsonify(build_cash_reserve_view(force=force))
 
 
 # ══════════════════════════════════════════════════════════
