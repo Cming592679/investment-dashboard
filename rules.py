@@ -19,6 +19,7 @@ REQUIRED_KEYS = [
     "version",
     "position_tiers",
     "risk_limits",
+    "cash_reserve",
     "trend_gate",
     "rsi",
     "divergence",
@@ -131,6 +132,21 @@ def validate_rules(rules):
     if isinstance(limits, dict) and not all(k in limits for k in
                                             ("single_fund_max", "sector_max", "theme_cluster_max", "cash_floor")):
         warnings.append("risk_limits 需包含 single_fund_max/sector_max/theme_cluster_max/cash_floor")
+
+    # 分层现金储备（v1.2）：下限必须逐档递减、不高于 base_floor，且归还期限存在
+    cr = rules.get("cash_reserve", {})
+    if isinstance(cr, dict):
+        if cr.get("enabled") and "base_floor" not in cr:
+            warnings.append("cash_reserve 启用时必须包含 base_floor")
+        floors = [cr.get("l1_floor"), cr.get("l2_floor"), cr.get("l3_floor")]
+        present = [f for f in floors if isinstance(f, (int, float))]
+        if present != sorted(present, reverse=True):
+            warnings.append(f"cash_reserve 下限必须逐档递减（L1≥L2≥L3），实际: {present}")
+        base = cr.get("base_floor")
+        if isinstance(base, (int, float)) and present and present[0] > base:
+            warnings.append("cash_reserve L1 下限不得高于 base_floor")
+        if "return_deadline_days" not in cr:
+            warnings.append("cash_reserve 缺少 return_deadline_days（归还期限）")
     return warnings
 
 

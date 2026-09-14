@@ -4,8 +4,8 @@
 # 状态标注：confirmed = 已确认；candidate = 未冻结（留待数据，B13/B9/C16）
 # 本文件是 v1.0 参数的权威记录；运行时迁移（接入 config/trading_rules）在 P1-1b 进行。
 
-version: 1.1
-updated: 2026-08-17
+version: 1.2
+updated: 2026-09-14
 
 objective:
   priority: loss-minimization-first
@@ -30,6 +30,31 @@ risk_limits:               # B7 confirmed；v1.1（B14）模式区分
     theme_cluster_max: reference
   position_count_min: 5    # candidate（B13）
   position_count_max: 8    # candidate（B13）
+
+# 分层现金储备（v1.2，2026-09-14 用户决策 D1）——把"唯一硬约束"从单向门改为可动用的战略储备。
+# 阈值由 2020-01-02~2026-09-14（6.7 年）历史回测频率反推，对齐"一年 2-3 次降到 10% 以下 / 一年 1 次允许归零"。
+# 口径：板块 RSI 取各板块代表 ETF 的 14 日 RSI；板块偏离 = 收盘相对自身 MA50 的百分比偏离；
+#      大盘 = 沪深300 20 日涨跌幅。实盘判定复用 dashboard 的板块数据（成分股加权），两者量级一致。
+cash_reserve:
+  enabled: true
+  base_floor: 0.10           # L0 常规下限（= risk_limits.cash_floor）
+  min_floor: 0.00            # L3 允许归零（用户决策：扣费不是障碍）
+  l1_floor: 0.07             # 第一档动用（现金可降至 7%）
+  l1_min_sector_rsi20: 4     # 触发：≥4 个板块 RSI≤20
+  l1_rsi_threshold: 20
+  l1_freq_per_year: 2.99     # 回测频率：2.99 次/年
+  l2_floor: 0.04             # 第二档动用（现金可降至 4%）
+  l2_min_sector_rsi30: 4     # 触发：≥4 个板块 RSI≤30 且 沪深300 20日跌幅≤-8%
+  l2_rsi_threshold: 30
+  l2_index_drop_20d: -8
+  l2_freq_per_year: 1.04     # 回测频率：1.04 次/年
+  l3_floor: 0.00             # 第三档动用（允许归零）
+  l3_min_sector_dev20: 4     # 触发：≥4 个板块偏离 MA50 ≤-20%
+  l3_dev_ma50: -20
+  l3_freq_per_year: 0.45     # 回测频率：0.45 次/年（约 2 年 1 次）
+  return_basis: exit-condition-not-pnl   # 归还依据=退出触发区间，不看盈亏
+  return_deadline_days: 20   # 20 个交易日未退出 → 强制归还 + 止损提醒
+  return_priority: [funded-positions, over-limit-sector, biggest-gainer]
 
 trend_gate:                # C15 confirmed
   type: default-filter     # 非绝对规则；描述风险，不判断 Thesis 是否成立

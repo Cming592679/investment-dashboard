@@ -1093,6 +1093,59 @@ TRADING_CONFIG = {
 
 
 # ══════════════════════════════════════════════════════════
+# 分层现金储备（v1.2，2026-09-14 用户决策 D1）
+# ══════════════════════════════════════════════════════════
+# 把"现金下限"从单向门（只能被动增加、永不可动用）改为可动用的战略储备：
+#   L0 常规 10% → L1 7% → L2 4% → L3 0%
+# 阈值由 2020-01-02~2026-09-14（6.7 年）历史回测的"独立机会次数"反推，
+# 目标对齐用户要求：一年 2-3 次 → 降到 10% 以下；一年 1 次 → 允许归零。
+# 参数权威记录见 rules.yaml 的 cash_reserve 段（本表为运行时结构）。
+# tiers 按"最严 → 最松"排列，判定时自上而下取第一个命中项。
+CASH_RESERVE = {
+    "enabled": True,
+    "base_floor_pct": 10.0,          # L0：TRADING_CONFIG.position.min_cash_pct 一致
+    "index_code": "000300.SS",       # 大盘基准（沪深300）
+    "tiers": [
+        {
+            "id": "L3",
+            "floor_pct": 0.0,
+            "freq_per_year": 0.45,
+            "label": "极深层：≥4 个板块偏离 MA50 ≤-20%（约 2 年 1 次）",
+            "conditions": [
+                {"type": "sector_dev_ma50_count", "threshold": -20.0, "min_count": 4},
+            ],
+        },
+        {
+            "id": "L2",
+            "floor_pct": 4.0,
+            "freq_per_year": 1.04,
+            "label": "深度层：≥4 个板块 RSI≤30 且 沪深300 20日 ≤-8%（约 1 年 1 次）",
+            "conditions": [
+                {"type": "sector_rsi_count", "threshold": 30.0, "min_count": 4},
+                {"type": "index_drop_20d", "threshold": -8.0},
+            ],
+        },
+        {
+            "id": "L1",
+            "floor_pct": 7.0,
+            "freq_per_year": 2.99,
+            "label": "应急层：≥4 个板块 RSI≤20（约 3 次/年）",
+            "conditions": [
+                {"type": "sector_rsi_count", "threshold": 20.0, "min_count": 4},
+            ],
+        },
+    ],
+    # 归还机制：退出触发区间即归还，不看盈亏；20 个交易日未退出 → 强制归还 + 止损提醒
+    "return": {
+        "basis": "exit-condition-not-pnl",
+        "deadline_trading_days": 20,
+        "on_deadline": "force-return-and-flag-stop-loss",
+        "priority": ["funded-positions", "over-limit-sector", "biggest-gainer"],
+    },
+}
+
+
+# ══════════════════════════════════════════════════════════
 # 持仓权重（来自天天基金季报，用于代理加权）
 # ══════════════════════════════════════════════════════════
 
