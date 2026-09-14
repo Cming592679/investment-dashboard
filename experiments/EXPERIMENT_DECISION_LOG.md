@@ -17,5 +17,7 @@
 | 2026-09-13 | E05 v0.1：全局/条件化 Regime 降暴露 REJECT；主题级波动率预算+30天最短持有 CANDIDATE（Calmar 0.86） | 跨年度一致，但参数为 DESIGN ASSUMPTION | ✅ 待 walk-forward |
 | 2026-09-13 | E07 v0.1 walk-forward 通过：OOS Calmar 1.95 vs BH 1.45；rolling 选参无增量 | split-sample + 4 窗口滚动 | ✅ 固定默认参数进入候选 |
 | 2026-09-13 | 编号调整：E07=walk-forward，Override 全量分类顺延 E08 | 与用户文档编号对齐 | ✅ |
+| 2026-09-14 | E08 台账构建：截图 OCR → 250 条（5/14~9/9）；金额解析修正（千分位）；FIFO 费用精算 | 用户确认 2026-05 起交易、无需保留 2020 标注 | 🔶 待补截图后对账 |
+| 2026-09-14 | 发现 19 条待确认（11 条卖出超出台账买入=疑似漏买截图、6 条无日期、2 条无净值） | 对账脚本 e08c_reconcile.py | ⏸ 待用户确认 |
 
 规则：任何参数/结论写入 v2 前，必须先在此表登记“来源=empirical / design assumption / user preference”。
