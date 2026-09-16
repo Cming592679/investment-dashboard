@@ -27,11 +27,19 @@ def clean(name):
 
 def main():
     trades = json.load(open(os.path.join(LEDGER, "trades.json"), encoding="utf-8"))
+    try:
+        closed_txns = json.load(open(os.path.join(LEDGER, "closed_txns.json"), encoding="utf-8"))
+    except Exception:
+        closed_txns = []
     names = {}
-    for t in trades:
+    for t in list(trades) + list(closed_txns):
         nm = t.get("name_raw") or t.get("fund_name")
         if nm:
             names.setdefault(clean(nm), nm)
+        # 转换的目标基金也纳入
+        tg = t.get("target")
+        if tg:
+            names.setdefault(clean(tg), tg)
     print("distinct names:", len(names))
 
     resolution = {}
