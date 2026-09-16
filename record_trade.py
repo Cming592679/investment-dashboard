@@ -4,6 +4,7 @@
   python3 record_trade.py buy 019633 3000 "放量确认，主仓加码"
   python3 record_trade.py sell 020608 965.70 shares "机器人减仓"
   python3 record_trade.py plan 011370 buy 2000 "明天不大涨" "CPO加仓计划"
+  python3 record_trade.py sell 021180 158.87 shares "清仓" nav=2.9988 date=2026-09-15
 
 成交约定：用户操作默认 T 日 15:00 前下单，按 T 日净值成交。
 记录买入时若成交日净值未发布，暂用最新已知净值估算份额，
@@ -61,10 +62,11 @@ def record_trade(pf, action, fund_code, amount_or_shares, note="", **kwargs):
         amount_or_shares: 买入金额(元) 或 卖出份额数(当 unit='shares'时)
         note: 备注
         **kwargs: unit='shares' 表示按份额卖出, nav=净值(用于算份额)
+            trade_date=YYYY-MM-DD 用于补记历史交易；缺省按当日。
 
     Returns: 更新后的 pf
     """
-    today = date.today().strftime('%Y-%m-%d')
+    today = kwargs.get('trade_date') or kwargs.get('date') or date.today().strftime('%Y-%m-%d')
 
     if action == 'plan':
         # 添加待执行计划
@@ -245,7 +247,7 @@ if __name__ == '__main__':
         pf = json.load(f)
 
     if len(sys.argv) < 5:
-        print("用法: python3 record_trade.py <buy|sell|plan> <fund_code> <amount> <note> [nav=...]")
+        print("用法: python3 record_trade.py <buy|sell|plan> <fund_code> <amount> <note> [nav=...] [date=YYYY-MM-DD]")
         sys.exit(1)
 
     action = sys.argv[1]

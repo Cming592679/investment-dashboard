@@ -45,6 +45,15 @@ class TestRecordTradeSell(unittest.TestCase):
         self.assertAlmostEqual(h["shares"], 0.0, places=2)
         self.assertAlmostEqual(h["cost_basis"], 0.0, places=2)
 
+    def test_trade_date_backfills_historical_action(self):
+        pf = _pf()
+        pf = record_trade(
+            pf, "sell", "020608", 965.7, "机器人减仓", unit="shares", nav=1.42,
+            trade_date="2026-09-15",
+        )
+        self.assertEqual(pf["action_log"][0]["date"], "2026-09-15")
+        self.assertEqual(pf["updated"], "2026-09-15")
+
     def test_legacy_plan_without_fund_code_does_not_crash(self):
         """历史待办（仅 fund 字段、无 fund_code）不应让 record_trade 崩溃。"""
         pf = _pf()
