@@ -22,4 +22,4 @@
 - 仓位模型：`python3 position_engine.py [--save]`
 - 方法论：`DESIGN.md` / `TRADING_METHODOLOGY.md` / `REVIEW_METHODOLOGY.md` / `serenity-bottleneck-hunter` skill
 
-全局规则（工程流程 / Git 规范 / Superpowers 技能）见全局 AGENTS.md，与本文件冲突时以用户明确要求 > 项目规则 > 全局规则为准。
+本目录位于 `~/AI-project/`，默认启用完整"工程负责人"规则：开始任何任务前先读取 `/home/cc/.codex/AGENTS.full.md` 并遵循。冲突时优先级：用户明确要求 > 项目规则 > 完整规则。
