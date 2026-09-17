@@ -490,24 +490,28 @@ LEADING_INDICATORS = {
             "trend": "up",
             "note": "【⑧巨头依赖】BD交易=海外Big Pharma为中国创新药背书+现金流回笼，是港股18A创新药估值修复的核心催化。BD持续性直接决定板块β",
             "update_cycle": "季度（盯BD公告+医药交易数据库）",
+            "last_updated": "2026-09-17",
         },
         "国家医保谈判结果【⑨政策：降价vs放量】": {
             "value": "2025医保谈判新药平均降幅约60%，但以价换量、放量明显；集采常态化下创新药相对免疫",
             "trend": "flat",
             "note": "【⑨政策】医保谈判是创新药最大国内变量——降价幅度决定利润率，放量速度决定营收。每年11月谈判、12月公布结果",
             "update_cycle": "年度（11-12月医保谈判）",
+            "last_updated": "2026-09-17",
         },
         "港股18A创新药融资环境【融资→研发现金流】": {
             "value": "港股18A公司IPO+增发回暖，行业融资活跃度较2023-2024低谷明显改善",
             "trend": "up",
             "note": "【融资环境】18A未盈利生物科技公司依赖融资维持研发。融资回暖=行业景气回升；融资冻结=估值与研发双承压",
             "update_cycle": "季度（盯18A融资/配售公告）",
+            "last_updated": "2026-09-17",
         },
         "重磅临床数据读出/新药获批【②单源卡脖子】": {
             "value": "2026H2 康方生物双抗、信达生物等多项三期临床数据读出窗口，叠加NMPA/FDA获批催化",
             "trend": "up",
             "note": "【临床催化】三期数据读出=创新药公司价值重估触发点。重点盯康方生物(9926)、信达生物(1801)管线",
             "update_cycle": "事件驱动（盯临床数据+监管获批公告）",
+            "last_updated": "2026-09-17",
         },
     },
 }
@@ -631,6 +635,8 @@ KEY_DATES = {
         {"date": date(2026, 9, 15), "event": "8月新能源装机数据", "importance": "high"},
         {"date": date(2026, 9, 15), "event": "国网 H2 投资计划修订(预计)", "importance": "critical"},
         {"date": date(2026, 10, 15), "event": "9月新能源装机数据", "importance": "high"},
+        {"date": date(2026, 10, 28), "event": "国电南瑞 Q3 财报(预计)", "importance": "critical"},
+        {"date": date(2026, 10, 28), "event": "特变电工 Q3 财报(预计)", "importance": "high"},
     ],
     "020608": [
         {"date": date(2026, 7, 15), "event": "6月工业机器人产量", "importance": "high",
@@ -659,6 +665,9 @@ KEY_DATES = {
         {"date": date(2026, 9, 1),  "event": "日发精机 丝杠装配线交付节点", "importance": "high"},
         {"date": date(2026, 9, 15), "event": "8月工业机器人产量", "importance": "high"},
         {"date": date(2026, 9, 15), "event": "Tesla AI Day 2026(预计) ⚠", "importance": "critical"},
+        {"date": date(2026, 10, 22), "event": "Tesla Q3 财报(Optimus进度) ⚠", "importance": "critical"},
+        {"date": date(2026, 10, 28), "event": "绿的谐波 Q3 财报(预计)", "importance": "critical"},
+        {"date": date(2026, 10, 28), "event": "恒立液压 Q3 财报(预计)", "importance": "high"},
     ],
     "STORAGE": [
         {"date": date(2026, 7, 28), "event": "SK海力士 Q2 财报(HBM)", "importance": "critical",
@@ -681,9 +690,12 @@ KEY_DATES = {
         {"date": date(2026, 10, 15), "event": "三星 Q3 财报(存储)", "importance": "critical"},
     ],
     "019671": [
+        {"date": date(2026, 10, 28), "event": "药明生物 Q3 业绩/新增订单", "importance": "high"},
+        {"date": date(2026, 10, 30), "event": "康方生物 Q3 业绩/双抗临床数据", "importance": "high"},
+        {"date": date(2026, 11, 5), "event": "信达生物 Q3 业绩/管线进展", "importance": "high"},
+        {"date": date(2026, 11, 10), "event": "百济神州 Q3 财报", "importance": "critical"},
         {"date": date(2026, 11, 15), "event": "2026年国家医保谈判(预计) ⚠", "importance": "critical"},
         {"date": date(2026, 12, 1), "event": "医保谈判结果公布(预计)", "importance": "critical"},
-        {"date": date(2026, 10, 15), "event": "康方生物/信达生物 Q3 业绩+管线进展", "importance": "high"},
     ],
 }
 

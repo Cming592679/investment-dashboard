@@ -93,8 +93,9 @@ CORPORATE_CALENDAR = {
         "aliases": ["美光", "micron"],
         "events": [
             {"date": date(2026, 9, 25), "event": "Q4 财报", "importance": "high"},
+            {"date": date(2026, 12, 20), "event": "Q1 FY2027 财报", "importance": "high"},
         ],
-        "affected_funds": ["019633"],
+        "affected_funds": ["019633", "STORAGE"],
     },
     "中芯国际": {
         "ticker": "688981.SS",
@@ -127,6 +128,78 @@ CORPORATE_CALENDAR = {
             {"date": date(2026, 8, 10), "event": "Q2 财报", "importance": "critical"},
         ],
         "affected_funds": ["015789"],
+    },
+    "百济神州": {
+        "ticker": "6160.HK",
+        "aliases": ["百济神州", "百济", "beigene", "BGNE"],
+        "events": [
+            {"date": date(2026, 11, 10), "event": "Q3 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["019671"],
+    },
+    "信达生物": {
+        "ticker": "1801.HK",
+        "aliases": ["信达生物", "信达", "innovent"],
+        "events": [
+            {"date": date(2026, 11, 5), "event": "Q3 业绩/管线进展", "importance": "high"},
+        ],
+        "affected_funds": ["019671"],
+    },
+    "康方生物": {
+        "ticker": "9926.HK",
+        "aliases": ["康方生物", "康方", "akeso"],
+        "events": [
+            {"date": date(2026, 10, 30), "event": "Q3 业绩/双抗临床数据", "importance": "high"},
+        ],
+        "affected_funds": ["019671"],
+    },
+    "药明生物": {
+        "ticker": "2269.HK",
+        "aliases": ["药明生物", "药明", "wuxi bio"],
+        "events": [
+            {"date": date(2026, 10, 28), "event": "Q3 业绩/新增订单", "importance": "high"},
+        ],
+        "affected_funds": ["019671"],
+    },
+    "国电南瑞": {
+        "ticker": "600406.SS",
+        "aliases": ["国电南瑞", "南瑞"],
+        "events": [
+            {"date": date(2026, 10, 28), "event": "Q3 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["025856"],
+    },
+    "特变电工": {
+        "ticker": "600089.SS",
+        "aliases": ["特变电工", "特变"],
+        "events": [
+            {"date": date(2026, 10, 28), "event": "Q3 财报", "importance": "high"},
+        ],
+        "affected_funds": ["025856"],
+    },
+    "绿的谐波": {
+        "ticker": "688017.SS",
+        "aliases": ["绿的谐波", "绿的", "谐波"],
+        "events": [
+            {"date": date(2026, 10, 28), "event": "Q3 财报", "importance": "critical"},
+        ],
+        "affected_funds": ["020608"],
+    },
+    "恒立液压": {
+        "ticker": "601100.SS",
+        "aliases": ["恒立液压", "恒立"],
+        "events": [
+            {"date": date(2026, 10, 28), "event": "Q3 财报", "importance": "high"},
+        ],
+        "affected_funds": ["020608"],
+    },
+    "Tesla": {
+        "ticker": "TSLA",
+        "aliases": ["tesla", "特斯拉", "Optimus"],
+        "events": [
+            {"date": date(2026, 10, 22), "event": "Q3 财报(Optimus进度)", "importance": "critical"},
+        ],
+        "affected_funds": ["020608"],
     },
 }
 
